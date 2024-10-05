@@ -1,0 +1,64 @@
+# Flutter/Dart spécifique
+.dart_tool/
+.flutter-plugins
+.flutter-plugins-dependencies
+.packages
+.pub-cache/
+build/
+flutter_*.png
+
+# Fichiers de configuration des environnements locaux
+.vscode/
+.idea/
+*.iml
+
+# Exclure les fichiers IntelliJ
+*.iml
+*.ipr
+*.iws
+.idea/
+
+# Exclure les fichiers de MacOS
+.DS_Store
+
+# Exclure les fichiers spécifiques à iOS
+ios/Pods/
+ios/.symlinks/
+ios/Flutter/Flutter.framework/
+ios/Flutter/Flutter.podspec
+ios/Flutter/Generated.xcconfig
+ios/Flutter/App.framework
+ios/Flutter/Flutter.podspec
+ios/ServiceDefinitions.json
+
+# Exclure les fichiers spécifiques à Android
+android/.gradle/
+android/app/build/
+android/.idea/
+android/local.properties
+android/app/google-services.json
+
+# Exclure les fichiers spécifiques à macOS
+macos/Pods/
+macos/Flutter/Flutter.podspec
+macos/.symlinks/
+macos/Flutter/ephemeral/
+macos/Flutter/Flutter.framework
+
+# Exclure les fichiers spécifiques à Windows
+windows/flutter/ephemeral/
+windows/CMakeLists.txt
+
+# Exclure les fichiers spécifiques à Linux
+linux/flutter/ephemeral/
+
+# Exclure Web spécifiques
+web/.dart_tool/
+web/build/
+
+# Exclure les fichiers liés aux tests
+test/**/build/
+
+# Exclure les clés privées
+*.key
+*.pem
