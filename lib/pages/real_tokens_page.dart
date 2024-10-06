@@ -66,7 +66,7 @@ class _RealTokensPageState extends State<RealTokensPage> {
                                 bottomLeft: Radius.circular(12),
                               ),
                               child: CachedNetworkImage(
-                                imageUrl: token['imageLink'] ?? '',
+                                imageUrl: token['imageLink'][0] ?? '',
                                 width: 150,
                                 fit: BoxFit.cover,
                                 placeholder: (context, url) => const CircularProgressIndicator(),

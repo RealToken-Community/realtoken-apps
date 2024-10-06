@@ -118,7 +118,7 @@ class PortfolioDisplay1 extends StatelessWidget {
                                 width: 150,
                                 height: double.infinity,  // Hauteur ajustée à l'élément adjacent
                                 child: CachedNetworkImage(
-                                  imageUrl: token['imageLink'] ?? '',
+                                  imageUrl: token['imageLink'][0] ?? '',
                                   fit: BoxFit.cover,
                                   placeholder: (context, url) =>
                                       const CircularProgressIndicator(),

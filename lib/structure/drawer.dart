@@ -156,8 +156,8 @@ class CustomDrawer extends StatelessWidget {
 
   void _launchFeedbackURL() async {
     const url = 'https://github.com/RealToken-Community/realtoken-apps/issues';
-    if (await canLaunch(url)) {
-      await launch(url);
+    if (await canLaunchUrl(url as Uri)) {
+      await launchUrl(url as Uri);
     } else {
       throw 'Impossible d\'ouvrir le lien $url';
     }

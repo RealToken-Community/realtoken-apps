@@ -4,11 +4,11 @@ import 'package:hive/hive.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 class ApiService {
-  static const theGraphApiKey = 'xxxxxxx';
+  static const theGraphApiKey = 'c57eb2612e998502f4418378a4cb9f35';
   static const String gnosisUrl = 'https://gateway-arbitrum.network.thegraph.com/api/$theGraphApiKey/subgraphs/id/FPPoFB7S2dcCNrRyjM5QbaMwKqRZPdbTg8ysBrwXd4SP';
   static const String etherumUrl = 'https://gateway-arbitrum.network.thegraph.com/api/$theGraphApiKey/subgraphs/id/EVjGN4mMd9h9JfGR7yLC6T2xrJf9syhjQNboFb7GzxVW';
   static const String rmmUrl = 'https://gateway-arbitrum.network.thegraph.com/api/$theGraphApiKey/subgraphs/id/2dMMk7DbQYPX6Gi5siJm6EZ2gDQBF8nJcgKtpiPnPBsK';
-  static const String realTokensUrl = 'https://pitswap-api.herokuapp.com/api/realTokens';
+  static const String realTokensUrl = 'https://pitswap-api.herokuapp.com/api/realTokens_mobileapps/';
   static const String rentTrackerUrl = 'https://ehpst.duckdns.org/realt_rent_tracker/api/rent_holder/';
   static const Duration cacheDuration = Duration(hours: 1);
 

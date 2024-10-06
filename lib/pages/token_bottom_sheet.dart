@@ -8,6 +8,7 @@ import 'dart:io';  // Import pour vérifier la plateforme
 import 'package:provider/provider.dart'; // Pour accéder à DataManager
 import '../api/data_manager.dart'; // Import de DataManager
 import '../generated/l10n.dart'; // Import pour les traductions
+import 'package:carousel_slider/carousel_slider.dart';
 
 // Fonction modifiée pour formater la monnaie avec le taux de conversion et le symbole
 String formatCurrency(BuildContext context, double value) {
@@ -36,12 +37,29 @@ void showTokenDetails(BuildContext context, Map<String, dynamic> token) {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 // Image du token
-                CachedNetworkImage(
-                  imageUrl: token['imageLink'] ?? '',
-                  width: double.infinity,
-                  height: 200,
-                  fit: BoxFit.cover,
-                ),
+               // Carrousel d'images du token
+                token['imageLink'] != null && token['imageLink'].isNotEmpty
+                    ? CarouselSlider(
+                        options: CarouselOptions(
+                        height: MediaQuery.of(context).size.height * 0.22, // 30% de la hauteur de l'écran
+                          enableInfiniteScroll: true, // Carrousel infini
+                          enlargeCenterPage: true, // Agrandir l'image au centre
+                        ),
+                        items: token['imageLink'].map<Widget>((imageUrl) {
+                          return CachedNetworkImage(
+                            imageUrl: imageUrl, // Utiliser l'URL de l'image
+                            width: double.infinity,
+                            fit: BoxFit.cover,
+                          );
+                        }).toList(),
+                      )
+                    : Container(
+                        height: 200,
+                        color: Colors.grey, // Si aucune image, afficher une couleur grise
+                        child: Center(
+                          child: Text("No image available"), // Texte si aucune image
+                        ),
+                      ),
                 const SizedBox(height: 10),
                 
                 // Titre du token
@@ -73,7 +91,7 @@ void showTokenDetails(BuildContext context, Map<String, dynamic> token) {
                 
                 // TabBarView pour le contenu de chaque onglet
                 SizedBox(
-                  height: 300, // Ajuster selon la hauteur du contenu
+                  height: MediaQuery.of(context).size.height * 0.35, // 40% de la hauteur de l'écran
                   child: TabBarView(
                     children: [
                       // Onglet Propriétés avec deux sections (Propriétés et Offering)

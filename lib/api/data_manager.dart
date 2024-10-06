@@ -45,12 +45,10 @@ class DataManager extends ChangeNotifier {
 
   // Portfolio data for PortfolioPage
   List<Map<String, dynamic>> _portfolio = [];
-
   List<Map<String, dynamic>> get portfolio => _portfolio;
 
   // Ajout des données pour les mises à jour récentes
   List<Map<String, dynamic>> _recentUpdates = [];
-
   List<Map<String, dynamic>> get recentUpdates => _recentUpdates;
 
   final String rwaTokenAddress = '0x0675e8f4a52ea6c845cb6427af03616a2af42170';
@@ -66,7 +64,7 @@ Future<void> fetchAndStoreAllTokens() async {
       allTokensList.add({
         'shortName': realToken['shortName'],
         'fullName': realToken['fullName'],
-        'imageLink': realToken['imageLink'][0],
+        'imageLink': realToken['imageLink'],
         'amount': realToken['totalTokens'].toString(),  // Affiche le total des tokens disponibles
         'totalTokens': realToken['totalTokens'],
         'tokenPrice': realToken['tokenPrice'],
@@ -212,7 +210,7 @@ Future<void> fetchAndCalculateData({bool forceFetch = false}) async {
         newPortfolio.add({
                     'shortName': matchingRealToken['shortName'],
           'fullName': matchingRealToken['fullName'],
-          'imageLink': matchingRealToken['imageLink'][0],
+          'imageLink': matchingRealToken['imageLink'],
           'lat': matchingRealToken['coordinate']['lat'],
           'lng': matchingRealToken['coordinate']['lng'],
           'amount': walletToken['amount'],
@@ -286,7 +284,7 @@ Future<void> fetchAndCalculateData({bool forceFetch = false}) async {
       newPortfolio.add({
           'shortName': matchingRealToken['shortName'],
           'fullName': matchingRealToken['fullName'],
-          'imageLink': matchingRealToken['imageLink'][0],
+          'imageLink': matchingRealToken['imageLink'],
           'lat': matchingRealToken['coordinate']['lat'],
           'lng': matchingRealToken['coordinate']['lng'],
           'amount': amount.toString(),
@@ -351,61 +349,72 @@ Future<void> fetchAndCalculateData({bool forceFetch = false}) async {
 }
 
   // Méthode pour extraire les mises à jour récentes sur les 30 derniers jours
-  List<Map<String, dynamic>> _extractRecentUpdates(List<dynamic> realTokensRaw) {
-  final List<Map<String, dynamic>> realTokens = realTokensRaw.cast<Map<String, dynamic>>();
 
+List<Map<String, dynamic>> _extractRecentUpdates(List<dynamic> realTokensRaw) {
+  final List<Map<String, dynamic>> realTokens = realTokensRaw.cast<Map<String, dynamic>>();
   List<Map<String, dynamic>> recentUpdates = [];
 
   for (var token in realTokens) {
-    if (token.containsKey('update30')) {
+    // Vérification si update30 existe et est non vide
+    if (token.containsKey('update30') && token['update30'] != null && token['update30'].isNotEmpty) {
       final String shortName = token['shortName'] ?? 'Nom inconnu';
-      final String imageLink = token['imageLink'] != null && token['imageLink'].isNotEmpty 
-          ? token['imageLink'][0] // Prendre la première image si disponible
+      final String imageLink = (token['imageLink'] != null && token['imageLink'].isNotEmpty)
+          ? token['imageLink'][0] 
           : 'Lien d\'image non disponible';
 
-      List<Map<String, dynamic>> updatesWithDetails = List<Map<String, dynamic>>.from(token['update30']).where((update) {
-        return update['key'] == 'netRentYearPerToken' || update['key'] == 'annualPercentageYield';
-      }).map((update) {
-        // Initialiser les variables avec des valeurs par défaut
-        String formattedKey = 'Donnée inconnue';
-        String formattedOldValue = 'Valeur inconnue';
-        String formattedNewValue = 'Valeur inconnue';
+      List<Map<String, dynamic>> updatesWithDetails = List<Map<String, dynamic>>.from(token['update30'])
+          .where((update) => _isRelevantKey(update['key'])) // Vérifier les clés pertinentes
+          .map((update) => _formatUpdateDetails(update, shortName, imageLink)) // Formatage
+          .toList();
 
-        if (update['key'] == 'netRentYearPerToken') {
-          // Arrondir la valeur à deux chiffres après la virgule
-          double newValue = double.tryParse(update['new_value']) ?? 0.0;
-          double oldValue = double.tryParse(update['old_value']) ?? 0.0;
-          formattedKey = 'Net Rent Per Token (Annuel)';
-          formattedOldValue = "${oldValue.toStringAsFixed(2)} USD";
-          formattedNewValue = "${newValue.toStringAsFixed(2)} USD";
-        } else if (update['key'] == 'annualPercentageYield') {
-          // Arrondir la valeur à deux chiffres après la virgule
-          double newValue = double.tryParse(update['new_value']) ?? 0.0;
-          double oldValue = double.tryParse(update['old_value']) ?? 0.0;
-          formattedKey = 'Rendement Annuel (%)';
-          formattedOldValue = "${oldValue.toStringAsFixed(2)}%";
-          formattedNewValue = "${newValue.toStringAsFixed(2)}%";
-        }
-
-        return {
-          'shortName': shortName,
-          'formattedKey': formattedKey,
-          'formattedOldValue': formattedOldValue,
-          'formattedNewValue': formattedNewValue,
-          'timsync': update['timsync'],
-          'imageLink': imageLink, // Ajout de l'image du token
-        };
-      }).toList();
-
+      // Ajouter les mises à jour extraites dans recentUpdates
       recentUpdates.addAll(updatesWithDetails);
+    } else {
+      print('Aucune mise à jour pour le token : $token');
     }
   }
 
   // Trier les mises à jour par date
   recentUpdates.sort((a, b) => DateTime.parse(b['timsync']).compareTo(DateTime.parse(a['timsync'])));
-
+  print('Mises à jour extraites : $recentUpdates');
   return recentUpdates;
 }
+
+// Vérifier les clés pertinentes
+bool _isRelevantKey(String key) {
+  return key == 'netRentYearPerToken' || key == 'annualPercentageYield';
+}
+
+// Formater les détails des mises à jour
+Map<String, dynamic> _formatUpdateDetails(Map<String, dynamic> update, String shortName, String imageLink) {
+  String formattedKey = 'Donnée inconnue';
+  String formattedOldValue = 'Valeur inconnue';
+  String formattedNewValue = 'Valeur inconnue';
+
+  if (update['key'] == 'netRentYearPerToken') {
+    double newValue = double.tryParse(update['new_value']) ?? 0.0;
+    double oldValue = double.tryParse(update['old_value']) ?? 0.0;
+    formattedKey = 'Net Rent Per Token (Annuel)';
+    formattedOldValue = "${oldValue.toStringAsFixed(2)} USD";
+    formattedNewValue = "${newValue.toStringAsFixed(2)} USD";
+  } else if (update['key'] == 'annualPercentageYield') {
+    double newValue = double.tryParse(update['new_value']) ?? 0.0;
+    double oldValue = double.tryParse(update['old_value']) ?? 0.0;
+    formattedKey = 'Rendement Annuel (%)';
+    formattedOldValue = "${oldValue.toStringAsFixed(2)}%";
+    formattedNewValue = "${newValue.toStringAsFixed(2)}%";
+  }
+
+  return {
+    'shortName': shortName,
+    'formattedKey': formattedKey,
+    'formattedOldValue': formattedOldValue,
+    'formattedNewValue': formattedNewValue,
+    'timsync': update['timsync'],
+    'imageLink': imageLink,
+  };
+}
+
 
 
 
