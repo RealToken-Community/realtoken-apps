@@ -40,6 +40,7 @@ class _DashboardPageState extends State<DashboardPage> {
     await dataManager.fetchAndCalculateData(); // Charger les données du portefeuille
     await dataManager.fetchRentData(); // Charger les données de loyer
     await dataManager.fetchPropertyData(); // Charger les données de propriété
+    await dataManager.fetchRmmBalances();
   }
 
   Future<void> _refreshData() async {
@@ -313,27 +314,55 @@ Widget _buildCard(
                 ),
                 const SizedBox(height: 20),
                 _buildCard(
-                  S.of(context).portfolio, // Utilisation de la traduction
-                  Icons.dashboard,
-                  _buildValueBeforeText(formatCurrency(dataManager.convert(dataManager.totalValue), dataManager.currencySymbol), S.of(context).totalPortfolio), // Première ligne
-                  [
-                  Text(
-                    '${S.of(context).wallet}: ${formatCurrency(dataManager.convert(dataManager.walletValue), dataManager.currencySymbol)}',
-                    style: TextStyle(fontSize: Platform.isAndroid ? 12 : 13),
-                  ),
-                  Text(
-                    '${S.of(context).rmm}: ${formatCurrency(dataManager.convert(dataManager.rmmValue), dataManager.currencySymbol)}',
-                    style: TextStyle(fontSize: Platform.isAndroid ? 12 : 13),
-                  ),
-                  Text(
-                    '${S.of(context).rwaHoldings}: ${formatCurrency(dataManager.convert(dataManager.rwaHoldingsValue), dataManager.currencySymbol)}',
-                    style: TextStyle(fontSize: Platform.isAndroid ? 12 : 13),
-                  ),
-                ],
-                  dataManager,
-                  context,
-                ),
-                const SizedBox(height: 15),
+  S.of(context).portfolio, // Utilisation de la traduction
+  Icons.dashboard,
+  _buildValueBeforeText(
+    formatCurrency(dataManager.convert(dataManager.totalValue), dataManager.currencySymbol),
+    S.of(context).totalPortfolio), // Première ligne avec le total du portfolio
+  [
+    // Section pour Wallet
+    Text(
+      '${S.of(context).wallet}: ${formatCurrency(dataManager.convert(dataManager.walletValue), dataManager.currencySymbol)}',
+      style: TextStyle(fontSize: Platform.isAndroid ? 12 : 13),
+    ),
+    Text(
+      '${S.of(context).rmm}: ${formatCurrency(dataManager.convert(dataManager.rmmValue), dataManager.currencySymbol)}',
+      style: TextStyle(fontSize: Platform.isAndroid ? 12 : 13),
+    ),
+    Text(
+      '${S.of(context).rwaHoldings}: ${formatCurrency(dataManager.convert(dataManager.rwaHoldingsValue), dataManager.currencySymbol)}',
+      style: TextStyle(fontSize: Platform.isAndroid ? 12 : 13),
+    ),
+    
+    const SizedBox(height: 10), // Ajout d'un espace pour séparer les sections
+
+    // Section pour les balances USDC
+    Text(
+      '${S.of(context).usdcDepositBalance}: ${formatCurrency(dataManager.convert(dataManager.totalUsdcDepositBalance), dataManager.currencySymbol)}',
+      style: TextStyle(fontSize: Platform.isAndroid ? 12 : 13),
+    ),
+    Text(
+      '${S.of(context).usdcBorrowBalance}: ${formatCurrency(dataManager.convert(dataManager.totalUsdcBorrowBalance), dataManager.currencySymbol)}',
+      style: TextStyle(fontSize: Platform.isAndroid ? 12 : 13),
+    ),
+
+    const SizedBox(height: 10), // Ajout d'un espace pour séparer les sections
+
+    // Section pour les balances XDAI
+    Text(
+      '${S.of(context).xdaiDepositBalance}: ${formatCurrency(dataManager.convert(dataManager.totalXdaiDepositBalance), dataManager.currencySymbol)}',
+      style: TextStyle(fontSize: Platform.isAndroid ? 12 : 13),
+    ),
+    Text(
+      '${S.of(context).xdaiBorrowBalance}: ${formatCurrency(dataManager.convert(dataManager.totalXdaiBorrowBalance), dataManager.currencySymbol)}',
+      style: TextStyle(fontSize: Platform.isAndroid ? 12 : 13),
+    ),
+  ],
+  dataManager,
+  context,
+),
+
+const SizedBox(height: 15),
                 _buildCard(
                   S.of(context).properties, // Utilisation de la traduction
                   Icons.home,

@@ -279,4 +279,135 @@ Future<Map<String, dynamic>> fetchCurrencies() async {
   }
 }
 
+// Récupérer le userId associé à une adresse Ethereum
+  static Future<String?> fetchUserIdFromAddress(String address) async {
+    const url = gnosisUrl;
+
+    final query = '''
+    {
+      account(id: "$address") {
+        userIds {
+          userId
+        }
+      }
+    }
+    ''';
+
+    final response = await http.post(
+      Uri.parse(url),
+      headers: {'Content-Type': 'application/json'},
+      body: json.encode({"query": query}),
+    );
+
+    if (response.statusCode == 200) {
+      final data = json.decode(response.body);
+      final userIds = data['data']['account']['userIds'];
+      if (userIds != null && userIds.isNotEmpty) {
+        return userIds.first['userId']; // Retourne le premier userId
+      }
+    }
+    return null; // Si aucun userId n'a été trouvé
+  }
+
+  // Récupérer les adresses associées à un userId
+  static Future<List<String>> fetchAddressesForUserId(String userId) async {
+    const url = gnosisUrl;
+
+    final query = '''
+    {
+      accounts(where: { userIds: ["0x296033cb983747b68911244ec1a3f01d7708851b-$userId"] }) {
+        address
+      }
+    }
+    ''';
+
+    final response = await http.post(
+      Uri.parse(url),
+      headers: {'Content-Type': 'application/json'},
+      body: json.encode({"query": query}),
+    );
+
+    if (response.statusCode == 200) {
+      final data = json.decode(response.body);
+      final accounts = data['data']['accounts'];
+      if (accounts != null && accounts.isNotEmpty) {
+        return List<String>.from(accounts.map((account) => account['address']));
+      }
+    }
+    return [];
+  }
+
+  static Future<List<Map<String, dynamic>>> fetchRmmBalances({bool forceFetch = false}) async {
+  final prefs = await SharedPreferences.getInstance();
+  List<String>? evmAddresses = prefs.getStringList('evmAddresses');
+
+  if (evmAddresses == null || evmAddresses.isEmpty) {
+    return [];
+  }
+
+  // Contrats pour USDC
+  const String usdcDepositContract = '0xed56f76e9cbc6a64b821e9c016eafbd3db5436d1'; // Dépôt USDC
+  const String usdcBorrowContract = '0x69c731ae5f5356a779f44c355abb685d84e5e9e6'; // Emprunt USDC
+
+  // Contrats pour XDAI
+  const String xdaiDepositContract = '0x0ca4f5554dd9da6217d62d8df2816c82bba4157b'; // Dépôt XDAI
+  const String xdaiBorrowContract = '0x9908801df7902675c3fedd6fea0294d18d5d5d34'; // Emprunt XDAI
+
+  List<Map<String, dynamic>> allBalances = [];
+
+  for (var address in evmAddresses) {
+    // Requête pour le dépôt et l'emprunt de USDC
+    final usdcDepositResponse = await _fetchBalance(usdcDepositContract, address);
+    final usdcBorrowResponse = await _fetchBalance(usdcBorrowContract, address);
+
+    // Requête pour le dépôt et l'emprunt de XDAI
+    final xdaiDepositResponse = await _fetchBalance(xdaiDepositContract, address);
+    final xdaiBorrowResponse = await _fetchBalance(xdaiBorrowContract, address);
+
+    // Traitement des réponses
+    if (usdcDepositResponse != null && usdcBorrowResponse != null && xdaiDepositResponse != null && xdaiBorrowResponse != null) {
+      allBalances.add({
+        'address': address,
+        'usdcDepositBalance': usdcDepositResponse.toString(),
+        'usdcBorrowBalance': usdcBorrowResponse.toString(),
+        'xdaiDepositBalance': xdaiDepositResponse.toString(),
+        'xdaiBorrowBalance': xdaiBorrowResponse.toString(),
+      });
+    } else {
+      throw Exception('Failed to fetch balances for address: $address');
+    }
+  }
+
+  return allBalances;
+}
+
+// Méthode pour simplifier la récupération des balances
+static Future<BigInt?> _fetchBalance(String contract, String address) async {
+  final response = await http.post(
+    Uri.parse('https://rpc.gnosischain.com'), // RPC Gnosis
+    headers: {'Content-Type': 'application/json'},
+    body: json.encode({
+      "jsonrpc": "2.0",
+      "method": "eth_call",
+      "params": [
+        {
+          "to": contract, // Contrat à interroger
+          "data": "0x70a08231000000000000000000000000${address.substring(2)}" // Méthode balanceOf(address)
+        },
+        "latest"
+      ],
+      "id": 1
+    }),
+  );
+
+  if (response.statusCode == 200) {
+    final result = json.decode(response.body)['result'];
+    if (result != null && result != "0x") {
+      return BigInt.parse(result.substring(2), radix: 16);
+    }
+  }
+  return null;
+}
+
+
 }

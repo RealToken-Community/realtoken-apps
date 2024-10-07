@@ -130,6 +130,12 @@
   "statistics": "Statistics",
   "noDataAvailable": "No data available, please add a new wallet",
   "manageAddresses": "Add wallet",
+  "depositBalance": "Deposit Balance",
+  "borrowBalance": "Borrow Balance",
+  "usdcDepositBalance": "USDC Deposit Balance",
+  "usdcBorrowBalance": "USDC Borrow Balance",
+  "xdaiDepositBalance": "XDAI Deposit Balance",
+  "xdaiBorrowBalance": "XDAI Borrow Balance",
   "maps": "Maps",
   "@dashboard": {
     "description": "Label for the Dashboard tab"

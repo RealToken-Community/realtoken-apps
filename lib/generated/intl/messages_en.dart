@@ -43,6 +43,7 @@ class MessageLookup extends MessageLookupByLibrary {
         "ascending": MessageLookupByLibrary.simpleMessage("Ascending"),
         "author": MessageLookupByLibrary.simpleMessage("Author"),
         "blockchain": MessageLookupByLibrary.simpleMessage("Blockchain"),
+        "borrowBalance": MessageLookupByLibrary.simpleMessage("Borrow Balance"),
         "characteristics":
             MessageLookupByLibrary.simpleMessage("Characteristics"),
         "clearCacheData":
@@ -63,6 +64,8 @@ class MessageLookup extends MessageLookupByLibrary {
         "darkTheme": MessageLookupByLibrary.simpleMessage("Dark Theme"),
         "dashboard": MessageLookupByLibrary.simpleMessage("Dashboard"),
         "day": MessageLookupByLibrary.simpleMessage("Day"),
+        "depositBalance":
+            MessageLookupByLibrary.simpleMessage("Deposit Balance"),
         "descending": MessageLookupByLibrary.simpleMessage("Descending"),
         "donate": MessageLookupByLibrary.simpleMessage("Donate"),
         "donationMessage": MessageLookupByLibrary.simpleMessage(
@@ -186,11 +189,19 @@ class MessageLookup extends MessageLookupByLibrary {
             MessageLookupByLibrary.simpleMessage("Asset price"),
         "unknown": MessageLookupByLibrary.simpleMessage("Unknown"),
         "unknownCity": MessageLookupByLibrary.simpleMessage("Unknown City"),
+        "usdcBorrowBalance":
+            MessageLookupByLibrary.simpleMessage("USDC Borrow Balance"),
+        "usdcDepositBalance":
+            MessageLookupByLibrary.simpleMessage("USDC Deposit Balance"),
         "version": MessageLookupByLibrary.simpleMessage("Version"),
         "viewOnRealT": MessageLookupByLibrary.simpleMessage("View on RealT"),
         "wallet": MessageLookupByLibrary.simpleMessage("Wallet"),
         "week": MessageLookupByLibrary.simpleMessage("Week"),
         "weekly": MessageLookupByLibrary.simpleMessage("Weekly"),
+        "xdaiBorrowBalance":
+            MessageLookupByLibrary.simpleMessage("XDAI Borrow Balance"),
+        "xdaiDepositBalance":
+            MessageLookupByLibrary.simpleMessage("XDAI Deposit Balance"),
         "year": MessageLookupByLibrary.simpleMessage("Year"),
         "yieldEvolution":
             MessageLookupByLibrary.simpleMessage("Yield evolution"),

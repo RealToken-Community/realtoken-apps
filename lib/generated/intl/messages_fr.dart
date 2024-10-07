@@ -43,6 +43,8 @@ class MessageLookup extends MessageLookupByLibrary {
         "ascending": MessageLookupByLibrary.simpleMessage("Ascendant"),
         "author": MessageLookupByLibrary.simpleMessage("Auteur"),
         "blockchain": MessageLookupByLibrary.simpleMessage("Blockchain"),
+        "borrowBalance":
+            MessageLookupByLibrary.simpleMessage("Solde des emprunts"),
         "characteristics":
             MessageLookupByLibrary.simpleMessage("Caractéristiques"),
         "clearCacheData": MessageLookupByLibrary.simpleMessage(
@@ -63,6 +65,8 @@ class MessageLookup extends MessageLookupByLibrary {
         "darkTheme": MessageLookupByLibrary.simpleMessage("Thème sombre"),
         "dashboard": MessageLookupByLibrary.simpleMessage("Tableau de bord"),
         "day": MessageLookupByLibrary.simpleMessage("Jour"),
+        "depositBalance":
+            MessageLookupByLibrary.simpleMessage("Solde des dépôts"),
         "descending": MessageLookupByLibrary.simpleMessage("Descendant"),
         "donate": MessageLookupByLibrary.simpleMessage("Faire un don"),
         "donationMessage": MessageLookupByLibrary.simpleMessage(
@@ -198,11 +202,19 @@ class MessageLookup extends MessageLookupByLibrary {
             "Prix de l\'actif sous-jacent"),
         "unknown": MessageLookupByLibrary.simpleMessage("Inconnu"),
         "unknownCity": MessageLookupByLibrary.simpleMessage("Ville inconnue"),
+        "usdcBorrowBalance":
+            MessageLookupByLibrary.simpleMessage("Solde des emprunts USDC"),
+        "usdcDepositBalance":
+            MessageLookupByLibrary.simpleMessage("Solde des dépôts USDC"),
         "version": MessageLookupByLibrary.simpleMessage("Version"),
         "viewOnRealT": MessageLookupByLibrary.simpleMessage("Voir sur RealT"),
         "wallet": MessageLookupByLibrary.simpleMessage("Portefeuille"),
         "week": MessageLookupByLibrary.simpleMessage("Semaine"),
         "weekly": MessageLookupByLibrary.simpleMessage("Hebdomadaire"),
+        "xdaiBorrowBalance":
+            MessageLookupByLibrary.simpleMessage("Solde des emprunts XDAI"),
+        "xdaiDepositBalance":
+            MessageLookupByLibrary.simpleMessage("Solde des dépôts XDAI"),
         "year": MessageLookupByLibrary.simpleMessage("Année"),
         "yieldEvolution":
             MessageLookupByLibrary.simpleMessage("Évolution du rendement"),

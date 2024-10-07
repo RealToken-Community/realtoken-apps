@@ -129,5 +129,11 @@
   "statistics": "Statistiques",
   "noDataAvailable": "Aucune donnée disponible, veuillez ajouter un nouveau portefeuille",
   "manageAddresses": "Ajouter un portefeuille",
-  "maps": "Cartes"
+  "maps": "Cartes",
+    "depositBalance": "Solde des dépôts",
+  "borrowBalance": "Solde des emprunts",
+  "usdcDepositBalance": "Solde des dépôts USDC",
+  "usdcBorrowBalance": "Solde des emprunts USDC",
+  "xdaiDepositBalance": "Solde des dépôts XDAI",
+  "xdaiBorrowBalance": "Solde des emprunts XDAI"
 }

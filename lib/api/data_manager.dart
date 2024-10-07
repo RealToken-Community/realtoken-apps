@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'dart:convert';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'api_service.dart';
 
@@ -21,6 +22,77 @@ class DataManager extends ChangeNotifier {
   double conversionRate = 1.0; // Taux de conversion par défaut (USD)
   String currencySymbol = '\$'; // Symbole par défaut (USD)
   String selectedCurrency = 'usd'; // Devise par défaut
+   // Map pour stocker les userIds et leurs adresses associées
+  Map<String, List<String>> userIdToAddresses = {};
+double totalUsdcDepositBalance = 0;
+double totalUsdcBorrowBalance = 0;
+double totalXdaiDepositBalance = 0;
+double totalXdaiBorrowBalance = 0;
+
+// Méthode pour ajouter des adresses à un userId
+  void addAddressesForUserId(String userId, List<String> addresses) {
+    if (userIdToAddresses.containsKey(userId)) {
+      userIdToAddresses[userId]!.addAll(addresses);
+    } else {
+      userIdToAddresses[userId] = addresses;
+    }
+    saveUserIdToAddresses(); // Sauvegarder après modification
+    notifyListeners();
+  }
+
+  // Sauvegarder la Map des userIds et adresses dans SharedPreferences
+  Future<void> saveUserIdToAddresses() async {
+    final prefs = await SharedPreferences.getInstance();
+    final userIdToAddressesJson = userIdToAddresses.map((userId, addresses) {
+      return MapEntry(userId, jsonEncode(addresses)); // Encoder les adresses en JSON
+    });
+
+    prefs.setString('userIdToAddresses', jsonEncode(userIdToAddressesJson));
+  }
+
+  // Charger les userIds et leurs adresses depuis SharedPreferences
+  Future<void> loadUserIdToAddresses() async {
+    final prefs = await SharedPreferences.getInstance();
+    final savedData = prefs.getString('userIdToAddresses');
+    
+    if (savedData != null) {
+      final decodedMap = Map<String, dynamic>.from(jsonDecode(savedData));
+      userIdToAddresses = decodedMap.map((userId, encodedAddresses) {
+        final addresses = List<String>.from(jsonDecode(encodedAddresses));
+        return MapEntry(userId, addresses);
+      });
+    }
+    notifyListeners();
+  }
+
+  // Supprimer une adresse spécifique
+  void removeAddressForUserId(String userId, String address) {
+    if (userIdToAddresses.containsKey(userId)) {
+      userIdToAddresses[userId]!.remove(address);
+      if (userIdToAddresses[userId]!.isEmpty) {
+        userIdToAddresses.remove(userId); // Supprimer le userId si plus d'adresses
+      }
+      saveUserIdToAddresses(); // Sauvegarder après suppression
+      notifyListeners();
+    }
+  }
+
+  // Supprimer un userId et toutes ses adresses
+  void removeUserId(String userId) {
+    userIdToAddresses.remove(userId);
+    saveUserIdToAddresses(); // Sauvegarder après suppression
+    notifyListeners();
+  }
+
+  // Méthode pour récupérer les adresses associées à un userId
+  List<String>? getAddressesForUserId(String userId) {
+    return userIdToAddresses[userId];
+  }
+
+  // Méthode pour obtenir tous les userIds
+  List<String> getAllUserIds() {
+    return userIdToAddresses.keys.toList();
+  }
 
   // Dictionnaire des symboles de devises
   final Map<String, String> _currencySymbols = {
@@ -319,6 +391,11 @@ Future<void> fetchAndCalculateData({bool forceFetch = false}) async {
       });
     }
   }
+  // Fetch RMM balances (USDC/XDAI Deposits and Borrows)
+  await fetchRmmBalances();
+
+  // Mise à jour des valeurs du wallet après avoir ajouté les dépôts et soustrait les emprunts
+  walletValueSum = walletValueSum + totalUsdcDepositBalance + totalXdaiDepositBalance - totalUsdcBorrowBalance - totalXdaiBorrowBalance;
 
   // Mise à jour des variables pour le Dashboard
   totalValue = walletValueSum + rmmValueSum + rwaValue;
@@ -557,5 +634,38 @@ Future<void> resetData() async {
   double convert(double valueInUsd) {
     return valueInUsd * conversionRate;
   }
+
+// Nouvelle méthode pour récupérer les balances RMM
+Future<void> fetchRmmBalances() async {
+  try {
+    // Récupérer les balances de l'API
+    List<Map<String, dynamic>> balances = await ApiService.fetchRmmBalances();
+    
+    double usdcDepositSum = 0;
+    double usdcBorrowSum = 0;
+    double xdaiDepositSum = 0;
+    double xdaiBorrowSum = 0;
+
+    for (var balance in balances) {
+      // Conversion des balances de dépôt et d'emprunt en double avec des décimales de 18
+      usdcDepositSum += double.parse(balance['usdcDepositBalance']) / (1e18); // Balance des dépôts USDC
+      usdcBorrowSum += double.parse(balance['usdcBorrowBalance']) / (1e18);   // Balance des emprunts USDC
+      xdaiDepositSum += double.parse(balance['xdaiDepositBalance']) / (1e18); // Balance des dépôts XDAI
+      xdaiBorrowSum += double.parse(balance['xdaiBorrowBalance']) / (1e18);   // Balance des emprunts XDAI
+    }
+
+    // Stocker les balances agrégées dans les variables
+    totalUsdcDepositBalance = usdcDepositSum;
+    totalUsdcBorrowBalance = usdcBorrowSum;
+    totalXdaiDepositBalance = xdaiDepositSum;
+    totalXdaiBorrowBalance = xdaiBorrowSum;
+
+    notifyListeners(); // Notifier l'interface que les données ont été mises à jour
+  } catch (e) {
+    print('Error fetching RMM balances: $e');
+  }
+}
+
+
 }
 

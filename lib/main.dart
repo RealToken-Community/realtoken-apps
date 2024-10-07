@@ -25,7 +25,8 @@ void main() async {
 // Initialisation de SharedPreferences et DataManager
   final dataManager = DataManager();
   await dataManager.loadSelectedCurrency(); // Charger la devise sélectionnée
-  dataManager.fetchAndCalculateData();
+  await dataManager.loadUserIdToAddresses(); // Charger les userIds et adresses
+  await dataManager.fetchAndCalculateData();
 
   runApp(
     MultiProvider(

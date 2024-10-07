@@ -129,6 +129,11 @@
     "statistics": "Estadísticas",
     "noDataAvailable": "No hay datos disponibles, por favor añade un nuevo monedero",
     "manageAddresses": "Añadir monedero",
-    "maps": "Mapas"
+    "maps": "Mapas",
+  "depositBalance": "Saldo de depósitos",
+  "borrowBalance": "Saldo de préstamos",
+  "usdcDepositBalance": "Saldo de depósitos USDC",
+  "usdcBorrowBalance": "Saldo de préstamos USDC",
+  "xdaiDepositBalance": "Saldo de depósitos XDAI",
+  "xdaiBorrowBalance": "Saldo de préstamos XDAI"
   }
-  

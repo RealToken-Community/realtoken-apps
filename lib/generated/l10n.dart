@@ -1340,6 +1340,66 @@ class S {
     );
   }
 
+  /// `Deposit Balance`
+  String get depositBalance {
+    return Intl.message(
+      'Deposit Balance',
+      name: 'depositBalance',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Borrow Balance`
+  String get borrowBalance {
+    return Intl.message(
+      'Borrow Balance',
+      name: 'borrowBalance',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `USDC Deposit Balance`
+  String get usdcDepositBalance {
+    return Intl.message(
+      'USDC Deposit Balance',
+      name: 'usdcDepositBalance',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `USDC Borrow Balance`
+  String get usdcBorrowBalance {
+    return Intl.message(
+      'USDC Borrow Balance',
+      name: 'usdcBorrowBalance',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `XDAI Deposit Balance`
+  String get xdaiDepositBalance {
+    return Intl.message(
+      'XDAI Deposit Balance',
+      name: 'xdaiDepositBalance',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `XDAI Borrow Balance`
+  String get xdaiBorrowBalance {
+    return Intl.message(
+      'XDAI Borrow Balance',
+      name: 'xdaiBorrowBalance',
+      desc: '',
+      args: [],
+    );
+  }
+
   /// `Maps`
   String get maps {
     return Intl.message(
