@@ -3,6 +3,7 @@ import 'package:flutter_map/flutter_map.dart';
 import 'package:flutter_map_marker_cluster/flutter_map_marker_cluster.dart';
 import 'package:latlong2/latlong.dart';
 import 'package:provider/provider.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import '../api/data_manager.dart';
 
 class MapsPage extends StatefulWidget {
@@ -10,19 +11,70 @@ class MapsPage extends StatefulWidget {
 
   @override
   _MapsPageState createState() => _MapsPageState();
+  
 }
 
 class _MapsPageState extends State<MapsPage> {
-  // Create a PopupController to manage the popups
   final PopupController _popupController = PopupController();
+  bool _showAllTokens = false;
+  final String _searchQuery = '';
+  final String _sortOption = 'Name';
+  final bool _isAscending = true;
+  bool _isDarkTheme = false; // Variable pour suivre le thème sélectionné
+
+  @override
+  void initState() {
+    super.initState();
+    _loadThemePreference(); // Charger la préférence du thème à l'initialisation
+     WidgetsBinding.instance.addPostFrameCallback((_) {
+      Provider.of<DataManager>(context, listen: false).fetchAndStoreAllTokens();
+    });
+  }
+
+  // Charger la préférence du thème à partir de SharedPreferences
+  Future<void> _loadThemePreference() async {
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    setState(() {
+      _isDarkTheme = prefs.getBool('isDarkTheme') ?? false;
+    });
+  }
+
+  // Méthode pour filtrer et trier les tokens (même approche que PortfolioPage)
+  List<Map<String, dynamic>> _filterAndSortTokens(
+      List<Map<String, dynamic>> tokens) {
+    List<Map<String, dynamic>> filteredTokens = tokens
+        .where((token) => token['fullName']
+            .toLowerCase()
+            .contains(_searchQuery.toLowerCase()))
+        .toList();
+
+    if (_sortOption == 'Name') {
+      filteredTokens.sort((a, b) => _isAscending
+          ? a['shortName'].compareTo(b['shortName'])
+          : b['shortName'].compareTo(a['shortName']));
+    } else if (_sortOption == 'Value') {
+      filteredTokens.sort((a, b) => _isAscending
+          ? a['totalValue'].compareTo(b['totalValue'])
+          : b['totalValue'].compareTo(a['totalValue']));
+    } else if (_sortOption == 'APY') {
+      filteredTokens.sort((a, b) => _isAscending
+          ? a['annualPercentageYield'].compareTo(b['annualPercentageYield'])
+          : b['annualPercentageYield'].compareTo(a['annualPercentageYield']));
+    }
+
+    return filteredTokens;
+  }
 
   @override
   Widget build(BuildContext context) {
     final dataManager = Provider.of<DataManager>(context);
 
-    // Vérification si le portefeuille contient des données
-    if (dataManager.portfolio.isEmpty) {
-      return const Center(child: Text('No portfolio data available'));
+    final tokensToShow = _showAllTokens
+        ? _filterAndSortTokens(dataManager.allTokens)
+        : _filterAndSortTokens(dataManager.portfolio);
+
+    if (tokensToShow.isEmpty) {
+      return const Center(child: Text('No tokens available'));
     }
 
     final List<Marker> markers = [];
@@ -34,112 +86,288 @@ class _MapsPageState extends State<MapsPage> {
     }) {
       final lat = double.tryParse(matchingToken['lat']);
       final lng = double.tryParse(matchingToken['lng']);
+      final rentedUnits = matchingToken['rentedUnits'] ?? 0;
+      final totalUnits = matchingToken['totalUnits'] ?? 1;
 
       if (lat != null && lng != null) {
         return Marker(
           point: LatLng(lat, lng),
-          width: 80.0,
-          height: 80.0,
-          child: Icon(
-            Icons.location_on,
-            color: color,
-            size: 40.0,
+          child: GestureDetector(
+            onTap: () => _showMarkerPopup(context, matchingToken),
+            child: Icon(
+              Icons.location_on,
+              color: getRentalStatusColor(rentedUnits, totalUnits),
+              size: 40.0,
+            ),
           ),
-          key: ValueKey(matchingToken), // Use key to store data
+          key: ValueKey(matchingToken),
         );
       } else {
         return Marker(
           point: LatLng(0, 0),
-          width: 0,
-          height: 0,
           child: const SizedBox.shrink(),
         );
       }
     }
 
-    // Ajouter les tokens du portefeuille à la carte
-    for (var token in dataManager.portfolio) {
+    for (var token in tokensToShow) {
+      final isWallet = token['source'] == 'Wallet';
+      final isRMM = token['source'] == 'RMM';
+
       if (token['lat'] != null) {
         markers.add(
           createMarker(
             matchingToken: token,
-            color: token['source'] == 'Wallet' ? Colors.green : Colors.blue, // Différencier par la source
+            color: isWallet
+                ? Colors.green
+                : isRMM
+                    ? Colors.blue
+                    : Colors.grey,
           ),
         );
       }
     }
 
     if (markers.isEmpty) {
-      return const Center(child: Text('No tokens with valid coordinates found on the map'));
+      return const Center(
+          child: Text('No tokens with valid coordinates found on the map'));
     }
 
-    return Scaffold(
-      body: FlutterMap(
-        options: MapOptions(
-          initialCenter: LatLng(42.367476, -83.130921),
-          initialZoom: 10.0,
-          onTap: (_, __) => _popupController.hideAllPopups(),
-        ),
-        children: [
-          TileLayer(
-            urlTemplate: 'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
+return Scaffold(
+  backgroundColor: Theme.of(context).scaffoldBackgroundColor,
+  body: Stack(
+    children: [
+      Container(
+        color: Theme.of(context).scaffoldBackgroundColor, // Définit la couleur de fond pour la carte
+        child: FlutterMap(
+          options: MapOptions(
+            initialCenter: LatLng(42.367476, -83.130921),
+            initialZoom: 10.0,
+            onTap: (_, __) => _popupController.hideAllPopups(),
           ),
-          PopupScope(
-            child: MarkerClusterLayerWidget(
+          children: [
+            TileLayer(
+              // Utilisation de tuiles différentes selon le thème sélectionné
+              urlTemplate: _isDarkTheme
+                  ? 'https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png'
+                  : 'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
+              subdomains: ['a', 'b', 'c'],
+              userAgentPackageName: 'com.byackee.app',
+              retinaMode: true,
+            ),
+            MarkerClusterLayerWidget(
               options: MarkerClusterLayerOptions(
                 maxClusterRadius: 70,
                 disableClusteringAtZoom: 15,
                 size: const Size(40, 40),
                 markers: markers,
-                builder: (context, markers) {
-                  return CircleAvatar(
-                    backgroundColor: Colors.blue,
-                    child: Text(markers.length.toString()),
+                builder: (context, clusterMarkers) {
+                  Color clusterColor = _getClusterColor(clusterMarkers);
+                  return Container(
+                    width: 50,
+                    height: 50,
+                    decoration: BoxDecoration(
+                      shape: BoxShape.circle,
+                      gradient: RadialGradient(
+                        colors: [
+                          clusterColor.withOpacity(0.9),
+                          clusterColor.withOpacity(0.2),
+                        ],
+                        stops: [0.4, 1.0],
+                      ),
+                    ),
+                    child: Center(
+                      child: Text(
+                        clusterMarkers.length.toString(),
+                        style: const TextStyle(
+                          color: Colors.white,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    ),
                   );
                 },
-                popupOptions: PopupOptions(
-                  popupController: _popupController,
-                  popupBuilder: (BuildContext context, Marker marker) {
-                    final matchingToken = marker.key is ValueKey
-                        ? (marker.key as ValueKey).value
-                        : null;
-
-                    if (matchingToken != null) {
-                      return Card(
-                        child: Container(
-                          width: 200,
-                          constraints: const BoxConstraints(maxHeight: 200),
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Image.network(
-                                matchingToken['imageLink'][0],
-                                width: 200,
-                                height: 100,
-                                fit: BoxFit.cover,
-                              ),
-                              Padding(
-                                padding: const EdgeInsets.all(8.0),
-                                child: Text(
-                                  matchingToken['shortName'],
-                                  style: const TextStyle(
-                                      fontSize: 16, fontWeight: FontWeight.bold),
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                      );
-                    } else {
-                      return const Text('No data available for this marker');
-                    }
-                  },
-                ),
               ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
+      // Switch en haut à gauche pour basculer entre les tokens du portefeuille et tous les tokens
+      Positioned(
+        top: 90, // Positionner juste en dessous de l'AppBar
+        left: 16,
+        child: Row(
+          children: [
+            Text(_showAllTokens ? 'All Tokens' : 'Portfolio'),
+            Switch(
+              value: _showAllTokens,
+              onChanged: (value) {
+                setState(() {
+                  _showAllTokens = value;
+                });
+              },
+            ),
+          ],
+        ),
+      ),
+      // Légende en bas à gauche
+      Positioned(
+        bottom: 90, // Remonter la légende pour la placer au-dessus de la BottomBar
+        left: 16,
+        child: Container(
+          padding: const EdgeInsets.all(8),
+          decoration: BoxDecoration(
+            color: Colors.white.withOpacity(0.9),
+            borderRadius: BorderRadius.circular(8),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black26,
+                blurRadius: 6,
+                offset: Offset(0, 2),
+              ),
+            ],
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                children: const [
+                  Icon(Icons.location_on, color: Colors.green),
+                  SizedBox(width: 4),
+                  Text("Fully Rented", style: TextStyle(color: Colors.black)),
+                ],
+              ),
+              Row(
+                children: const [
+                  Icon(Icons.location_on, color: Colors.orange),
+                  SizedBox(width: 4),
+                  Text("Partially Rented", style: TextStyle(color: Colors.black)),
+                ],
+              ),
+              Row(
+                children: const [
+                  Icon(Icons.location_on, color: Colors.red),
+                  SizedBox(width: 4),
+                  Text("Not Rented", style: TextStyle(color: Colors.black)),
+                ],
+              ),
+            ],
+          ),
+        ),
+      ),
+    ],
+  ),
+);
+
+  }
+
+  // Fonction pour déterminer la couleur du cluster en fonction des marqueurs qu'il contient
+  Color _getClusterColor(List<Marker> markers) {
+    int fullyRented = 0;
+    int partiallyRented = 0;
+    int notRented = 0;
+
+    for (var marker in markers) {
+      if (marker.key is ValueKey) {
+        final token = (marker.key as ValueKey).value as Map<String, dynamic>;
+
+        final rentedUnits = token['rentedUnits'] ?? 0;
+        final totalUnits = token['totalUnits'] ?? 1;
+
+        if (rentedUnits == 0) {
+          notRented++;
+        } else if (rentedUnits == totalUnits) {
+          fullyRented++;
+        } else {
+          partiallyRented++;
+        }
+      }
+    }
+
+    if (fullyRented == markers.length) {
+      return Colors.green;
+    } else if (notRented == markers.length) {
+      return Colors.red;
+    } else {
+      return Colors.orange;
+    }
+  }
+
+  void _showMarkerPopup(BuildContext context, dynamic matchingToken) {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        final rentedUnits = matchingToken['rentedUnits'] ?? 0;
+        final totalUnits = matchingToken['totalUnits'] ?? 1;
+
+        return AlertDialog(
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.center,
+            children: [
+              if (matchingToken['imageLink'] != null)
+                Image.network(
+                  matchingToken['imageLink'][0],
+                  width: 200,
+                  fit: BoxFit.cover,
+                ),
+              Padding(
+                padding: const EdgeInsets.all(8.0),
+                child: Text(
+                  matchingToken['shortName'],
+                  style: const TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.bold,
+                  ),
+                  textAlign: TextAlign.center,
+                ),
+              ),
+              const SizedBox(height: 8.0),
+              Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const Text(
+                    'Token Price: ',
+                    style: TextStyle(fontWeight: FontWeight.bold),
+                  ),
+                  Text('${matchingToken['tokenPrice'] ?? 'N/A'}'),
+                ],
+              ),
+              Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const Text(
+                    'Token Yield: ',
+                    style: TextStyle(fontWeight: FontWeight.bold),
+                  ),
+                  Text(
+                      '${matchingToken['annualPercentageYield'] != null ? matchingToken['annualPercentageYield'].toStringAsFixed(2) : 'N/A'}'),
+                ],
+              ),
+              Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const Text(
+                    'Units Rented: ',
+                    style: TextStyle(fontWeight: FontWeight.bold),
+                  ),
+                  Text('$rentedUnits / $totalUnits'),
+                ],
+              ),
+            ],
+          ),
+        );
+      },
     );
+  }
+
+  Color getRentalStatusColor(int rentedUnits, int totalUnits) {
+    if (rentedUnits == 0) {
+      return Colors.red;
+    } else if (rentedUnits == totalUnits) {
+      return Colors.green;
+    } else {
+      return Colors.orange;
+    }
   }
 }

@@ -1,20 +1,22 @@
+import 'package:RealToken/structure/home_page.dart';
 import 'package:flutter/material.dart';
 import 'package:hive_flutter/hive_flutter.dart';
 import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'api/data_manager.dart';
 import 'settings/theme.dart';
-import 'splash_screen.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'generated/l10n.dart'; // Import du fichier généré pour les traductions
 import 'package:firebase_core/firebase_core.dart';
 import 'firebase_options.dart';
+import 'package:flutter_native_splash/flutter_native_splash.dart'; // Import du package pour le splashscreen
 
 void main() async {
-  WidgetsFlutterBinding.ensureInitialized(); // Nécessaire pour l'utilisation d'async dans main()
+  WidgetsBinding widgetsBinding = WidgetsFlutterBinding.ensureInitialized();
+  FlutterNativeSplash.preserve(widgetsBinding: widgetsBinding); // Préserver le splash screen natif
 
   await Firebase.initializeApp(
-      options: DefaultFirebaseOptions.currentPlatform,
+    options: DefaultFirebaseOptions.currentPlatform,
   );
 
   await Hive.initFlutter();
@@ -22,11 +24,13 @@ void main() async {
   await Hive.openBox('realTokens');
   await Hive.openBox('rentData');
 
-// Initialisation de SharedPreferences et DataManager
+  // Initialisation de SharedPreferences et DataManager
   final dataManager = DataManager();
   await dataManager.loadSelectedCurrency(); // Charger la devise sélectionnée
   await dataManager.loadUserIdToAddresses(); // Charger les userIds et adresses
   await dataManager.fetchAndCalculateData();
+
+  FlutterNativeSplash.remove(); // Supprimer le splash screen natif après l'initialisation
 
   runApp(
     MultiProvider(
@@ -94,7 +98,7 @@ class _MyAppState extends State<MyApp> {
           theme: lightTheme,
           darkTheme: darkTheme,
           themeMode: isDarkTheme ? ThemeMode.dark : ThemeMode.light,
-          home: SplashScreen(
+          home: MyHomePage(
             onThemeChanged: (value) {
               _isDarkTheme.value = value;
             },

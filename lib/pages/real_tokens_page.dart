@@ -43,7 +43,7 @@ class _RealTokensPageState extends State<RealTokensPage> {
           if (dataManager.allTokens.isEmpty) {
             return const Center(child: CircularProgressIndicator());
           }
-          
+
           return ListView.builder(
             padding: const EdgeInsets.only(top: 20),
             itemCount: dataManager.allTokens.length,
@@ -55,7 +55,8 @@ class _RealTokensPageState extends State<RealTokensPage> {
                 child: Column(
                   children: [
                     GestureDetector(
-                      onTap: () => showTokenDetails(context, token), // Appel à la méthode pour afficher les détails
+                      onTap: () => showTokenDetails(context,
+                          token), // Appel à la méthode pour afficher les détails
                       child: IntrinsicHeight(
                         child: Row(
                           crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -69,8 +70,10 @@ class _RealTokensPageState extends State<RealTokensPage> {
                                 imageUrl: token['imageLink'][0] ?? '',
                                 width: 150,
                                 fit: BoxFit.cover,
-                                placeholder: (context, url) => const CircularProgressIndicator(),
-                                errorWidget: (context, url, error) => const Icon(Icons.error),
+                                placeholder: (context, url) =>
+                                    const CircularProgressIndicator(),
+                                errorWidget: (context, url, error) =>
+                                    const Icon(Icons.error),
                               ),
                             ),
                             Expanded(
@@ -87,13 +90,16 @@ class _RealTokensPageState extends State<RealTokensPage> {
                                 child: Padding(
                                   padding: const EdgeInsets.all(8.0),
                                   child: Column(
-                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
                                     children: [
                                       Row(
-                                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                        mainAxisAlignment:
+                                            MainAxisAlignment.spaceBetween,
                                         children: [
                                           Text(
-                                            token['shortName'] ?? 'Nom indisponible',
+                                            token['shortName'] ??
+                                                'Nom indisponible',
                                             style: const TextStyle(
                                               fontWeight: FontWeight.bold,
                                               fontSize: 15,

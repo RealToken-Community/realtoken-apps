@@ -1,12 +1,12 @@
 import 'package:flutter/material.dart';
-import 'package:url_launcher/url_launcher.dart';  // Importer url_launcher pour ouvrir des liens externes
-import '../settings/settings_page.dart';  // Importer la page des paramètres
-import '../pages/real_tokens_page.dart';  // Importer la page des RealTokens
-import '../about.dart';  // Importer la page About
-import '../updates_page.dart';  // Importer la page des mises à jour
+import 'package:url_launcher/url_launcher.dart'; // Importer url_launcher pour ouvrir des liens externes
+import '../settings/settings_page.dart'; // Importer la page des paramètres
+import '../pages/real_tokens_page.dart'; // Importer la page des RealTokens
+import '../about.dart'; // Importer la page About
+import '../updates_page.dart'; // Importer la page des mises à jour
 import 'dart:io'; // Pour détecter la plateforme
-import '../generated/l10n.dart';  // Importer les traductions
-import '../settings/manage_evm_addresses_page.dart';  // Ajouter cet import si ce n'est pas déjà le cas
+import '../generated/l10n.dart'; // Importer les traductions
+import '../settings/manage_evm_addresses_page.dart'; // Ajouter cet import si ce n'est pas déjà le cas
 
 class CustomDrawer extends StatelessWidget {
   final Function(bool) onThemeChanged;
@@ -39,14 +39,20 @@ class CustomDrawer extends StatelessWidget {
                       'RealToken',
                       style: TextStyle(
                         color: Colors.white,
-                        fontSize: Platform.isAndroid ? 23 : 24, // Réduction pour Android
+                        fontSize: Platform.isAndroid
+                            ? 23
+                            : 24, // Réduction pour Android
                       ),
                     ),
                     Text(
-                      S.of(context).appDescription, // Utilisation de la traduction
+                      S
+                          .of(context)
+                          .appDescription, // Utilisation de la traduction
                       style: TextStyle(
                         color: Colors.white70,
-                        fontSize: Platform.isAndroid ? 15 : 16, // Réduction pour Android
+                        fontSize: Platform.isAndroid
+                            ? 15
+                            : 16, // Réduction pour Android
                       ),
                     ),
                   ],
@@ -54,11 +60,13 @@ class CustomDrawer extends StatelessWidget {
               ],
             ),
           ),
-           ListTile(
+          ListTile(
             leading: const Icon(Icons.wallet),
             title: Text(
-              S.of(context).manageEvmAddresses,  // Utilisation de la traduction
-              style: TextStyle(fontSize: Platform.isAndroid ? 15 : 16),  // Réduction pour Android
+              S.of(context).manageEvmAddresses, // Utilisation de la traduction
+              style: TextStyle(
+                  fontSize:
+                      Platform.isAndroid ? 15 : 16), // Réduction pour Android
             ),
             onTap: () {
               Navigator.pop(context);
@@ -75,7 +83,9 @@ class CustomDrawer extends StatelessWidget {
             leading: const Icon(Icons.list),
             title: Text(
               S.of(context).realTokensList, // Utilisation de la traduction
-              style: TextStyle(fontSize: Platform.isAndroid ? 15 : 16), // Réduction pour Android
+              style: TextStyle(
+                  fontSize:
+                      Platform.isAndroid ? 15 : 16), // Réduction pour Android
             ),
             onTap: () {
               Navigator.pop(context);
@@ -91,7 +101,9 @@ class CustomDrawer extends StatelessWidget {
             leading: const Icon(Icons.update),
             title: Text(
               S.of(context).recentChanges, // Utilisation de la traduction
-              style: TextStyle(fontSize: Platform.isAndroid ? 15 : 16), // Réduction pour Android
+              style: TextStyle(
+                  fontSize:
+                      Platform.isAndroid ? 15 : 16), // Réduction pour Android
             ),
             onTap: () {
               Navigator.pop(context);
@@ -103,21 +115,31 @@ class CustomDrawer extends StatelessWidget {
               );
             },
           ),
-         
+          // Nouveau ListTile pour Wiki
+          ListTile(
+            leading: const Icon(Icons.book),
+            title: const Text('Wiki'),
+            onTap: () {
+              _launchURL('https://community-realt.gitbook.io/tuto-community');
+            },
+          ),
           const Spacer(),
           const Divider(),
           ListTile(
             leading: const Icon(Icons.settings),
             title: Text(
               S.of(context).settings, // Utilisation de la traduction
-              style: TextStyle(fontSize: Platform.isAndroid ? 15 : 16), // Réduction pour Android
+              style: TextStyle(
+                  fontSize:
+                      Platform.isAndroid ? 15 : 16), // Réduction pour Android
             ),
             onTap: () {
               Navigator.pop(context);
               Navigator.push(
                 context,
                 MaterialPageRoute(
-                  builder: (context) => SettingsPage(onThemeChanged: onThemeChanged),
+                  builder: (context) =>
+                      SettingsPage(onThemeChanged: onThemeChanged),
                 ),
               );
             },
@@ -126,7 +148,9 @@ class CustomDrawer extends StatelessWidget {
             leading: const Icon(Icons.info),
             title: Text(
               S.of(context).about, // Utilisation de la traduction
-              style: TextStyle(fontSize: Platform.isAndroid ? 15 : 16), // Réduction pour Android
+              style: TextStyle(
+                  fontSize:
+                      Platform.isAndroid ? 15 : 16), // Réduction pour Android
             ),
             onTap: () {
               Navigator.pop(context);
@@ -142,7 +166,9 @@ class CustomDrawer extends StatelessWidget {
             leading: const Icon(Icons.feedback),
             title: Text(
               S.of(context).feedback, // Utilisation de la traduction
-              style: TextStyle(fontSize: Platform.isAndroid ? 15 : 16), // Réduction pour Android
+              style: TextStyle(
+                  fontSize:
+                      Platform.isAndroid ? 15 : 16), // Réduction pour Android
             ),
             onTap: () {
               _launchFeedbackURL();
@@ -154,10 +180,19 @@ class CustomDrawer extends StatelessWidget {
     );
   }
 
+  // Méthode pour ouvrir l'URL du Wiki
+  void _launchURL(String url) async {
+    if (await canLaunch(url)) {
+      await launch(url);
+    } else {
+      throw 'Impossible d\'ouvrir le lien $url';
+    }
+  }
+
   void _launchFeedbackURL() async {
     const url = 'https://github.com/RealToken-Community/realtoken-apps/issues';
-    if (await canLaunchUrl(url as Uri)) {
-      await launchUrl(url as Uri);
+    if (await canLaunch(url)) {
+      await launch(url);
     } else {
       throw 'Impossible d\'ouvrir le lien $url';
     }

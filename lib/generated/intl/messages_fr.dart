@@ -43,8 +43,7 @@ class MessageLookup extends MessageLookupByLibrary {
         "ascending": MessageLookupByLibrary.simpleMessage("Ascendant"),
         "author": MessageLookupByLibrary.simpleMessage("Auteur"),
         "blockchain": MessageLookupByLibrary.simpleMessage("Blockchain"),
-        "borrowBalance":
-            MessageLookupByLibrary.simpleMessage("Solde des emprunts"),
+        "borrowBalance": MessageLookupByLibrary.simpleMessage("Emprunts"),
         "characteristics":
             MessageLookupByLibrary.simpleMessage("Caractéristiques"),
         "clearCacheData": MessageLookupByLibrary.simpleMessage(
@@ -59,26 +58,33 @@ class MessageLookup extends MessageLookupByLibrary {
         "crypto": MessageLookupByLibrary.simpleMessage("Crypto"),
         "cryptoDonationAddress":
             MessageLookupByLibrary.simpleMessage("Adresse de don en crypto"),
+        "cumulativeRentGraph":
+            MessageLookupByLibrary.simpleMessage("Cumul des loyers"),
         "currency": MessageLookupByLibrary.simpleMessage("Monnaie"),
         "daily": MessageLookupByLibrary.simpleMessage("Quotidien"),
         "dark": MessageLookupByLibrary.simpleMessage("Sombre"),
         "darkTheme": MessageLookupByLibrary.simpleMessage("Thème sombre"),
         "dashboard": MessageLookupByLibrary.simpleMessage("Tableau de bord"),
         "day": MessageLookupByLibrary.simpleMessage("Jour"),
-        "depositBalance":
-            MessageLookupByLibrary.simpleMessage("Solde des dépôts"),
+        "depositBalance": MessageLookupByLibrary.simpleMessage("Dépôts"),
         "descending": MessageLookupByLibrary.simpleMessage("Descendant"),
         "donate": MessageLookupByLibrary.simpleMessage("Faire un don"),
         "donationMessage": MessageLookupByLibrary.simpleMessage(
             "Si vous aimez cette application et souhaitez soutenir son développement, vous pouvez faire un don."),
         "duplex": MessageLookupByLibrary.simpleMessage("Duplex"),
         "english": MessageLookupByLibrary.simpleMessage("Anglais"),
+        "ethereumContract":
+            MessageLookupByLibrary.simpleMessage("Contract ethereum"),
         "feedback":
             MessageLookupByLibrary.simpleMessage("Retour d\'expérience"),
         "finances": MessageLookupByLibrary.simpleMessage("Finances"),
         "french": MessageLookupByLibrary.simpleMessage("Français"),
+        "gnosisContract":
+            MessageLookupByLibrary.simpleMessage("Contract gnosis"),
         "grossRentMonth":
             MessageLookupByLibrary.simpleMessage("Loyer brut par mois"),
+        "groupedRentGraph":
+            MessageLookupByLibrary.simpleMessage("Loyers groupés"),
         "hello": MessageLookupByLibrary.simpleMessage("Bonjour"),
         "initialLaunchDate":
             MessageLookupByLibrary.simpleMessage("Date de lancement initial"),
@@ -194,6 +200,8 @@ class MessageLookup extends MessageLookupByLibrary {
             MessageLookupByLibrary.simpleMessage("Investissement total"),
         "totalPortfolio":
             MessageLookupByLibrary.simpleMessage("Portefeuille total"),
+        "totalRentReceived":
+            MessageLookupByLibrary.simpleMessage("total des revenus"),
         "totalTokens": MessageLookupByLibrary.simpleMessage("Jetons totaux"),
         "totalUnits":
             MessageLookupByLibrary.simpleMessage("Nombre total d\'unités"),
@@ -207,6 +215,7 @@ class MessageLookup extends MessageLookupByLibrary {
         "usdcDepositBalance":
             MessageLookupByLibrary.simpleMessage("Solde des dépôts USDC"),
         "version": MessageLookupByLibrary.simpleMessage("Version"),
+        "viewOnMap": MessageLookupByLibrary.simpleMessage("voir sur la carte"),
         "viewOnRealT": MessageLookupByLibrary.simpleMessage("Voir sur RealT"),
         "wallet": MessageLookupByLibrary.simpleMessage("Portefeuille"),
         "week": MessageLookupByLibrary.simpleMessage("Semaine"),

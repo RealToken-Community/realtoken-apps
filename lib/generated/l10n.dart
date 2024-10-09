@@ -1340,20 +1340,20 @@ class S {
     );
   }
 
-  /// `Deposit Balance`
+  /// `Deposits`
   String get depositBalance {
     return Intl.message(
-      'Deposit Balance',
+      'Deposits',
       name: 'depositBalance',
       desc: '',
       args: [],
     );
   }
 
-  /// `Borrow Balance`
+  /// `Borrows`
   String get borrowBalance {
     return Intl.message(
-      'Borrow Balance',
+      'Borrows',
       name: 'borrowBalance',
       desc: '',
       args: [],
@@ -1400,12 +1400,72 @@ class S {
     );
   }
 
+  /// `Ethereum contract`
+  String get ethereumContract {
+    return Intl.message(
+      'Ethereum contract',
+      name: 'ethereumContract',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Gnosis contract`
+  String get gnosisContract {
+    return Intl.message(
+      'Gnosis contract',
+      name: 'gnosisContract',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `view on map`
+  String get viewOnMap {
+    return Intl.message(
+      'view on map',
+      name: 'viewOnMap',
+      desc: '',
+      args: [],
+    );
+  }
+
   /// `Maps`
   String get maps {
     return Intl.message(
       'Maps',
       name: 'maps',
       desc: 'Label for the Maps tab',
+      args: [],
+    );
+  }
+
+  /// `total of revenus`
+  String get totalRentReceived {
+    return Intl.message(
+      'total of revenus',
+      name: 'totalRentReceived',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Loyers groupés`
+  String get groupedRentGraph {
+    return Intl.message(
+      'Loyers groupés',
+      name: 'groupedRentGraph',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Cumul des loyers`
+  String get cumulativeRentGraph {
+    return Intl.message(
+      'Cumul des loyers',
+      name: 'cumulativeRentGraph',
+      desc: '',
       args: [],
     );
   }

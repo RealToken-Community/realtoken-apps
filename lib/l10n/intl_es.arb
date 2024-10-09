@@ -130,10 +130,16 @@
     "noDataAvailable": "No hay datos disponibles, por favor añade un nuevo monedero",
     "manageAddresses": "Añadir monedero",
     "maps": "Mapas",
-  "depositBalance": "Saldo de depósitos",
-  "borrowBalance": "Saldo de préstamos",
+  "depositBalance": "Depósitos",
+  "borrowBalance": "`Préstamos",
   "usdcDepositBalance": "Saldo de depósitos USDC",
   "usdcBorrowBalance": "Saldo de préstamos USDC",
   "xdaiDepositBalance": "Saldo de depósitos XDAI",
-  "xdaiBorrowBalance": "Saldo de préstamos XDAI"
+  "xdaiBorrowBalance": "Saldo de préstamos XDAI",
+   "ethereumContract": "Contrato de Ethereum",
+  "gnosisContract": "Contrato de Gnosis",
+  "viewOnMap":"voir sur la carte",
+  "totalRentReceived":"total of revenus",
+    "groupedRentGraph": "Loyers groupés",
+  "cumulativeRentGraph": "Cumul des loyers"
   }

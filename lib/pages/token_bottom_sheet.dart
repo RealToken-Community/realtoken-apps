@@ -1,28 +1,115 @@
 import 'package:flutter/material.dart';
 import 'package:cached_network_image/cached_network_image.dart';
-import '../utils/utils.dart'; // Importer le fichier utils
+import 'package:shared_preferences/shared_preferences.dart';
+// Importer le fichier utils
 import 'package:intl/intl.dart';
 import 'package:url_launcher/url_launcher.dart';
+import 'package:flutter_map/flutter_map.dart';
+import 'package:latlong2/latlong.dart'; // Import pour les coordonnées géographiques
 import 'package:fl_chart/fl_chart.dart';
-import 'dart:io';  // Import pour vérifier la plateforme
+import 'dart:io'; // Import pour vérifier la plateforme
 import 'package:provider/provider.dart'; // Pour accéder à DataManager
 import '../api/data_manager.dart'; // Import de DataManager
 import '../generated/l10n.dart'; // Import pour les traductions
 import 'package:carousel_slider/carousel_slider.dart';
+import 'portfolio/FullScreenCarousel.dart';
 
 // Fonction modifiée pour formater la monnaie avec le taux de conversion et le symbole
 String formatCurrency(BuildContext context, double value) {
-  final dataManager = Provider.of<DataManager>(context, listen: false); // Récupérer DataManager
+  final dataManager =
+      Provider.of<DataManager>(context, listen: false); // Récupérer DataManager
   final NumberFormat formatter = NumberFormat.currency(
     locale: 'fr_FR', // Vous pouvez adapter la locale selon vos besoins
     symbol: dataManager.currencySymbol, // Utilise le symbole de la devise
     decimalDigits: 2,
   );
-  return formatter.format(dataManager.convert(value)); // Conversion selon la devise sélectionnée
+  return formatter.format(
+      dataManager.convert(value)); // Conversion selon la devise sélectionnée
 }
 
+void _openMapModal(BuildContext context, dynamic lat, dynamic lng) {
+  // Convertir les valeurs lat et lng en double
+  final double? latitude = double.tryParse(lat.toString());
+  final double? longitude = double.tryParse(lng.toString());
+
+  if (latitude == null || longitude == null) {
+    // Afficher un message d'erreur si les coordonnées ne sont pas valides
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text('Invalid coordinates for the property')),
+    );
+    return;
+  }
+
+
+  showModalBottomSheet(
+    context: context,
+    isScrollControlled: true,
+    builder: (BuildContext context) {
+      return FractionallySizedBox(
+        heightFactor: 0.7, // Ajuste la hauteur de la modale
+        child: Scaffold(
+          appBar: AppBar(
+            title: Text(S.of(context).viewOnMap), // Titre de la carte
+            automaticallyImplyLeading: false,
+            actions: [
+              IconButton(
+                icon: const Icon(Icons.close),
+                onPressed: () {
+                  Navigator.pop(context);
+                },
+              ),
+            ],
+          ),
+          body: FlutterMap(
+            options: MapOptions(
+              initialCenter:
+                  LatLng(latitude, longitude), // Utilise les valeurs converties
+              initialZoom: 10.0,
+            ),
+            children: [
+              TileLayer(
+                urlTemplate:
+                    'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',
+                subdomains: ['a', 'b', 'c'],
+              ),
+              MarkerLayer(
+                markers: [
+                  Marker(
+                    point:
+                        LatLng(latitude, longitude), // Coordonnées du marqueur
+                    width: 50, // Largeur du marqueur
+                    height: 50, // Hauteur du marqueur
+                    child: const Icon(
+                      Icons.location_on,
+                      color: Colors.red,
+                      size: 40, // Taille de l'icône de localisation
+                    ),
+                  ),
+                ],
+              ),
+            ],
+          ),
+        ),
+      );
+    },
+  );
+}
+
+  // Fonction pour convertir les sqft en m²
+String _formatSquareFeet(double sqft, bool convertToSquareMeters) {
+  if (convertToSquareMeters) {
+    double squareMeters = sqft * 0.092903; // Conversion des pieds carrés en m²
+    return '${squareMeters.toStringAsFixed(2)} m²';
+  } else {
+    return '${sqft.toStringAsFixed(2)} sqft';
+  }
+}
+  
 // Fonction réutilisable pour afficher la BottomModalSheet avec les détails du token
-void showTokenDetails(BuildContext context, Map<String, dynamic> token) {
+Future<void> showTokenDetails(BuildContext context, Map<String, dynamic> token) async {
+  final prefs = await SharedPreferences.getInstance();
+  bool convertToSquareMeters = prefs.getBool('convertToSquareMeters') ?? false;
+
   showModalBottomSheet(
     backgroundColor: Theme.of(context).cardColor,
     context: context,
@@ -37,160 +124,234 @@ void showTokenDetails(BuildContext context, Map<String, dynamic> token) {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 // Image du token
-               // Carrousel d'images du token
                 token['imageLink'] != null && token['imageLink'].isNotEmpty
-                    ? CarouselSlider(
-                        options: CarouselOptions(
-                        height: MediaQuery.of(context).size.height * 0.22, // 30% de la hauteur de l'écran
-                          enableInfiniteScroll: true, // Carrousel infini
-                          enlargeCenterPage: true, // Agrandir l'image au centre
-                        ),
-                        items: token['imageLink'].map<Widget>((imageUrl) {
-                          return CachedNetworkImage(
-                            imageUrl: imageUrl, // Utiliser l'URL de l'image
-                            width: double.infinity,
-                            fit: BoxFit.cover,
+                    ? GestureDetector(
+                        onTap: () {
+                          // Vérifier si c'est une chaîne ou une liste
+                          final List<String> imageLinks = token['imageLink']
+                                  is String
+                              ? [
+                                  token['imageLink']
+                                ] // Convertir en liste si c'est une chaîne
+                              : List<String>.from(token[
+                                  'imageLink']); // Garder la liste si c'est déjà une liste
+
+                          Navigator.of(context).push(
+                            MaterialPageRoute(
+                              builder: (_) => FullScreenCarousel(
+                                imageLinks: imageLinks,
+                              ),
+                            ),
                           );
-                        }).toList(),
+                        },
+                        child: CarouselSlider(
+                          options: CarouselOptions(
+                            height: MediaQuery.of(context).size.height * 0.22,
+                            enableInfiniteScroll: true,
+                            enlargeCenterPage: true,
+                          ),
+                          items: (token['imageLink'] is String
+                                  ? [
+                                      token['imageLink']
+                                    ] // Convertir en liste si c'est une chaîne
+                                  : List<String>.from(token[
+                                      'imageLink'])) // Utiliser la liste directement
+                              .map<Widget>((imageUrl) {
+                            return CachedNetworkImage(
+                              imageUrl: imageUrl,
+                              width: double.infinity,
+                              fit: BoxFit.cover,
+                            );
+                          }).toList(),
+                        ),
                       )
                     : Container(
                         height: 200,
-                        color: Colors.grey, // Si aucune image, afficher une couleur grise
-                        child: Center(
-                          child: Text("No image available"), // Texte si aucune image
+                        color: Colors.grey,
+                        child: const Center(
+                          child: Text("No image available"),
                         ),
                       ),
                 const SizedBox(height: 10),
-                
+
                 // Titre du token
                 Center(
                   child: Text(
                     token['fullName'],
                     style: TextStyle(
                       fontWeight: FontWeight.bold,
-                      fontSize: Platform.isAndroid ? 14 : 15,  // Réduction de la taille du texte pour Android
+                      fontSize: Platform.isAndroid ? 14 : 15,
                     ),
                   ),
                 ),
-
-                const SizedBox(height: 5), // Réduit l'espacement
+                const SizedBox(height: 5),
 
                 // TabBar pour les différents onglets
                 TabBar(
                   labelColor: Theme.of(context).primaryColor,
                   unselectedLabelColor: Colors.grey,
                   tabs: [
-                    Tab(text: S.of(context).properties), // Utilisation de la traduction
-                    Tab(text: S.of(context).finances), // Utilisation de la traduction
-                    Tab(text: S.of(context).others), // Utilisation de la traduction
-                    Tab(text: S.of(context).insights), // Utilisation de la traduction
+                    Tab(text: S.of(context).properties),
+                    Tab(text: S.of(context).finances),
+                    Tab(text: S.of(context).others),
+                    Tab(text: S.of(context).insights),
                   ],
                 ),
-                
+
                 const SizedBox(height: 10),
-                
+
                 // TabBarView pour le contenu de chaque onglet
                 SizedBox(
-                  height: MediaQuery.of(context).size.height * 0.35, // 40% de la hauteur de l'écran
+                  height: MediaQuery.of(context).size.height * 0.35,
                   child: TabBarView(
                     children: [
-                      // Onglet Propriétés avec deux sections (Propriétés et Offering)
+                      // Onglet Propriétés
                       SingleChildScrollView(
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             Text(
-                              S.of(context).characteristics, // Utilisation de la traduction
+                              S.of(context).characteristics,
                               style: TextStyle(
                                 fontWeight: FontWeight.bold,
-                                fontSize: Platform.isAndroid ? 14 : 15,  // Réduction de la taille du texte pour Android
+                                fontSize: Platform.isAndroid ? 14 : 15,
                               ),
                             ),
                             const SizedBox(height: 10),
-                            _buildDetailRow(S.of(context).constructionYear, token['constructionYear']?.toString() ?? S.of(context).notSpecified),
-                            _buildDetailRow(S.of(context).propertyStories, token['propertyStories']?.toString() ?? S.of(context).notSpecified),
-                            _buildDetailRow(S.of(context).totalUnits, token['totalUnits']?.toString() ?? S.of(context).notSpecified),
-                            _buildDetailRow(S.of(context).lotSize, '${token['lotSize']?.toStringAsFixed(2) ?? S.of(context).notSpecified} sqft'),
-                            _buildDetailRow(S.of(context).squareFeet, '${token['squareFeet']?.toStringAsFixed(2) ?? S.of(context).notSpecified} sqft'),
-                            const SizedBox(height: 20),
-                            Text(
-                              S.of(context).offering, // Utilisation de la traduction
-                              style: TextStyle(
-                                fontWeight: FontWeight.bold,
-                                fontSize: Platform.isAndroid ? 14 : 15,  // Réduction de la taille du texte pour Android
-                              ),
+                            _buildDetailRow(
+                                S.of(context).constructionYear,
+                                token['constructionYear']?.toString() ??
+                                    S.of(context).notSpecified),
+                            _buildDetailRow(
+                                S.of(context).propertyStories,
+                                token['propertyStories']?.toString() ??
+                                    S.of(context).notSpecified),
+                            _buildDetailRow(
+                                S.of(context).totalUnits,
+                                token['totalUnits']?.toString() ??
+                                    S.of(context).notSpecified),
+                             _buildDetailRow(
+                              S.of(context).squareFeet,
+                              _formatSquareFeet(token['lotSize']?.toDouble() ?? 0, convertToSquareMeters,),
+                            ),
+                            _buildDetailRow(
+                              S.of(context).squareFeet,
+                              _formatSquareFeet(token['squareFeet']?.toDouble() ?? 0, convertToSquareMeters,),
                             ),
                             const SizedBox(height: 10),
-                            _buildDetailRow(S.of(context).initialLaunchDate, token['initialLaunchDate'] != null ? Utils.formatReadableDate(token['initialLaunchDate']) : S.of(context).notSpecified),
-                            _buildDetailRow(S.of(context).rentalType, token['rentalType'] ?? S.of(context).notSpecified),
-                            _buildDetailRow(S.of(context).rentStartDate, token['rentStartDate'] != null ? Utils.formatReadableDate(token['rentStartDate']) : S.of(context).notSpecified),
-                            _buildDetailRow(S.of(context).rentedUnits, '${token['rentedUnits'] ?? S.of(context).notSpecified} / ${token['totalUnits'] ?? S.of(context).notSpecified}'),
                           ],
                         ),
                       ),
-                      
+
                       // Onglet Finances
                       SingleChildScrollView(
                         child: Column(
                           children: [
-                            _buildDetailRow(S.of(context).totalInvestment, formatCurrency(context, token['totalInvestment'] ?? 0)),
-                            _buildDetailRow(S.of(context).underlyingAssetPrice, formatCurrency(context, token['underlyingAssetPrice'] ?? 0)),
-                            _buildDetailRow(S.of(context).initialMaintenanceReserve, formatCurrency(context, token['initialMaintenanceReserve'] ?? 0)),
-                            _buildDetailRow(S.of(context).grossRentMonth, formatCurrency(context, token['grossRentMonth'] ?? 0)),
-                            _buildDetailRow(S.of(context).netRentMonth, formatCurrency(context, token['netRentMonth'] ?? 0)),
-                            _buildDetailRow(S.of(context).annualPercentageYield, '${token['annualPercentageYield']?.toStringAsFixed(2) ?? S.of(context).notSpecified}%'),
+                            _buildDetailRow(
+                                S.of(context).totalInvestment,
+                                formatCurrency(
+                                    context, token['totalInvestment'] ?? 0)),
+                            _buildDetailRow(
+                                S.of(context).underlyingAssetPrice,
+                                formatCurrency(context,
+                                    token['underlyingAssetPrice'] ?? 0)),
+                            _buildDetailRow(
+                                S.of(context).initialMaintenanceReserve,
+                                formatCurrency(context,
+                                    token['initialMaintenanceReserve'] ?? 0)),
+                            _buildDetailRow(
+                                S.of(context).grossRentMonth,
+                                formatCurrency(
+                                    context, token['grossRentMonth'] ?? 0)),
+                            _buildDetailRow(
+                                S.of(context).netRentMonth,
+                                formatCurrency(
+                                    context, token['netRentMonth'] ?? 0)),
+                            _buildDetailRow(S.of(context).annualPercentageYield,
+                                '${token['annualPercentageYield']?.toStringAsFixed(2) ?? S.of(context).notSpecified}%'),
                           ],
                         ),
                       ),
-                      
+
                       // Onglet Autres avec section Blockchain uniquement
                       SingleChildScrollView(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              S.of(context).blockchain, // Utilisation de la traduction
-                              style: TextStyle(
-                                fontWeight: FontWeight.bold,
-                                fontSize: Platform.isAndroid ? 14 : 15,  // Réduction de la taille du texte pour Android
-                              ),
-                            ),
-                            const SizedBox(height: 10),
-                              Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Text(
-                                    S.of(context).tokenAddress, // Afficher le label
-                                    style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13),
-                                  ),
-                                  const SizedBox(height: 4), // Ajouter un petit espacement
-                                  Text(
-                                    token['ethereumContract'] ?? S.of(context).notSpecified, // Afficher l'adresse
-                                    style: const TextStyle(fontSize: 13),
-                                  ),
-                                ],
-                                ),
-                                const SizedBox(height: 10), // Espacement entre les deux sections
-                                Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    Text(
-                                      S.of(context).tokenAddress, // Afficher le label
-                                      style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13),
-                                    ),
-                                    const SizedBox(height: 4), // Ajouter un petit espacement
-                                    Text(
-                                      token['gnosisContract'] ?? S.of(context).notSpecified, // Afficher l'adresse
-                                      style: const TextStyle(fontSize: 13),
-                                    ),
-                                  ],
-                                ),
-                      ],
-                        ),
-                      ),
-                      
-                      // Onglet Insights (Graphique de l'évolution du yield et du prix avec pastille de statut de location)
-                      SingleChildScrollView(
+  child: Column(
+    crossAxisAlignment: CrossAxisAlignment.start,
+    children: [
+      Text(
+        S.of(context).blockchain,
+        style: TextStyle(
+          fontWeight: FontWeight.bold,
+          fontSize: Platform.isAndroid ? 14 : 15,
+        ),
+      ),
+      const SizedBox(height: 10),
+
+      // Ethereum Contract avec icône de lien
+      Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          Text(
+            S.of(context).ethereumContract,
+            style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13),
+          ),
+          IconButton(
+            icon: const Icon(Icons.link),
+            onPressed: () {
+              final ethereumAddress = token['ethereumContract'] ?? '';
+              if (ethereumAddress.isNotEmpty) {
+                _launchURL('https://etherscan.io/address/$ethereumAddress');
+              } else {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(content: Text(S.of(context).notSpecified)),
+                );
+              }
+            },
+          ),
+        ],
+      ),
+      const SizedBox(height: 4),
+      Text(
+        token['ethereumContract'] ?? S.of(context).notSpecified,
+        style: const TextStyle(fontSize: 13),
+      ),
+
+      const SizedBox(height: 10),
+
+      // Gnosis Contract avec icône de lien
+      Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          Text(
+            S.of(context).gnosisContract,
+            style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13),
+          ),
+          IconButton(
+            icon: const Icon(Icons.link),
+            onPressed: () {
+              final gnosisAddress = token['gnosisContract'] ?? '';
+              if (gnosisAddress.isNotEmpty) {
+                _launchURL('https://gnosisscan.io/address/$gnosisAddress');
+              } else {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(content: Text(S.of(context).notSpecified)),
+                );
+              }
+            },
+          ),
+        ],
+      ),
+      const SizedBox(height: 4),
+      Text(
+        token['gnosisContract'] ?? S.of(context).notSpecified,
+        style: const TextStyle(fontSize: 13),
+      ),
+    ],
+  ),
+),
+
+                      // Onglet Insights
+                       SingleChildScrollView(
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
@@ -257,22 +418,55 @@ void showTokenDetails(BuildContext context, Map<String, dynamic> token) {
                     ],
                   ),
                 ),
-                
+
                 const SizedBox(height: 20),
-                
+
                 // Bouton pour voir sur RealT
                 Center(
-                  child: SizedBox(
-                    height: 36,
-                    width: 150,
-                    child: ElevatedButton(
-                      style: ElevatedButton.styleFrom(
-                        foregroundColor: Colors.white, backgroundColor: Colors.blue, // Couleur du texte (blanc)
-                        padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 16),
-                        textStyle: const TextStyle(fontSize: 13),
-                      ),
-                      onPressed: () => _launchURL(token['marketplaceLink']),
-                      child: Text(S.of(context).viewOnRealT), // Utilisation de la traduction
+                  child: Padding(
+                    padding: const EdgeInsets.all(
+                        16.0), // Ajoute un padding de 16 pixels autour des boutons
+                    child: Row(
+                      mainAxisAlignment:
+                          MainAxisAlignment.center, // Centre les boutons
+                      children: [
+                        // Bouton pour voir sur RealT
+                        SizedBox(
+                          height: 36,
+                          child: ElevatedButton(
+                            onPressed: () =>
+                                _launchURL(token['marketplaceLink']),
+                            style: ElevatedButton.styleFrom(
+                              foregroundColor: Colors.white,
+                              backgroundColor:
+                                  Colors.blue, // Bouton bleu pour RealT
+                              padding: const EdgeInsets.symmetric(
+                                  vertical: 8, horizontal: 16),
+                              textStyle: const TextStyle(fontSize: 13),
+                            ),
+                            child: Text(S.of(context).viewOnRealT),
+                          ),
+                        ),
+                        const SizedBox(
+                            width: 10), // Espacement entre les deux boutons
+                        // Bouton pour voir sur la carte
+                        SizedBox(
+                          height: 36,
+                          child: ElevatedButton(
+                            onPressed: () => _openMapModal(
+                                context, token['lat'], token['lng']),
+                            style: ElevatedButton.styleFrom(
+                              foregroundColor: Colors.white,
+                              backgroundColor:
+                                  Colors.green, // Bouton vert pour la carte
+                              padding: const EdgeInsets.symmetric(
+                                  vertical: 8, horizontal: 16),
+                              textStyle: const TextStyle(fontSize: 13),
+                            ),
+                            child: Text(S.of(context).viewOnMap),
+                          ),
+                        ),
+                      ],
                     ),
                   ),
                 ),
@@ -292,27 +486,36 @@ Widget _buildDetailRow(String label, String value) {
     child: Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
-        Text(
-          label,
-          style: TextStyle(fontWeight: FontWeight.bold, fontSize: Platform.isAndroid ? 12 : 13)), // Réduction pour Android
-        Text(value, style: TextStyle(fontSize: Platform.isAndroid ? 12 : 13)), // Réduction pour Android
+        Text(label,
+            style: TextStyle(
+                fontWeight: FontWeight.bold,
+                fontSize:
+                    Platform.isAndroid ? 12 : 13)), // Réduction pour Android
+        Text(value,
+            style: TextStyle(
+                fontSize:
+                    Platform.isAndroid ? 12 : 13)), // Réduction pour Android
       ],
     ),
   );
 }
 
 // Méthode pour afficher soit le graphique du yield, soit un message, avec % évolution
-Widget _buildYieldChartOrMessage(BuildContext context, List<dynamic> yields, double? initYield) {
+Widget _buildYieldChartOrMessage(
+    BuildContext context, List<dynamic> yields, double? initYield) {
   if (yields.length <= 1) {
     // Afficher le message si une seule donnée est disponible
     return Text(
       "${S.of(context).noYieldEvolution} ${yields.isNotEmpty ? yields.first['yield'].toStringAsFixed(2) : S.of(context).notSpecified}",
-      style: TextStyle(fontSize: Platform.isAndroid ? 12 : 13),  // Réduction pour Android
+      style: TextStyle(
+          fontSize: Platform.isAndroid ? 12 : 13), // Réduction pour Android
     );
   } else {
     // Calculer l'évolution en pourcentage
     double lastYield = yields.last['yield']?.toDouble() ?? 0;
-    double percentageChange = ((lastYield - (initYield ?? lastYield)) / (initYield ?? lastYield)) * 100;
+    double percentageChange =
+        ((lastYield - (initYield ?? lastYield)) / (initYield ?? lastYield)) *
+            100;
 
     // Afficher le graphique et le % d'évolution
     return Column(
@@ -322,7 +525,8 @@ Widget _buildYieldChartOrMessage(BuildContext context, List<dynamic> yields, dou
         const SizedBox(height: 10),
         Text(
           "${S.of(context).yieldEvolutionPercentage} ${percentageChange.toStringAsFixed(2)}%",
-          style: TextStyle(fontSize: Platform.isAndroid ? 12 : 13),  // Réduction pour Android
+          style: TextStyle(
+              fontSize: Platform.isAndroid ? 12 : 13), // Réduction pour Android
         ),
       ],
     );
@@ -330,17 +534,21 @@ Widget _buildYieldChartOrMessage(BuildContext context, List<dynamic> yields, dou
 }
 
 // Méthode pour afficher soit le graphique des prix, soit un message, avec % évolution
-Widget _buildPriceChartOrMessage(BuildContext context, List<dynamic> prices, double? initPrice) {
+Widget _buildPriceChartOrMessage(
+    BuildContext context, List<dynamic> prices, double? initPrice) {
   if (prices.length <= 1) {
     // Afficher le message si une seule donnée est disponible
     return Text(
       "${S.of(context).noPriceEvolution} ${prices.isNotEmpty ? prices.first['price'].toStringAsFixed(2) : S.of(context).notSpecified}",
-      style: TextStyle(fontSize: Platform.isAndroid ? 12 : 13),  // Réduction pour Android
+      style: TextStyle(
+          fontSize: Platform.isAndroid ? 12 : 13), // Réduction pour Android
     );
   } else {
     // Calculer l'évolution en pourcentage
     double lastPrice = prices.last['price']?.toDouble() ?? 0;
-    double percentageChange = ((lastPrice - (initPrice ?? lastPrice)) / (initPrice ?? lastPrice)) * 100;
+    double percentageChange =
+        ((lastPrice - (initPrice ?? lastPrice)) / (initPrice ?? lastPrice)) *
+            100;
 
     // Afficher le graphique et le % d'évolution
     return Column(
@@ -350,7 +558,8 @@ Widget _buildPriceChartOrMessage(BuildContext context, List<dynamic> prices, dou
         const SizedBox(height: 10),
         Text(
           "${S.of(context).priceEvolutionPercentage} ${percentageChange.toStringAsFixed(2)}%",
-          style: TextStyle(fontSize: Platform.isAndroid ? 12 : 13),  // Réduction pour Android
+          style: TextStyle(
+              fontSize: Platform.isAndroid ? 12 : 13), // Réduction pour Android
         ),
       ],
     );
@@ -369,10 +578,12 @@ Widget _buildYieldChart(List<dynamic> yields) {
       double y = yields[i]['yield'] != null
           ? double.tryParse(yields[i]['yield'].toString()) ?? 0
           : 0;
-      y = double.parse(y.toStringAsFixed(2));  // Limiter la valeur de `y` à 2 décimales
+      y = double.parse(
+          y.toStringAsFixed(2)); // Limiter la valeur de `y` à 2 décimales
 
       spots.add(FlSpot(x, y));
-      dateLabels.add(DateFormat('MM/yyyy').format(date)); // Ajouter la date formatée en mois/année
+      dateLabels.add(DateFormat('MM/yyyy')
+          .format(date)); // Ajouter la date formatée en mois/année
     }
   }
 
@@ -384,7 +595,8 @@ Widget _buildYieldChart(List<dynamic> yields) {
         borderData: FlBorderData(show: true),
         titlesData: FlTitlesData(
           topTitles: AxisTitles(
-            sideTitles: SideTitles(showTitles: false), // Désactiver l'axe du haut
+            sideTitles:
+                SideTitles(showTitles: false), // Désactiver l'axe du haut
           ),
           bottomTitles: AxisTitles(
             sideTitles: SideTitles(
@@ -393,7 +605,10 @@ Widget _buildYieldChart(List<dynamic> yields) {
                 if (value.toInt() >= 0 && value.toInt() < dateLabels.length) {
                   return Text(
                     dateLabels[value.toInt()],
-                    style: TextStyle(fontSize: Platform.isAndroid ? 9 : 10), // Réduction de la taille pour Android
+                    style: TextStyle(
+                        fontSize: Platform.isAndroid
+                            ? 9
+                            : 10), // Réduction de la taille pour Android
                   );
                 }
                 return const Text('');
@@ -408,13 +623,17 @@ Widget _buildYieldChart(List<dynamic> yields) {
               getTitlesWidget: (value, meta) {
                 return Text(
                   value.toStringAsFixed(2),
-                  style: TextStyle(fontSize: Platform.isAndroid ? 9 : 10), // Réduction de la taille pour Android
+                  style: TextStyle(
+                      fontSize: Platform.isAndroid
+                          ? 9
+                          : 10), // Réduction de la taille pour Android
                 );
               },
             ),
           ),
           rightTitles: AxisTitles(
-            sideTitles: SideTitles(showTitles: false), // Désactiver l'axe de droite
+            sideTitles:
+                SideTitles(showTitles: false), // Désactiver l'axe de droite
           ),
         ),
         minX: spots.isNotEmpty ? spots.first.x : 0,
@@ -449,7 +668,8 @@ Widget _buildPriceChart(List<dynamic> prices) {
     double y = prices[i]['price']?.toDouble() ?? 0;
 
     spots.add(FlSpot(x, y));
-    dateLabels.add(DateFormat('MM/yyyy').format(date)); // Ajouter la date formatée en mois/année
+    dateLabels.add(DateFormat('MM/yyyy')
+        .format(date)); // Ajouter la date formatée en mois/année
   }
 
   return SizedBox(
@@ -460,7 +680,8 @@ Widget _buildPriceChart(List<dynamic> prices) {
         borderData: FlBorderData(show: true),
         titlesData: FlTitlesData(
           topTitles: AxisTitles(
-            sideTitles: SideTitles(showTitles: false), // Désactiver l'axe du haut
+            sideTitles:
+                SideTitles(showTitles: false), // Désactiver l'axe du haut
           ),
           bottomTitles: AxisTitles(
             sideTitles: SideTitles(
@@ -469,7 +690,10 @@ Widget _buildPriceChart(List<dynamic> prices) {
                 if (value.toInt() >= 0 && value.toInt() < dateLabels.length) {
                   return Text(
                     dateLabels[value.toInt()],
-                    style: TextStyle(fontSize: Platform.isAndroid ? 9 : 10), // Réduction de la taille pour Android
+                    style: TextStyle(
+                        fontSize: Platform.isAndroid
+                            ? 9
+                            : 10), // Réduction de la taille pour Android
                   );
                 }
                 return const Text('');
@@ -484,13 +708,17 @@ Widget _buildPriceChart(List<dynamic> prices) {
               getTitlesWidget: (value, meta) {
                 return Text(
                   value.toStringAsFixed(2),
-                  style: TextStyle(fontSize: Platform.isAndroid ? 9 : 10), // Réduction de la taille pour Android
+                  style: TextStyle(
+                      fontSize: Platform.isAndroid
+                          ? 9
+                          : 10), // Réduction de la taille pour Android
                 );
               },
             ),
           ),
           rightTitles: AxisTitles(
-            sideTitles: SideTitles(showTitles: false), // Désactiver l'axe de droite
+            sideTitles:
+                SideTitles(showTitles: false), // Désactiver l'axe de droite
           ),
         ),
         minX: spots.isNotEmpty ? spots.first.x : 0,

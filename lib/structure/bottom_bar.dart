@@ -15,10 +15,18 @@ class CustomBottomNavigationBar extends StatelessWidget {
   Widget build(BuildContext context) {
     return BottomNavigationBar(
       items: <BottomNavigationBarItem>[
-        BottomNavigationBarItem(icon: const Icon(Icons.dashboard), label: S.of(context).dashboard), // Traduction pour "Dashboard"
-        BottomNavigationBarItem(icon: const Icon(Icons.pie_chart), label: S.of(context).portfolio), // Traduction pour "Portfolio"
-        BottomNavigationBarItem(icon: const Icon(Icons.bar_chart), label: S.of(context).statistics), // Traduction pour "Statistiques"
-        BottomNavigationBarItem(icon: const Icon(Icons.map), label: S.of(context).maps), // Traduction pour "Maps"
+        BottomNavigationBarItem(
+            icon: const Icon(Icons.dashboard),
+            label: S.of(context).dashboard), // Traduction pour "Dashboard"
+        BottomNavigationBarItem(
+            icon: const Icon(Icons.pie_chart),
+            label: S.of(context).portfolio), // Traduction pour "Portfolio"
+        BottomNavigationBarItem(
+            icon: const Icon(Icons.bar_chart),
+            label: S.of(context).statistics), // Traduction pour "Statistiques"
+        BottomNavigationBarItem(
+            icon: const Icon(Icons.map),
+            label: S.of(context).maps), // Traduction pour "Maps"
       ],
       currentIndex: selectedIndex,
       elevation: 0,

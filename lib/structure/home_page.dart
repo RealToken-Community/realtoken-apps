@@ -1,13 +1,12 @@
 import 'package:flutter/material.dart';
 import 'bottom_bar.dart';
 import 'drawer.dart';
-import 'dashboard_page.dart';
+import '../pages/dashboard/dashboard_page.dart';
 import '../pages/portfolio/portfolio_page.dart';
 import '../pages/statistics_page.dart';
 import '../pages/maps_page.dart';
-import 'dart:ui';  // Import pour le flou
+import 'dart:ui'; // Import pour le flou
 import 'dart:io'; // Pour détecter la plateforme
-
 
 class MyHomePage extends StatefulWidget {
   final Function(bool) onThemeChanged;
@@ -55,9 +54,9 @@ class _MyHomePageState extends State<MyHomePage> {
                 filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
                 child: Container(
                   height: kToolbarHeight + 40,
-                  color: Theme.of(context).brightness == Brightness.dark 
-                        ? Colors.black.withOpacity(0.3) 
-                        : Colors.white.withOpacity(0.3),
+                  color: Theme.of(context).brightness == Brightness.dark
+                      ? Colors.black.withOpacity(0.3)
+                      : Colors.white.withOpacity(0.3),
                   child: AppBar(
                     forceMaterialTransparency: true,
                     backgroundColor: Colors.transparent,
@@ -76,12 +75,15 @@ class _MyHomePageState extends State<MyHomePage> {
               child: BackdropFilter(
                 filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
                 child: Container(
-                  height: Platform.isAndroid ? 65 : 80, // Augmenter légèrement la hauteur pour étendre le blur
-                  color: Theme.of(context).brightness == Brightness.dark 
-                        ? Colors.black.withOpacity(0.3) 
-                        : Colors.white.withOpacity(0.3),
+                  height: Platform.isAndroid
+                      ? 65
+                      : 80, // Augmenter légèrement la hauteur pour étendre le blur
+                  color: Theme.of(context).brightness == Brightness.dark
+                      ? Colors.black.withOpacity(0.3)
+                      : Colors.white.withOpacity(0.3),
                   child: SafeArea(
-                    top: false, // Désactiver le SafeArea pour le haut, ne le garder que pour le bas
+                    top:
+                        false, // Désactiver le SafeArea pour le haut, ne le garder que pour le bas
                     child: CustomBottomNavigationBar(
                       selectedIndex: _selectedIndex,
                       onItemTapped: _onItemTapped,
@@ -94,7 +96,8 @@ class _MyHomePageState extends State<MyHomePage> {
         ],
       ),
       drawer: CustomDrawer(
-        onThemeChanged: widget.onThemeChanged,  // Passer la fonction onThemeChanged uniquement
+        onThemeChanged: widget
+            .onThemeChanged, // Passer la fonction onThemeChanged uniquement
       ),
     );
   }

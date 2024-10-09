@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:shared_preferences/shared_preferences.dart'; 
-import '../../api/data_manager.dart'; 
+import 'package:shared_preferences/shared_preferences.dart';
+import '../../api/data_manager.dart';
 import 'portfolio_display_1.dart';
 import 'portfolio_display_2.dart';
 import '../../generated/l10n.dart'; // Import pour les traductions
@@ -14,28 +14,31 @@ class PortfolioPage extends StatefulWidget {
 }
 
 class _PortfolioPageState extends State<PortfolioPage> {
-  bool _isDisplay1 = true; 
-  String _searchQuery = ''; 
-  String _sortOption = 'Name'; 
+  bool _isDisplay1 = true;
+  String _searchQuery = '';
+  String _sortOption = 'Name';
   bool _isAscending = true;
-  String? _selectedCity; 
+  String? _selectedCity;
   String _rentalStatusFilter = 'All'; // Nouveau filtre pour le statut de location
 
   @override
   void initState() {
     super.initState();
     final dataManager = Provider.of<DataManager>(context, listen: false);
-    dataManager.fetchAndCalculateData(); 
-    _loadDisplayPreference(); 
+    dataManager.fetchAndCalculateData();
+    _loadDisplayPreference();
+    _loadFilterPreferences(); // Charger les filtres et tri depuis SharedPreferences
   }
 
+  // Charger les préférences d'affichage
   Future<void> _loadDisplayPreference() async {
     SharedPreferences prefs = await SharedPreferences.getInstance();
     setState(() {
-      _isDisplay1 = prefs.getBool('isDisplay1') ?? true; 
+      _isDisplay1 = prefs.getBool('isDisplay1') ?? true;
     });
   }
 
+  // Sauvegarder l'affichage
   Future<void> _saveDisplayPreference(bool isDisplay1) async {
     SharedPreferences prefs = await SharedPreferences.getInstance();
     await prefs.setBool('isDisplay1', isDisplay1);
@@ -45,7 +48,58 @@ class _PortfolioPageState extends State<PortfolioPage> {
     setState(() {
       _isDisplay1 = !_isDisplay1;
     });
-    _saveDisplayPreference(_isDisplay1); 
+    _saveDisplayPreference(_isDisplay1);
+  }
+
+  // Charger les filtres et tri depuis SharedPreferences
+  Future<void> _loadFilterPreferences() async {
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    setState(() {
+      _searchQuery = prefs.getString('searchQuery') ?? '';
+      _sortOption = prefs.getString('sortOption') ?? 'Name';
+      _isAscending = prefs.getBool('isAscending') ?? true;
+      _selectedCity = prefs.getString('selectedCity')?.isEmpty ?? true ? null : prefs.getString('selectedCity');
+      _rentalStatusFilter = prefs.getString('rentalStatusFilter') ?? 'All';
+    });
+  }
+
+  // Sauvegarder les filtres et tri dans SharedPreferences
+  Future<void> _saveFilterPreferences() async {
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    await prefs.setString('searchQuery', _searchQuery);
+    await prefs.setString('sortOption', _sortOption);
+    await prefs.setBool('isAscending', _isAscending);
+    await prefs.setString('selectedCity', _selectedCity ?? ''); // Sauvegarder la ville sélectionnée
+    await prefs.setString('rentalStatusFilter', _rentalStatusFilter);
+  }
+
+  // Méthodes de gestion des filtres et tri
+  void _updateSearchQuery(String value) {
+    setState(() {
+      _searchQuery = value;
+    });
+    _saveFilterPreferences(); // Sauvegarde
+  }
+
+  void _updateSortOption(String value) {
+    setState(() {
+      _sortOption = value;
+    });
+    _saveFilterPreferences(); // Sauvegarde
+  }
+
+  void _updateCityFilter(String? value) {
+    setState(() {
+      _selectedCity = value;
+    });
+    _saveFilterPreferences(); // Sauvegarde
+  }
+
+  void _updateRentalStatusFilter(String value) {
+    setState(() {
+      _rentalStatusFilter = value;
+    });
+    _saveFilterPreferences(); // Sauvegarde
   }
 
   // Modifier la méthode pour appliquer le filtre sur le statut de location
@@ -58,8 +112,9 @@ class _PortfolioPageState extends State<PortfolioPage> {
         .toList();
 
     if (_sortOption == S.of(context).sortByName) {
-      filteredPortfolio.sort((a, b) =>
-          _isAscending ? a['shortName'].compareTo(b['shortName']) : b['shortName'].compareTo(a['shortName']));
+      filteredPortfolio.sort((a, b) => _isAscending
+          ? a['shortName'].compareTo(b['shortName'])
+          : b['shortName'].compareTo(a['shortName']));
     } else if (_sortOption == S.of(context).sortByValue) {
       filteredPortfolio.sort((a, b) => _isAscending
           ? a['totalValue'].compareTo(b['totalValue'])
@@ -90,11 +145,14 @@ class _PortfolioPageState extends State<PortfolioPage> {
 
   // Méthode pour obtenir la liste unique des villes à partir des noms complets (fullName)
   List<String> _getUniqueCities(List<Map<String, dynamic>> portfolio) {
-    final cities = portfolio.map((token) {
-      List<String> parts = token['fullName'].split(',');
-      return parts.length >= 2 ? parts[1].trim() : S.of(context).unknownCity;
-    }).toSet().toList();
-    cities.sort(); 
+    final cities = portfolio
+        .map((token) {
+          List<String> parts = token['fullName'].split(',');
+          return parts.length >= 2 ? parts[1].trim() : S.of(context).unknownCity;
+        })
+        .toSet()
+        .toList();
+    cities.sort();
     return cities;
   }
 
@@ -104,7 +162,7 @@ class _PortfolioPageState extends State<PortfolioPage> {
       body: Consumer<DataManager>(
         builder: (context, dataManager, child) {
           final sortedFilteredPortfolio = _filterAndSortPortfolio(dataManager.portfolio);
-          final uniqueCities = _getUniqueCities(dataManager.portfolio); 
+          final uniqueCities = _getUniqueCities(dataManager.portfolio);
 
           return Padding(
             padding: const EdgeInsets.only(top: kToolbarHeight + 40),
@@ -121,9 +179,7 @@ class _PortfolioPageState extends State<PortfolioPage> {
                           flex: 3,
                           child: TextField(
                             onChanged: (value) {
-                              setState(() {
-                                _searchQuery = value;
-                              });
+                              _updateSearchQuery(value);
                             },
                             decoration: InputDecoration(
                               hintText: S.of(context).searchHint, // "Search..."
@@ -144,9 +200,7 @@ class _PortfolioPageState extends State<PortfolioPage> {
                         PopupMenuButton<String>(
                           icon: const Icon(Icons.location_city),
                           onSelected: (String value) {
-                            setState(() {
-                              _selectedCity = value == S.of(context).allCities ? null : value;
-                            });
+                            _updateCityFilter(value == S.of(context).allCities ? null : value);
                           },
                           itemBuilder: (BuildContext context) {
                             return [
@@ -162,14 +216,11 @@ class _PortfolioPageState extends State<PortfolioPage> {
                           },
                         ),
                         const SizedBox(width: 8.0),
-                        
                         // Nouveau PopupMenuButton pour le filtre sur le statut de location
                         PopupMenuButton<String>(
                           icon: const Icon(Icons.filter_alt),
                           onSelected: (String value) {
-                            setState(() {
-                              _rentalStatusFilter = value;
-                            });
+                            _updateRentalStatusFilter(value);
                           },
                           itemBuilder: (BuildContext context) {
                             return [
@@ -192,17 +243,16 @@ class _PortfolioPageState extends State<PortfolioPage> {
                             ];
                           },
                         ),
-                        
                         const SizedBox(width: 8.0),
                         PopupMenuButton<String>(
                           onSelected: (String value) {
-                            setState(() {
-                              if (value == 'asc' || value == 'desc') {
+                            if (value == 'asc' || value == 'desc') {
+                              setState(() {
                                 _isAscending = (value == 'asc');
-                              } else {
-                                _sortOption = value;
-                              }
-                            });
+                              });
+                            } else {
+                              _updateSortOption(value);
+                            }
                           },
                           itemBuilder: (BuildContext context) {
                             return [
@@ -232,7 +282,6 @@ class _PortfolioPageState extends State<PortfolioPage> {
                             ];
                           },
                         ),
-                        
                       ],
                     ),
                   ),

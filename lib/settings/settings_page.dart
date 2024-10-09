@@ -22,8 +22,13 @@ class _SettingsPageState extends State<SettingsPage> {
   String _selectedLanguage = 'en';
   String _selectedCurrency = 'usd'; // Devise par défaut
   Map<String, dynamic> _currencies = {}; // Stockage des devises
+  bool _convertToSquareMeters = false; // Nouvelle variable pour la conversion des pieds carrés
 
-  final List<String> _languages = ['en', 'fr', 'es']; // Ajout de 'es' pour l'espagnol
+  final List<String> _languages = [
+    'en',
+    'fr',
+    'es'
+  ]; // Ajout de 'es' pour l'espagnol
 
   @override
   void initState() {
@@ -39,6 +44,8 @@ class _SettingsPageState extends State<SettingsPage> {
       _isDarkTheme = prefs.getBool('isDarkTheme') ?? false;
       _selectedLanguage = prefs.getString('language') ?? 'en';
       _selectedCurrency = prefs.getString('currency') ?? 'usd'; // Charger la devise
+      _convertToSquareMeters = prefs.getBool('convertToSquareMeters') ?? false; // Charger la préférence pour la conversion
+
     });
   }
 
@@ -52,43 +59,49 @@ class _SettingsPageState extends State<SettingsPage> {
   Future<void> _saveLanguage(String language) async {
     final prefs = await SharedPreferences.getInstance();
     await prefs.setString('language', language);
-    MyApp.of(context)?.changeLanguage(language); // Mise à jour de la langue dans l'app
+    MyApp.of(context)
+        ?.changeLanguage(language); // Mise à jour de la langue dans l'app
   }
 
   // Fonction pour récupérer les devises depuis l'API CoinGecko
   Future<void> _fetchCurrencies() async {
-  final apiService = ApiService(); // Créez une instance d'ApiService
-  try {
-    final currencies = await apiService.fetchCurrencies(); // Utilisez l'instance pour appeler la méthode
-    setState(() {
-      _currencies = currencies;
-    });
-  } catch (e) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text('Failed to load currencies')),
-    );
+    final apiService = ApiService(); // Créez une instance d'ApiService
+    try {
+      final currencies = await apiService
+          .fetchCurrencies(); // Utilisez l'instance pour appeler la méthode
+      setState(() {
+        _currencies = currencies;
+      });
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Failed to load currencies')),
+      );
+    }
   }
-}
 
+ // Fonction pour sauvegarder la conversion des sqft en m²
+  Future<void> _saveConvertToSquareMeters(bool value) async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setBool('convertToSquareMeters', value);
+  }
+  
   // Fonction pour sauvegarder la devise sélectionnée
   Future<void> _saveCurrency(String currency) async {
-  final prefs = await SharedPreferences.getInstance();
+    final prefs = await SharedPreferences.getInstance();
 
-  // Sauvegarder la devise sélectionnée
-  await prefs.setString('selectedCurrency', currency);
+    // Sauvegarder la devise sélectionnée
+    await prefs.setString('selectedCurrency', currency);
 
-  // Mettre à jour le taux de conversion et le symbole dans DataManager
-  final dataManager = Provider.of<DataManager>(context, listen: false);
-  
-  // Passer la devise sélectionnée et le map des devises à `updateConversionRate`
-  dataManager.updateConversionRate(currency, _selectedCurrency, _currencies);
+    // Mettre à jour le taux de conversion et le symbole dans DataManager
+    final dataManager = Provider.of<DataManager>(context, listen: false);
 
-  setState(() {
-    _selectedCurrency = currency;
-  });
-}
+    // Passer la devise sélectionnée et le map des devises à `updateConversionRate`
+    dataManager.updateConversionRate(currency, _selectedCurrency, _currencies);
 
-
+    setState(() {
+      _selectedCurrency = currency;
+    });
+  }
 
   // Fonction pour vider le cache et les données
   Future<void> _clearCacheAndData() async {
@@ -120,7 +133,9 @@ class _SettingsPageState extends State<SettingsPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Theme.of(context).scaffoldBackgroundColor,
-      appBar: AppBar(title: Text(S.of(context).settingsTitle)), // Utilisation de la traduction
+      appBar: AppBar(
+          title: Text(
+              S.of(context).settingsTitle)), // Utilisation de la traduction
       body: Padding(
         padding: const EdgeInsets.all(16.0),
         child: Column(
@@ -143,7 +158,9 @@ class _SettingsPageState extends State<SettingsPage> {
                   widget.onThemeChanged(value);
                   _saveTheme(value);
                   ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(content: Text(S.of(context).themeUpdated(value ? S.of(context).dark : S.of(context).light))),
+                    SnackBar(
+                        content: Text(S.of(context).themeUpdated(
+                            value ? S.of(context).dark : S.of(context).light))),
                   );
                 },
               ),
@@ -182,14 +199,15 @@ class _SettingsPageState extends State<SettingsPage> {
                     });
                     _saveLanguage(newValue);
                     ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(content: Text(
+                      SnackBar(
+                          content: Text(
                         S.of(context).languageUpdated(
-                          newValue == 'en'
-                              ? S.of(context).english
-                              : newValue == 'fr'
-                                  ? S.of(context).french
-                                  : S.of(context).spanish,
-                        ),
+                              newValue == 'en'
+                                  ? S.of(context).english
+                                  : newValue == 'fr'
+                                      ? S.of(context).french
+                                      : S.of(context).spanish,
+                            ),
                       )),
                     );
                   }
@@ -225,7 +243,25 @@ class _SettingsPageState extends State<SettingsPage> {
                     )
                   : CircularProgressIndicator(), // Loader si devises non chargées
             ),
-
+const Divider(),
+ // Paramètre pour la conversion des sqft en m²
+            ListTile(
+              title: Text(
+                'Convertir les sqft en m²',
+                style: TextStyle(
+                  fontSize: Platform.isAndroid ? 15.0 : 16.0,
+                ),
+              ),
+              trailing: Switch(
+                value: _convertToSquareMeters,
+                onChanged: (value) {
+                  setState(() {
+                    _convertToSquareMeters = value;
+                  });
+                  _saveConvertToSquareMeters(value); // Sauvegarder la préférence
+                },
+              ),
+            ),
             const Spacer(),
 
             // Bouton pour vider le cache et les données

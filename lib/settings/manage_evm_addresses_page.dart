@@ -1,4 +1,4 @@
-import 'dart:io'; // Pour détecter la plateforme
+// Pour détecter la plateforme
 import 'package:provider/provider.dart';
 import 'package:flutter/material.dart';
 import 'package:mobile_scanner/mobile_scanner.dart';
@@ -37,6 +37,16 @@ class _ManageEthAddressesPageState extends State<ManageEvmAddressesPage> {
     });
   }
 
+  String? _extractEthereumAddress(String scannedData) {
+    // Vérifiez si le code scanné contient une adresse Ethereum valide
+    RegExp ethAddressRegExp = RegExp(r'(0x[a-fA-F0-9]{40})');
+    final match = ethAddressRegExp.firstMatch(scannedData);
+    if (match != null) {
+      return match.group(0); // Retourne la première adresse valide
+    }
+    return null; // Aucune adresse trouvée
+  }
+
   Future<void> _saveAddress(String address) async {
     if (!ethAddresses.contains(address)) {
       final prefs = await SharedPreferences.getInstance();
@@ -47,18 +57,22 @@ class _ManageEthAddressesPageState extends State<ManageEvmAddressesPage> {
 
       final dataManager = Provider.of<DataManager>(context, listen: false);
       dataManager.fetchAndCalculateData(forceFetch: true); // Forcer le fetch
-      dataManager.fetchRentData(forceFetch: true);         // Forcer le fetch des données de loyer
-      dataManager.fetchPropertyData(forceFetch: true);     // Forcer le fetch des données de propriété
+      dataManager.fetchRentData(
+          forceFetch: true); // Forcer le fetch des données de loyer
+      dataManager.fetchPropertyData(
+          forceFetch: true); // Forcer le fetch des données de propriété
 
       // Récupérer le userId associé à l'adresse via ApiService
       final userId = await ApiService.fetchUserIdFromAddress(address);
       if (userId != null) {
         // Récupérer les autres adresses associées au userId
-        final associatedAddresses = await ApiService.fetchAddressesForUserId(userId);
+        final associatedAddresses =
+            await ApiService.fetchAddressesForUserId(userId);
         dataManager.addAddressesForUserId(userId, associatedAddresses);
 
         setState(() {
-          ethAddresses.addAll(associatedAddresses.where((addr) => !ethAddresses.contains(addr)));
+          ethAddresses.addAll(associatedAddresses
+              .where((addr) => !ethAddresses.contains(addr)));
         });
 
         await prefs.setStringList('evmAddresses', ethAddresses);
@@ -78,31 +92,30 @@ class _ManageEthAddressesPageState extends State<ManageEvmAddressesPage> {
     await Navigator.of(context).push(MaterialPageRoute(
       builder: (context) => Scaffold(
         appBar: AppBar(title: const Text('Scan QR Code')),
-        body: MobileScanner(
-          onDetect: (BarcodeCapture barcodeCapture) {
-            if (!isAddressSaved) {
-              final List<Barcode> barcodes = barcodeCapture.barcodes;
-              for (final barcode in barcodes) {
-                if (barcode.rawValue != null) {
-                  final String code = barcode.rawValue!;
-                  if (_validateEVMAddress(code) == null) {
-                    _saveAddress(code);
-                    isAddressSaved = true;
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(content: Text('Wallet saved: $code')),
-                    );
-                    Navigator.of(context).pop(); // Fermer le scanner
-                    break;
-                  } else {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(content: Text('Invalid wallet in QR Code')),
-                    );
-                  }
+        body: MobileScanner(onDetect: (BarcodeCapture barcodeCapture) {
+          if (!isAddressSaved) {
+            final List<Barcode> barcodes = barcodeCapture.barcodes;
+            for (final barcode in barcodes) {
+              if (barcode.rawValue != null) {
+                final String code = barcode.rawValue!;
+                final String? extractedAddress = _extractEthereumAddress(code);
+                if (extractedAddress != null) {
+                  _saveAddress(extractedAddress);
+                  isAddressSaved = true;
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(content: Text('Wallet saved: $extractedAddress')),
+                  );
+                  Navigator.of(context).pop(); // Fermer le scanner
+                  break;
+                } else {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(content: Text('Invalid wallet in QR Code')),
+                  );
                 }
               }
             }
-          },
-        ),
+          }
+        }),
       ),
     ));
   }
@@ -112,57 +125,128 @@ class _ManageEthAddressesPageState extends State<ManageEvmAddressesPage> {
     setState(() {
       ethAddresses.removeAt(index);
     });
-    await prefs.setStringList('evmAddresses', ethAddresses); 
+    await prefs.setStringList('evmAddresses', ethAddresses);
   }
 
-  @override
-  Widget build(BuildContext context) {
-    final dataManager = Provider.of<DataManager>(context);
+ @override
+Widget build(BuildContext context) {
+  final dataManager = Provider.of<DataManager>(context);
 
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text('Manage Wallets'),
-      ),
-      body: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: Column(
-          children: <Widget>[
-            Row(
-              children: [
-                Expanded(
-                  child: TextField(
-                    controller: _ethAddressController,
-                    decoration: const InputDecoration(
-                      labelText: 'Wallet Address',
-                      border: OutlineInputBorder(),
-                    ),
+  // Récupérer toutes les adresses liées à un userId
+  final List linkedAddresses = dataManager
+      .getAllUserIds()
+      .expand((userId) => dataManager.getAddressesForUserId(userId) ?? [])
+      .toList();
+
+  // Filtrer les adresses non liées
+  final unlinkedAddresses =
+      ethAddresses.where((address) => !linkedAddresses.contains(address)).toList();
+
+  return Scaffold(
+    appBar: AppBar(
+      title: const Text('Manage Wallets'),
+    ),
+    body: Padding(
+      padding: const EdgeInsets.all(16.0),
+      child: Column(
+        children: <Widget>[
+          Row(
+            children: [
+              Expanded(
+                child: TextField(
+                  controller: _ethAddressController,
+                  decoration: const InputDecoration(
+                    labelText: 'Wallet Address',
+                    border: OutlineInputBorder(),
                   ),
                 ),
-                const SizedBox(width: 10),
-                ElevatedButton(
-                  onPressed: _scanQRCode, 
-                  child: const Icon(Icons.qr_code_scanner),
-                ),
-              ],
-            ),
-            const SizedBox(height: 20),
-            ElevatedButton(
-              onPressed: () {
-                String enteredAddress = _ethAddressController.text;
-                if (_validateEVMAddress(enteredAddress) == null) {
-                  _saveAddress(enteredAddress);
-                  _ethAddressController.clear();
-                } else {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(content: Text('Invalid wallet address')),
-                  );
-                }
-              },
-              child: const Text('Save Address'),
-            ),
-            const SizedBox(height: 20),
+              ),
+              const SizedBox(width: 10),
+              ElevatedButton(
+                onPressed: _scanQRCode,
+                child: const Icon(Icons.qr_code_scanner),
+              ),
+            ],
+          ),
+          const SizedBox(height: 20),
+          ElevatedButton(
+            onPressed: () {
+              String enteredAddress = _ethAddressController.text;
+              if (_validateEVMAddress(enteredAddress) == null) {
+                _saveAddress(enteredAddress);
+                _ethAddressController.clear();
+              } else {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(content: Text('Invalid wallet address')),
+                );
+              }
+            },
+            child: const Text('Save Address'),
+          ),
+          const SizedBox(height: 20),
 
-            // Afficher les adresses associées à chaque userId
+          // Afficher les adresses non associées à un userId
+          if (unlinkedAddresses.isNotEmpty) ...[
+            const Text(
+              'Unlinked Wallet Addresses',
+              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+            ),
+            const SizedBox(height: 10),
+            Expanded(
+              child: ListView.builder(
+                itemCount: unlinkedAddresses.length,
+                itemBuilder: (context, index) {
+                  final address = unlinkedAddresses[index];
+                  return Container(
+                    margin: const EdgeInsets.symmetric(vertical: 10),
+                    padding: const EdgeInsets.all(16),
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      border: Border.all(color: Colors.blue, width: 2),
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Expanded(
+                          child: Text(
+                            address,
+                            style: const TextStyle(fontSize: 14),
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        ),
+                        IconButton(
+                          icon: const Icon(Icons.copy, color: Colors.blue),
+                          onPressed: () {
+                            Clipboard.setData(ClipboardData(text: address));
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              SnackBar(content: Text('Address copied: $address')),
+                            );
+                          },
+                        ),
+                        IconButton(
+                          icon: const Icon(Icons.delete, color: Colors.red),
+                          onPressed: () {
+                            _deleteAddress(index);
+                          },
+                        ),
+                      ],
+                    ),
+                  );
+                },
+              ),
+            ),
+          ],
+
+          const SizedBox(height: 20),
+
+          // Afficher les adresses associées à chaque userId
+          if (dataManager.getAllUserIds().isNotEmpty) ...[
+            const Text(
+              'User Linked Wallet Addresses',
+              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+            ),
+            const SizedBox(height: 10),
             Expanded(
               child: ListView.builder(
                 itemCount: dataManager.getAllUserIds().length,
@@ -174,7 +258,7 @@ class _ManageEthAddressesPageState extends State<ManageEvmAddressesPage> {
                     margin: const EdgeInsets.symmetric(vertical: 10),
                     padding: const EdgeInsets.all(16),
                     decoration: BoxDecoration(
-                      color: Colors.white, // Fond blanc pour chaque cadre
+                      color: Colors.white,
                       border: Border.all(color: Colors.blue, width: 2),
                       borderRadius: BorderRadius.circular(10),
                     ),
@@ -195,10 +279,11 @@ class _ManageEthAddressesPageState extends State<ManageEvmAddressesPage> {
                             IconButton(
                               icon: const Icon(Icons.delete, color: Colors.red),
                               onPressed: () {
-                                // Supprimer le userId entier
                                 dataManager.removeUserId(userId);
                                 ScaffoldMessenger.of(context).showSnackBar(
-                                  SnackBar(content: Text('User ID $userId deleted')),
+                                  SnackBar(
+                                    content: Text('User ID $userId deleted'),
+                                  ),
                                 );
                               },
                             ),
@@ -213,23 +298,24 @@ class _ManageEthAddressesPageState extends State<ManageEvmAddressesPage> {
                                 Expanded(
                                   child: Row(
                                     children: [
-                                      // Adresse avec petite taille de police
                                       Expanded(
                                         child: Text(
                                           address,
-                                          style: const TextStyle(
-                                            fontSize: 14, // Réduction de la taille de la police
-                                          ),
-                                          overflow: TextOverflow.ellipsis, // Limiter le texte si trop long
+                                          style: const TextStyle(fontSize: 14),
+                                          overflow: TextOverflow.ellipsis,
                                         ),
                                       ),
-                                      // Bouton pour copier l'adresse
                                       IconButton(
-                                        icon: const Icon(Icons.copy, color: Colors.blue),
+                                        icon: const Icon(Icons.copy,
+                                            color: Colors.blue),
                                         onPressed: () {
-                                          Clipboard.setData(ClipboardData(text: address));
-                                          ScaffoldMessenger.of(context).showSnackBar(
-                                            SnackBar(content: Text('Address copied: $address')),
+                                          Clipboard.setData(
+                                              ClipboardData(text: address));
+                                          ScaffoldMessenger.of(context)
+                                              .showSnackBar(
+                                            SnackBar(
+                                                content: Text(
+                                                    'Address copied: $address')),
                                           );
                                         },
                                       ),
@@ -237,12 +323,15 @@ class _ManageEthAddressesPageState extends State<ManageEvmAddressesPage> {
                                   ),
                                 ),
                                 IconButton(
-                                  icon: const Icon(Icons.delete, color: Colors.red),
+                                  icon: const Icon(Icons.delete,
+                                      color: Colors.red),
                                   onPressed: () {
-                                    // Supprimer une adresse spécifique
-                                    dataManager.removeAddressForUserId(userId, address);
+                                    dataManager.removeAddressForUserId(
+                                        userId, address);
                                     ScaffoldMessenger.of(context).showSnackBar(
-                                      SnackBar(content: Text('Address $address deleted')),
+                                      SnackBar(
+                                          content:
+                                              Text('Address $address deleted')),
                                     );
                                   },
                                 ),
@@ -255,8 +344,9 @@ class _ManageEthAddressesPageState extends State<ManageEvmAddressesPage> {
               ),
             ),
           ],
-        ),
+        ],
       ),
-    );
-  }
+    ),
+  );
+}
 }

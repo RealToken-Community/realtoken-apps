@@ -80,7 +80,6 @@ class _StatisticsPageState extends State<StatisticsPage> {
     'WY': 'Wyoming'
   };
 
-
   @override
   void initState() {
     super.initState();
@@ -174,9 +173,8 @@ class _StatisticsPageState extends State<StatisticsPage> {
       return Center(child: Text("Error loading data"));
     }
 
-   
-
-    List<Map<String, dynamic>> groupedData = _groupRentDataByPeriod(dataManager);
+    List<Map<String, dynamic>> groupedData =
+        _groupRentDataByPeriod(dataManager);
 
     return Scaffold(
       backgroundColor: Theme.of(context).scaffoldBackgroundColor,
@@ -202,19 +200,21 @@ class _StatisticsPageState extends State<StatisticsPage> {
     );
   }
 
-  Widget _buildRentGraphCard(List<Map<String, dynamic>> groupedData, DataManager dataManager) {
-  // Limiter la taille des données affichées à un maximum de 100 points pour éviter la surcharge
+  bool _showCumulativeRent = false;
+
+Widget _buildRentGraphCard(
+    List<Map<String, dynamic>> groupedData, DataManager dataManager) {
   const int maxPoints = 100;
   List<Map<String, dynamic>> limitedData = groupedData.length > maxPoints
       ? groupedData.sublist(0, maxPoints)
       : groupedData;
 
-  // Conversion des valeurs de loyer dans la devise sélectionnée
   List<Map<String, dynamic>> convertedData = limitedData.map((entry) {
     double convertedRent = dataManager.convert(entry['rent'] ?? 0.0);
     return {
       'date': entry['date'],
       'rent': convertedRent,
+      'cumulativeRent': entry['cumulativeRent'] ?? 0.0, // Ajout des données cumulatives
     };
   }).toList();
 
@@ -228,14 +228,28 @@ class _StatisticsPageState extends State<StatisticsPage> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text(
-              S.of(context).rentGraph,
-              style: TextStyle(
-                fontSize: Platform.isAndroid ? 19 : 20,
-                fontWeight: FontWeight.bold,
-              ),
+            Row(
+              children: [
+                Text(
+                  _showCumulativeRent
+                      ? S.of(context).groupedRentGraph
+                      : S.of(context).cumulativeRentGraph,
+                  style: TextStyle(
+                    fontSize: Platform.isAndroid ? 19 : 20,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+                Spacer(), // Ajoute de l'espace flexible
+                Switch(
+                  value: _showCumulativeRent,
+                  onChanged: (value) {
+                    setState(() {
+                      _showCumulativeRent = value;
+                    });
+                  },
+                ),
+              ],
             ),
-            const SizedBox(height: 10),
             _buildPeriodSelector(),
             const SizedBox(height: 10),
             SizedBox(
@@ -244,18 +258,25 @@ class _StatisticsPageState extends State<StatisticsPage> {
                 LineChartData(
                   gridData: FlGridData(show: true),
                   titlesData: FlTitlesData(
-                    topTitles: AxisTitles(sideTitles: SideTitles(showTitles: false)),
+                    topTitles:
+                        AxisTitles(sideTitles: SideTitles(showTitles: false)),
                     leftTitles: AxisTitles(
                       sideTitles: SideTitles(
                         showTitles: true,
+                        reservedSize: 50, // Augmenter la taille réservée à l'échelle de gauche
                         interval: _calculateLeftInterval(convertedData),
                         getTitlesWidget: (value, meta) {
-                          // Formatage et affichage des valeurs avec le symbole de la devise convertie
                           return Text(
-                            formatCurrency(value, dataManager.currencySymbol), // Conversion des valeurs
-                            style: TextStyle(fontSize: Platform.isAndroid ? 9 : 10),
+                            formatCurrency(value, dataManager.currencySymbol),
+                            style: TextStyle(
+                                fontSize: Platform.isAndroid ? 9 : 10),
                           );
                         },
+                      ),
+                    ),
+                    rightTitles: AxisTitles(
+                      sideTitles: SideTitles(
+                        showTitles: false, // Désactiver l'échelle de droite
                       ),
                     ),
                     bottomTitles: AxisTitles(
@@ -264,12 +285,14 @@ class _StatisticsPageState extends State<StatisticsPage> {
                         interval: _calculateBottomInterval(convertedData),
                         getTitlesWidget: (value, meta) {
                           List<String> labels = _buildDateLabels(convertedData);
-                          if (value.toInt() >= 0 && value.toInt() < labels.length) {
+                          if (value.toInt() >= 0 &&
+                              value.toInt() < labels.length) {
                             return Transform.rotate(
                               angle: -0.5,
                               child: Text(
                                 labels[value.toInt()],
-                                style: TextStyle(fontSize: Platform.isAndroid ? 7 : 8),
+                                style: TextStyle(
+                                    fontSize: Platform.isAndroid ? 7 : 8),
                               ),
                             );
                           } else {
@@ -282,16 +305,20 @@ class _StatisticsPageState extends State<StatisticsPage> {
                   borderData: FlBorderData(show: false),
                   minX: 0,
                   maxX: (convertedData.length - 1).toDouble(),
-                  minY: 0,
                   lineBarsData: [
                     LineChartBarData(
-                      spots: _buildChartData(convertedData),
+                      spots: _showCumulativeRent
+                          ? _buildCumulativeChartData(
+                              convertedData) // Ligne verte (cumulative)
+                          : _buildChartData(
+                              convertedData), // Ligne bleue (rent)
                       isCurved: true,
-                      barWidth: 3,
-                      color: Colors.blue,
+                      barWidth: 2,
+                      color: _showCumulativeRent ? Colors.green : Colors.blue,
                       belowBarData: BarAreaData(
                         show: true,
-                        color: Colors.blue.withOpacity(0.3),
+                        color: (_showCumulativeRent ? Colors.green : Colors.blue)
+                            .withOpacity(0.3),
                       ),
                     ),
                   ],
@@ -307,18 +334,28 @@ class _StatisticsPageState extends State<StatisticsPage> {
 
 
 // Méthode pour calculer un intervalle optimisé pour l'axe des valeurs
-double _calculateLeftInterval(List<Map<String, dynamic>> data) {
-  if (data.isEmpty) return 1;
-  double maxRent = data.map((d) => d['rent'] ?? 0).reduce((a, b) => a > b ? a : b);
-  return maxRent / 5;  // Diviser les titres en 5 intervalles
-}
+  double _calculateLeftInterval(List<Map<String, dynamic>> data) {
+    if (data.isEmpty) return 1;
+    double maxRent =
+        data.map((d) => d['rent'] ?? 0).reduce((a, b) => a > b ? a : b);
+    return maxRent / 2; // Diviser les titres en 5 intervalles
+  }
+
+  double _calculateRightInterval(List<Map<String, dynamic>> data) {
+    if (data.isEmpty) return 1;
+    double maxCumulativeRent = data
+        .map((d) => d['cumulativeRent'] ?? 0)
+        .reduce((a, b) => a > b ? a : b);
+
+    // Si maxCumulativeRent est zéro, on retourne un intervalle de 1 pour éviter l'erreur
+    return (maxCumulativeRent > 0 ? maxCumulativeRent / 100 : 1000);
+  }
 
 // Méthode pour calculer un intervalle optimisé pour l'axe des dates
-double _calculateBottomInterval(List<Map<String, dynamic>> data) {
-  if (data.isEmpty) return 1;
-  return (data.length / 6).roundToDouble();  // Montrer 6 dates maximum
-}
-
+  double _calculateBottomInterval(List<Map<String, dynamic>> data) {
+    if (data.isEmpty) return 1;
+    return (data.length / 6).roundToDouble(); // Montrer 6 dates maximum
+  }
 
   Widget _buildTokenDistributionCard(DataManager dataManager) {
     return Padding(
@@ -333,7 +370,9 @@ double _calculateBottomInterval(List<Map<String, dynamic>> data) {
             children: [
               Text(
                 S.of(context).tokenDistribution,
-                style: TextStyle(fontSize: Platform.isAndroid ? 19 : 20, fontWeight: FontWeight.bold),
+                style: TextStyle(
+                    fontSize: Platform.isAndroid ? 19 : 20,
+                    fontWeight: FontWeight.bold),
               ),
               const SizedBox(height: 10),
               SizedBox(
@@ -369,7 +408,9 @@ double _calculateBottomInterval(List<Map<String, dynamic>> data) {
             children: [
               Text(
                 S.of(context).tokenDistributionByCountry,
-                style: TextStyle(fontSize: Platform.isAndroid ? 19 : 20, fontWeight: FontWeight.bold),
+                style: TextStyle(
+                    fontSize: Platform.isAndroid ? 19 : 20,
+                    fontWeight: FontWeight.bold),
               ),
               const SizedBox(height: 10),
               SizedBox(
@@ -405,7 +446,9 @@ double _calculateBottomInterval(List<Map<String, dynamic>> data) {
             children: [
               Text(
                 S.of(context).tokenDistributionByRegion,
-                style: TextStyle(fontSize: Platform.isAndroid ? 19 : 20, fontWeight: FontWeight.bold),
+                style: TextStyle(
+                    fontSize: Platform.isAndroid ? 19 : 20,
+                    fontWeight: FontWeight.bold),
               ),
               const SizedBox(height: 10),
               SizedBox(
@@ -441,7 +484,9 @@ double _calculateBottomInterval(List<Map<String, dynamic>> data) {
             children: [
               Text(
                 S.of(context).tokenDistributionByCity,
-                style: TextStyle(fontSize: Platform.isAndroid ? 19 : 20, fontWeight: FontWeight.bold),
+                style: TextStyle(
+                    fontSize: Platform.isAndroid ? 19 : 20,
+                    fontWeight: FontWeight.bold),
               ),
               const SizedBox(height: 10),
               SizedBox(
@@ -474,7 +519,8 @@ double _calculateBottomInterval(List<Map<String, dynamic>> data) {
     );
   }
 
-  Widget _buildPeriodButton(String period, {bool isFirst = false, bool isLast = false}) {
+  Widget _buildPeriodButton(String period,
+      {bool isFirst = false, bool isLast = false}) {
     bool isSelected = _selectedPeriod == period;
 
     return Expanded(
@@ -509,7 +555,10 @@ double _calculateBottomInterval(List<Map<String, dynamic>> data) {
 
   List<PieChartSectionData> _buildDonutChartData(DataManager dataManager) {
     return dataManager.propertyData.map((data) {
-      final double percentage = (data['count'] / dataManager.propertyData.fold(0.0, (double sum, item) => sum + item['count'])) * 100;
+      final double percentage = (data['count'] /
+              dataManager.propertyData
+                  .fold(0.0, (double sum, item) => sum + item['count'])) *
+          100;
       return PieChartSectionData(
         value: data['count'].toDouble(),
         title: '${percentage.toStringAsFixed(1)}%',
@@ -575,7 +624,9 @@ double _calculateBottomInterval(List<Map<String, dynamic>> data) {
             Container(
               width: 16,
               height: 16,
-              color: Colors.cyan[100 * (countryCount.keys.toList().indexOf(entry.key) % 9)] ?? Colors.cyan,
+              color: Colors.cyan[100 *
+                      (countryCount.keys.toList().indexOf(entry.key) % 9)] ??
+                  Colors.cyan,
             ),
             const SizedBox(width: 4),
             Text(
@@ -594,7 +645,9 @@ double _calculateBottomInterval(List<Map<String, dynamic>> data) {
     for (var token in dataManager.portfolio) {
       String fullName = token['fullName'];
       List<String> parts = fullName.split(',');
-      String regionCode = parts.length >= 3 ? parts[2].trim().substring(0, 2) : S.of(context).unknown;
+      String regionCode = parts.length >= 3
+          ? parts[2].trim().substring(0, 2)
+          : S.of(context).unknown;
 
       String regionName = _usStateAbbreviations[regionCode] ?? regionCode;
 
@@ -611,7 +664,9 @@ double _calculateBottomInterval(List<Map<String, dynamic>> data) {
             Container(
               width: 16,
               height: 16,
-              color: Colors.accents[regionCount.keys.toList().indexOf(entry.key) % Colors.accents.length],
+              color: Colors.accents[
+                  regionCount.keys.toList().indexOf(entry.key) %
+                      Colors.accents.length],
             ),
             const SizedBox(width: 4),
             Text(
@@ -645,7 +700,9 @@ double _calculateBottomInterval(List<Map<String, dynamic>> data) {
             Container(
               width: 16,
               height: 16,
-              color: Colors.primaries[cityCount.keys.toList().indexOf(entry.key) % Colors.primaries.length],
+              color: Colors.primaries[
+                  cityCount.keys.toList().indexOf(entry.key) %
+                      Colors.primaries.length],
             ),
             const SizedBox(width: 4),
             Text(
@@ -658,7 +715,19 @@ double _calculateBottomInterval(List<Map<String, dynamic>> data) {
     );
   }
 
-  List<PieChartSectionData> _buildDonutChartDataByCountry(DataManager dataManager) {
+  List<FlSpot> _buildCumulativeChartData(List<Map<String, dynamic>> data) {
+    List<FlSpot> spots = [];
+    double cumulativeRent = 0.0;
+
+    for (var i = 0; i < data.length; i++) {
+      cumulativeRent += data[i]['rent']?.toDouble() ?? 0.0;
+      spots.add(FlSpot(i.toDouble(), cumulativeRent));
+    }
+    return spots;
+  }
+
+  List<PieChartSectionData> _buildDonutChartDataByCountry(
+      DataManager dataManager) {
     Map<String, int> countryCount = {};
 
     for (var token in dataManager.portfolio) {
@@ -670,11 +739,15 @@ double _calculateBottomInterval(List<Map<String, dynamic>> data) {
     }
 
     return countryCount.entries.map((entry) {
-      final double percentage = (entry.value / countryCount.values.fold(0, (sum, value) => sum + value)) * 100;
+      final double percentage = (entry.value /
+              countryCount.values.fold(0, (sum, value) => sum + value)) *
+          100;
       return PieChartSectionData(
         value: entry.value.toDouble(),
         title: '${percentage.toStringAsFixed(1)}%',
-        color: Colors.cyan[100 * (countryCount.keys.toList().indexOf(entry.key) % 9)] ?? Colors.cyan,
+        color: Colors.cyan[
+                100 * (countryCount.keys.toList().indexOf(entry.key) % 9)] ??
+            Colors.cyan,
         radius: 50,
         titleStyle: TextStyle(
           fontSize: Platform.isAndroid ? 11 : 12,
@@ -685,7 +758,8 @@ double _calculateBottomInterval(List<Map<String, dynamic>> data) {
     }).toList();
   }
 
-  List<PieChartSectionData> _buildDonutChartDataByRegion(DataManager dataManager) {
+  List<PieChartSectionData> _buildDonutChartDataByRegion(
+      DataManager dataManager) {
     Map<String, int> regionCount = {};
 
     for (var token in dataManager.portfolio) {
@@ -693,7 +767,8 @@ double _calculateBottomInterval(List<Map<String, dynamic>> data) {
       List<String> parts = fullName.split(',');
       String region = '';
 
-      if (parts.length >= 3 && RegExp(r'^[A-Z]{2}\s\d{5}$').hasMatch(parts[2].trim())) {
+      if (parts.length >= 3 &&
+          RegExp(r'^[A-Z]{2}\s\d{5}$').hasMatch(parts[2].trim())) {
         region = parts[2].trim().substring(0, 2);
       } else if (parts.length >= 3) {
         region = parts[2].trim();
@@ -707,11 +782,14 @@ double _calculateBottomInterval(List<Map<String, dynamic>> data) {
     }
 
     return regionCount.entries.map((entry) {
-      final double percentage = (entry.value / regionCount.values.fold(0, (sum, value) => sum + value)) * 100;
+      final double percentage = (entry.value /
+              regionCount.values.fold(0, (sum, value) => sum + value)) *
+          100;
       return PieChartSectionData(
         value: entry.value.toDouble(),
         title: '${percentage.toStringAsFixed(1)}%',
-        color: Colors.accents[regionCount.keys.toList().indexOf(entry.key) % Colors.accents.length],
+        color: Colors.accents[regionCount.keys.toList().indexOf(entry.key) %
+            Colors.accents.length],
         radius: 50,
         titleStyle: TextStyle(
           fontSize: Platform.isAndroid ? 11 : 12,
@@ -722,7 +800,8 @@ double _calculateBottomInterval(List<Map<String, dynamic>> data) {
     }).toList();
   }
 
-  List<PieChartSectionData> _buildDonutChartDataByCity(DataManager dataManager) {
+  List<PieChartSectionData> _buildDonutChartDataByCity(
+      DataManager dataManager) {
     Map<String, int> cityCount = {};
 
     for (var token in dataManager.portfolio) {
@@ -734,11 +813,14 @@ double _calculateBottomInterval(List<Map<String, dynamic>> data) {
     }
 
     return cityCount.entries.map((entry) {
-      final double percentage = (entry.value / cityCount.values.fold(0, (sum, value) => sum + value)) * 100;
+      final double percentage = (entry.value /
+              cityCount.values.fold(0, (sum, value) => sum + value)) *
+          100;
       return PieChartSectionData(
         value: entry.value.toDouble(),
         title: '${percentage.toStringAsFixed(1)}%',
-        color: Colors.primaries[cityCount.keys.toList().indexOf(entry.key) % Colors.primaries.length],
+        color: Colors.primaries[cityCount.keys.toList().indexOf(entry.key) %
+            Colors.primaries.length],
         radius: 50,
         titleStyle: TextStyle(
           fontSize: Platform.isAndroid ? 11 : 12,
