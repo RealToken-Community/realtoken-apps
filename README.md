@@ -1,4 +1,4 @@
-# RealToken_apss
+# RealToken_apps
 
 RealToken apps is a mobile application built using Flutter, available on both iOS and Android, allowing users to access and see their fractional ownership of tokenized real estate. Leveraging blockchain technology, the app provides a seamless interface for users to view their RealToken portfolios, and access property details.
 
@@ -33,7 +33,7 @@ RealToken apps is a mobile application built using Flutter, available on both iO
 
 1. Clone the repository:
    ```bash
-   git clone https://github.com/RealToken-Community/App-iOS.git
+   git clone https://github.com/RealToken-Community/RealToken_apps.git
 2. Navigate to the project directory:
     ```bash
     cd realtoken_app
@@ -43,15 +43,15 @@ RealToken apps is a mobile application built using Flutter, available on both iO
 4. Setup iOS with CocoaPods (for macOS):
     ```bash
 ### Running the app
-To run on Android:
+To run debug app:
     ```bash
     flutter run
-To run on Android:
+To run release version:
     ```bash
     flutter run --release
 
 ### Configuration
-Ajoutez vos adresses de portefeuille Ethereum directement dans le menu **Settings** de l'application. Ces adresses seront enregistrées pour une utilisation future. Il est possible d'ajouter plusieurs portefeuilles, et l'application prend en charge la persistance des données d'une session à l'autre.
+Ajoutez vos adresses de portefeuille Ethereum directement dans le menu **Wallet** de l'application. Ces adresses sont nécéssaires pour utiliser toutes les fonctionalités de l'application. Il est possible d'ajouter plusieurs portefeuilles, et l'application prend en charge la persistance des données d'une session à l'autre.
 
 ### Contributing
 
@@ -61,8 +61,8 @@ Nous accueillons les contributions ! Veuillez cloner le dépôt, puis soumettre 
 
 Ce projet est sous licence MIT - voir le fichier [LICENSE](LICENSE) pour plus de détails.
 
-### About RealToken
+### About RealT
 
-RealToken permet aux investisseurs de posséder des parts fractionnées de biens immobiliers via des jetons basés sur la blockchain. En achetant des jetons, les investisseurs peuvent accéder à des revenus locatifs, à l'appréciation des biens immobiliers et à d'autres avantages financiers. Pour en savoir plus sur la plateforme RealToken, visitez [realt.co](https://realt.co).
+RealT permet aux investisseurs de posséder des parts fractionnées de biens immobiliers via des jetons basés sur la blockchain. En achetant des jetons, les investisseurs peuvent accéder à des revenus locatifs, à l'appréciation des biens immobiliers et à d'autres avantages financiers. Pour en savoir plus sur la plateforme RealT, visitez [realt.co](https://realt.co).
 
 

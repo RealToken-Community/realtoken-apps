@@ -29,7 +29,8 @@ Color getRentalStatusColor(int rentedUnits, int totalUnits) {
 
 // Fonction modifiée pour formater la monnaie avec le taux de conversion et le symbole
 String formatCurrency(BuildContext context, double value) {
-  final dataManager = Provider.of<DataManager>(context, listen: false); // Récupérer DataManager
+  final dataManager =
+      Provider.of<DataManager>(context, listen: false); // Récupérer DataManager
   final NumberFormat formatter = NumberFormat.currency(
     locale: 'fr_FR', // Vous pouvez adapter la locale selon vos besoins
     symbol: dataManager.currencySymbol, // Utilise le symbole de la devise
@@ -123,7 +124,7 @@ class PortfolioDisplay1 extends StatelessWidget {
                                 child: Stack(
                                   children: [
                                     SizedBox(
-                                      width: 150,
+                                      width: 120,
                                       height: double
                                           .infinity, // Hauteur ajustée à l'élément adjacent
                                       child: CachedNetworkImage(
@@ -201,15 +202,29 @@ class PortfolioDisplay1 extends StatelessWidget {
                                           mainAxisAlignment:
                                               MainAxisAlignment.spaceBetween,
                                           children: [
-                                            Text(
-                                              token['shortName'] ??
-                                                  S.of(context).nameUnavailable,
-                                              style: TextStyle(
+                                            // Tronquer le shortName si trop long
+                                            Expanded(
+                                              child: Text(
+                                                token['shortName'] ??
+                                                    S
+                                                        .of(context)
+                                                        .nameUnavailable,
+                                                style: TextStyle(
                                                   fontSize: Platform.isAndroid
                                                       ? 14
                                                       : 15,
-                                                  fontWeight: FontWeight.bold),
+                                                  fontWeight: FontWeight.bold,
+                                                ),
+                                                maxLines:
+                                                    1, // Limite à une seule ligne
+                                                overflow: TextOverflow
+                                                    .ellipsis, // Tronque avec "..."
+                                              ),
                                             ),
+                                            const SizedBox(
+                                                width:
+                                                    8), // Espacement entre le texte et la pastille
+                                            // Affichage de la pastille
                                             Container(
                                               padding:
                                                   const EdgeInsets.symmetric(
@@ -233,11 +248,12 @@ class PortfolioDisplay1 extends StatelessWidget {
                                                         ? 'RMM'
                                                         : S.of(context).other,
                                                 style: TextStyle(
-                                                    color: Colors.white,
-                                                    fontWeight: FontWeight.bold,
-                                                    fontSize: Platform.isAndroid
-                                                        ? 9
-                                                        : 10),
+                                                  color: Colors.white,
+                                                  fontWeight: FontWeight.bold,
+                                                  fontSize: Platform.isAndroid
+                                                      ? 9
+                                                      : 10,
+                                                ),
                                               ),
                                             ),
                                           ],
@@ -287,7 +303,9 @@ class PortfolioDisplay1 extends StatelessWidget {
                                                   Text(
                                                       formatCurrency(
                                                           context,
-                                                          token['dailyIncome'] * 7??  0),
+                                                          token['dailyIncome'] *
+                                                                  7 ??
+                                                              0),
                                                       style: TextStyle(
                                                           fontSize:
                                                               Platform.isAndroid

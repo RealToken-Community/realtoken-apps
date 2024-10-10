@@ -24,7 +24,7 @@ class StatisticsPage extends StatefulWidget {
 }
 
 class _StatisticsPageState extends State<StatisticsPage> {
-  String _selectedPeriod = 'Semaine'; // Peut être traduit
+  late String _selectedPeriod;
 
   // Carte des abréviations d'États des États-Unis à leurs noms complets
   final Map<String, String> _usStateAbbreviations = {
@@ -94,6 +94,14 @@ class _StatisticsPageState extends State<StatisticsPage> {
         print("Stacktrace: $stacktrace");
       }
     });
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    _selectedPeriod = S
+        .of(context)
+        .month; // Initialisation avec la traduction après que le contexte est disponible.
   }
 
   List<Map<String, dynamic>> _groupRentDataByPeriod(DataManager dataManager) {
@@ -202,136 +210,139 @@ class _StatisticsPageState extends State<StatisticsPage> {
 
   bool _showCumulativeRent = false;
 
-Widget _buildRentGraphCard(
-    List<Map<String, dynamic>> groupedData, DataManager dataManager) {
-  const int maxPoints = 100;
-  List<Map<String, dynamic>> limitedData = groupedData.length > maxPoints
-      ? groupedData.sublist(0, maxPoints)
-      : groupedData;
+  Widget _buildRentGraphCard(
+      List<Map<String, dynamic>> groupedData, DataManager dataManager) {
+    const int maxPoints = 100;
+    List<Map<String, dynamic>> limitedData = groupedData.length > maxPoints
+        ? groupedData.sublist(0, maxPoints)
+        : groupedData;
 
-  List<Map<String, dynamic>> convertedData = limitedData.map((entry) {
-    double convertedRent = dataManager.convert(entry['rent'] ?? 0.0);
-    return {
-      'date': entry['date'],
-      'rent': convertedRent,
-      'cumulativeRent': entry['cumulativeRent'] ?? 0.0, // Ajout des données cumulatives
-    };
-  }).toList();
+    List<Map<String, dynamic>> convertedData = limitedData.map((entry) {
+      double convertedRent = dataManager.convert(entry['rent'] ?? 0.0);
+      return {
+        'date': entry['date'],
+        'rent': convertedRent,
+        'cumulativeRent':
+            entry['cumulativeRent'] ?? 0.0, // Ajout des données cumulatives
+      };
+    }).toList();
 
-  return Padding(
-    padding: const EdgeInsets.symmetric(horizontal: 16.0),
-    child: Card(
-      elevation: 0,
-      color: Theme.of(context).cardColor,
-      child: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              children: [
-                Text(
-                  _showCumulativeRent
-                      ? S.of(context).groupedRentGraph
-                      : S.of(context).cumulativeRentGraph,
-                  style: TextStyle(
-                    fontSize: Platform.isAndroid ? 19 : 20,
-                    fontWeight: FontWeight.bold,
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 16.0),
+      child: Card(
+        elevation: 0,
+        color: Theme.of(context).cardColor,
+        child: Padding(
+          padding: const EdgeInsets.all(16.0),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                children: [
+                  Text(
+                    _showCumulativeRent
+                        ? S.of(context).groupedRentGraph
+                        : S.of(context).cumulativeRentGraph,
+                    style: TextStyle(
+                      fontSize: Platform.isAndroid ? 19 : 20,
+                      fontWeight: FontWeight.bold,
+                    ),
                   ),
-                ),
-                Spacer(), // Ajoute de l'espace flexible
-                Switch(
-                  value: _showCumulativeRent,
-                  onChanged: (value) {
-                    setState(() {
-                      _showCumulativeRent = value;
-                    });
-                  },
-                ),
-              ],
-            ),
-            _buildPeriodSelector(),
-            const SizedBox(height: 10),
-            SizedBox(
-              height: 300,
-              child: LineChart(
-                LineChartData(
-                  gridData: FlGridData(show: true),
-                  titlesData: FlTitlesData(
-                    topTitles:
-                        AxisTitles(sideTitles: SideTitles(showTitles: false)),
-                    leftTitles: AxisTitles(
-                      sideTitles: SideTitles(
-                        showTitles: true,
-                        reservedSize: 50, // Augmenter la taille réservée à l'échelle de gauche
-                        interval: _calculateLeftInterval(convertedData),
-                        getTitlesWidget: (value, meta) {
-                          return Text(
-                            formatCurrency(value, dataManager.currencySymbol),
-                            style: TextStyle(
-                                fontSize: Platform.isAndroid ? 9 : 10),
-                          );
-                        },
-                      ),
-                    ),
-                    rightTitles: AxisTitles(
-                      sideTitles: SideTitles(
-                        showTitles: false, // Désactiver l'échelle de droite
-                      ),
-                    ),
-                    bottomTitles: AxisTitles(
-                      sideTitles: SideTitles(
-                        showTitles: true,
-                        interval: _calculateBottomInterval(convertedData),
-                        getTitlesWidget: (value, meta) {
-                          List<String> labels = _buildDateLabels(convertedData);
-                          if (value.toInt() >= 0 &&
-                              value.toInt() < labels.length) {
-                            return Transform.rotate(
-                              angle: -0.5,
-                              child: Text(
-                                labels[value.toInt()],
-                                style: TextStyle(
-                                    fontSize: Platform.isAndroid ? 7 : 8),
-                              ),
+                  Spacer(), // Ajoute de l'espace flexible
+                  Switch(
+                    value: _showCumulativeRent,
+                    onChanged: (value) {
+                      setState(() {
+                        _showCumulativeRent = value;
+                      });
+                    },
+                  ),
+                ],
+              ),
+              _buildPeriodSelector(),
+              const SizedBox(height: 10),
+              SizedBox(
+                height: 300,
+                child: LineChart(
+                  LineChartData(
+                    gridData: FlGridData(show: true),
+                    titlesData: FlTitlesData(
+                      topTitles:
+                          AxisTitles(sideTitles: SideTitles(showTitles: false)),
+                      leftTitles: AxisTitles(
+                        sideTitles: SideTitles(
+                          showTitles: true,
+                          reservedSize:
+                              50, // Augmenter la taille réservée à l'échelle de gauche
+                          interval: _calculateLeftInterval(convertedData),
+                          getTitlesWidget: (value, meta) {
+                            return Text(
+                              formatCurrency(value, dataManager.currencySymbol),
+                              style: TextStyle(
+                                  fontSize: Platform.isAndroid ? 9 : 10),
                             );
-                          } else {
-                            return const Text('');
-                          }
-                        },
+                          },
+                        ),
+                      ),
+                      rightTitles: AxisTitles(
+                        sideTitles: SideTitles(
+                          showTitles: false, // Désactiver l'échelle de droite
+                        ),
+                      ),
+                      bottomTitles: AxisTitles(
+                        sideTitles: SideTitles(
+                          showTitles: true,
+                          interval: _calculateBottomInterval(convertedData),
+                          getTitlesWidget: (value, meta) {
+                            List<String> labels =
+                                _buildDateLabels(convertedData);
+                            if (value.toInt() >= 0 &&
+                                value.toInt() < labels.length) {
+                              return Transform.rotate(
+                                angle: -0.5,
+                                child: Text(
+                                  labels[value.toInt()],
+                                  style: TextStyle(
+                                      fontSize: Platform.isAndroid ? 7 : 8),
+                                ),
+                              );
+                            } else {
+                              return const Text('');
+                            }
+                          },
+                        ),
                       ),
                     ),
+                    borderData: FlBorderData(show: false),
+                    minX: 0,
+                    maxX: (convertedData.length - 1).toDouble(),
+                    lineBarsData: [
+                      LineChartBarData(
+                        spots: _showCumulativeRent
+                            ? _buildCumulativeChartData(
+                                convertedData) // Ligne verte (cumulative)
+                            : _buildChartData(
+                                convertedData), // Ligne bleue (rent)
+                        isCurved: true,
+                        barWidth: 2,
+                        color: _showCumulativeRent ? Colors.green : Colors.blue,
+                        belowBarData: BarAreaData(
+                          show: true,
+                          color:
+                              (_showCumulativeRent ? Colors.green : Colors.blue)
+                                  .withOpacity(0.3),
+                        ),
+                      ),
+                    ],
                   ),
-                  borderData: FlBorderData(show: false),
-                  minX: 0,
-                  maxX: (convertedData.length - 1).toDouble(),
-                  lineBarsData: [
-                    LineChartBarData(
-                      spots: _showCumulativeRent
-                          ? _buildCumulativeChartData(
-                              convertedData) // Ligne verte (cumulative)
-                          : _buildChartData(
-                              convertedData), // Ligne bleue (rent)
-                      isCurved: true,
-                      barWidth: 2,
-                      color: _showCumulativeRent ? Colors.green : Colors.blue,
-                      belowBarData: BarAreaData(
-                        show: true,
-                        color: (_showCumulativeRent ? Colors.green : Colors.blue)
-                            .withOpacity(0.3),
-                      ),
-                    ),
-                  ],
                 ),
               ),
-            ),
-          ],
+            ],
+          ),
         ),
       ),
-    ),
-  );
-}
-
+    );
+  }
 
 // Méthode pour calculer un intervalle optimisé pour l'axe des valeurs
   double _calculateLeftInterval(List<Map<String, dynamic>> data) {
@@ -538,7 +549,7 @@ Widget _buildRentGraphCard(
               right: isLast ? const Radius.circular(20) : Radius.zero,
             ),
           ),
-          padding: const EdgeInsets.symmetric(vertical: 6),
+          padding: const EdgeInsets.symmetric(vertical: 3),
           alignment: Alignment.center,
           child: Text(
             period,

@@ -3,7 +3,6 @@ import 'package:cached_network_image/cached_network_image.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 // Importer le fichier utils
 import 'package:intl/intl.dart';
-import 'package:url_launcher/url_launcher.dart';
 import 'package:flutter_map/flutter_map.dart';
 import 'package:latlong2/latlong.dart'; // Import pour les coordonnées géographiques
 import 'package:fl_chart/fl_chart.dart';
@@ -13,6 +12,7 @@ import '../api/data_manager.dart'; // Import de DataManager
 import '../generated/l10n.dart'; // Import pour les traductions
 import 'package:carousel_slider/carousel_slider.dart';
 import 'portfolio/FullScreenCarousel.dart';
+import '../utils/utils.dart';
 
 // Fonction modifiée pour formater la monnaie avec le taux de conversion et le symbole
 String formatCurrency(BuildContext context, double value) {
@@ -39,7 +39,6 @@ void _openMapModal(BuildContext context, dynamic lat, dynamic lng) {
     );
     return;
   }
-
 
   showModalBottomSheet(
     context: context,
@@ -95,7 +94,7 @@ void _openMapModal(BuildContext context, dynamic lat, dynamic lng) {
   );
 }
 
-  // Fonction pour convertir les sqft en m²
+// Fonction pour convertir les sqft en m²
 String _formatSquareFeet(double sqft, bool convertToSquareMeters) {
   if (convertToSquareMeters) {
     double squareMeters = sqft * 0.092903; // Conversion des pieds carrés en m²
@@ -104,9 +103,10 @@ String _formatSquareFeet(double sqft, bool convertToSquareMeters) {
     return '${sqft.toStringAsFixed(2)} sqft';
   }
 }
-  
+
 // Fonction réutilisable pour afficher la BottomModalSheet avec les détails du token
-Future<void> showTokenDetails(BuildContext context, Map<String, dynamic> token) async {
+Future<void> showTokenDetails(
+    BuildContext context, Map<String, dynamic> token) async {
   final prefs = await SharedPreferences.getInstance();
   bool convertToSquareMeters = prefs.getBool('convertToSquareMeters') ?? false;
 
@@ -210,6 +210,33 @@ Future<void> showTokenDetails(BuildContext context, Map<String, dynamic> token) 
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
+                            Row(
+                              children: [
+                                // Pastille de couleur en fonction du statut de location
+                                Container(
+                                  width: 16,
+                                  height: 16,
+                                  decoration: BoxDecoration(
+                                    shape: BoxShape.circle,
+                                    color: getRentalStatusColor(
+                                      token['rentedUnits'] ??
+                                          0, // Nombre de logements loués
+                                      token['totalUnits'] ??
+                                          1, // Nombre total de logements
+                                    ),
+                                  ),
+                                ),
+                                const SizedBox(width: 10),
+                                Text(
+                                  '${S.of(context).rentedUnits} : ${token['rentedUnits'] ?? S.of(context).notSpecified} / ${token['totalUnits'] ?? S.of(context).notSpecified}',
+                                  style: TextStyle(
+                                      fontSize: Platform.isAndroid
+                                          ? 12
+                                          : 13), // Réduction de la taille du texte pour Android
+                                ),
+                              ],
+                            ),
+                            const SizedBox(height: 20),
                             Text(
                               S.of(context).characteristics,
                               style: TextStyle(
@@ -230,15 +257,33 @@ Future<void> showTokenDetails(BuildContext context, Map<String, dynamic> token) 
                                 S.of(context).totalUnits,
                                 token['totalUnits']?.toString() ??
                                     S.of(context).notSpecified),
-                             _buildDetailRow(
-                              S.of(context).squareFeet,
-                              _formatSquareFeet(token['lotSize']?.toDouble() ?? 0, convertToSquareMeters,),
+                            _buildDetailRow(
+                              S.of(context).lotSize,
+                              _formatSquareFeet(
+                                token['lotSize']?.toDouble() ?? 0,
+                                convertToSquareMeters,
+                              ),
                             ),
                             _buildDetailRow(
                               S.of(context).squareFeet,
-                              _formatSquareFeet(token['squareFeet']?.toDouble() ?? 0, convertToSquareMeters,),
+                              _formatSquareFeet(
+                                token['squareFeet']?.toDouble() ?? 0,
+                                convertToSquareMeters,
+                              ),
                             ),
                             const SizedBox(height: 10),
+                            Text(
+                              S.of(context).rents,
+                              style: TextStyle(
+                                fontWeight: FontWeight.bold,
+                                fontSize: Platform.isAndroid ? 14 : 15,
+                              ),
+                            ),
+                            const SizedBox(height: 10),
+                            _buildDetailRow(
+                                S.of(context).rentStartDate,
+                                Utils.formatReadableDate(
+                                    token['rentStartDate']))
                           ],
                         ),
                       ),
@@ -275,143 +320,139 @@ Future<void> showTokenDetails(BuildContext context, Map<String, dynamic> token) 
 
                       // Onglet Autres avec section Blockchain uniquement
                       SingleChildScrollView(
-  child: Column(
-    crossAxisAlignment: CrossAxisAlignment.start,
-    children: [
-      Text(
-        S.of(context).blockchain,
-        style: TextStyle(
-          fontWeight: FontWeight.bold,
-          fontSize: Platform.isAndroid ? 14 : 15,
-        ),
-      ),
-      const SizedBox(height: 10),
-
-      // Ethereum Contract avec icône de lien
-      Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-        children: [
-          Text(
-            S.of(context).ethereumContract,
-            style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13),
-          ),
-          IconButton(
-            icon: const Icon(Icons.link),
-            onPressed: () {
-              final ethereumAddress = token['ethereumContract'] ?? '';
-              if (ethereumAddress.isNotEmpty) {
-                _launchURL('https://etherscan.io/address/$ethereumAddress');
-              } else {
-                ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(content: Text(S.of(context).notSpecified)),
-                );
-              }
-            },
-          ),
-        ],
-      ),
-      const SizedBox(height: 4),
-      Text(
-        token['ethereumContract'] ?? S.of(context).notSpecified,
-        style: const TextStyle(fontSize: 13),
-      ),
-
-      const SizedBox(height: 10),
-
-      // Gnosis Contract avec icône de lien
-      Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-        children: [
-          Text(
-            S.of(context).gnosisContract,
-            style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13),
-          ),
-          IconButton(
-            icon: const Icon(Icons.link),
-            onPressed: () {
-              final gnosisAddress = token['gnosisContract'] ?? '';
-              if (gnosisAddress.isNotEmpty) {
-                _launchURL('https://gnosisscan.io/address/$gnosisAddress');
-              } else {
-                ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(content: Text(S.of(context).notSpecified)),
-                );
-              }
-            },
-          ),
-        ],
-      ),
-      const SizedBox(height: 4),
-      Text(
-        token['gnosisContract'] ?? S.of(context).notSpecified,
-        style: const TextStyle(fontSize: 13),
-      ),
-    ],
-  ),
-),
-
-                      // Onglet Insights
-                       SingleChildScrollView(
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            Row(
-                              children: [
-                                // Pastille de couleur en fonction du statut de location
-                                Container(
-                                  width: 16,
-                                  height: 16,
-                                  decoration: BoxDecoration(
-                                    shape: BoxShape.circle,
-                                    color: getRentalStatusColor(
-                                      token['rentedUnits'] ?? 0, // Nombre de logements loués
-                                      token['totalUnits'] ?? 1,  // Nombre total de logements
-                                    ),
-                                  ),
-                                ),
-                                const SizedBox(width: 10),
-                                Text(
-                                  S.of(context).rentalStatus, // Utilisation de la traduction
-                                  style: TextStyle(
-                                    fontWeight: FontWeight.bold,
-                                    fontSize: Platform.isAndroid ? 14 : 15,  // Réduction de la taille du texte pour Android
-                                  ),
-                                ),
-                              ],
-                            ),
-                            const SizedBox(height: 10),
-                            
-                            // Ajout du texte pour indiquer le pourcentage des logements loués
                             Text(
-                              '${S.of(context).rentedUnits} : ${token['rentedUnits'] ?? S.of(context).notSpecified} / ${token['totalUnits'] ?? S.of(context).notSpecified}',
-                              style: TextStyle(fontSize: Platform.isAndroid ? 12 : 13),  // Réduction de la taille du texte pour Android
-                            ),
-
-                            const SizedBox(height: 10),
-
-                            // Graphique du rendement (Yield)
-                            Text(
-                              S.of(context).yieldEvolution, // Utilisation de la traduction
+                              S.of(context).blockchain,
                               style: TextStyle(
                                 fontWeight: FontWeight.bold,
-                                fontSize: Platform.isAndroid ? 14 : 15,  // Réduction de la taille du texte pour Android
+                                fontSize: Platform.isAndroid ? 14 : 15,
                               ),
                             ),
                             const SizedBox(height: 10),
-                            _buildYieldChartOrMessage(context, token['historic']?['yields'] ?? [], token['historic']?['init_yield']),
-                            
+
+                            // Ethereum Contract avec icône de lien
+                            Row(
+                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                              children: [
+                                Text(
+                                  S.of(context).ethereumContract,
+                                  style: const TextStyle(
+                                      fontWeight: FontWeight.bold,
+                                      fontSize: 13),
+                                ),
+                                IconButton(
+                                  icon: const Icon(Icons.link),
+                                  onPressed: () {
+                                    final ethereumAddress =
+                                        token['ethereumContract'] ?? '';
+                                    if (ethereumAddress.isNotEmpty) {
+                                      Utils.launchURL(
+                                          'https://etherscan.io/address/$ethereumAddress');
+                                    } else {
+                                      ScaffoldMessenger.of(context)
+                                          .showSnackBar(
+                                        SnackBar(
+                                            content: Text(
+                                                S.of(context).notSpecified)),
+                                      );
+                                    }
+                                  },
+                                ),
+                              ],
+                            ),
+                            const SizedBox(height: 4),
+                            Text(
+                              token['ethereumContract'] ??
+                                  S.of(context).notSpecified,
+                              style: const TextStyle(fontSize: 13),
+                            ),
+
+                            const SizedBox(height: 10),
+
+                            // Gnosis Contract avec icône de lien
+                            Row(
+                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                              children: [
+                                Text(
+                                  S.of(context).gnosisContract,
+                                  style: const TextStyle(
+                                      fontWeight: FontWeight.bold,
+                                      fontSize: 13),
+                                ),
+                                IconButton(
+                                  icon: const Icon(Icons.link),
+                                  onPressed: () {
+                                    final gnosisAddress =
+                                        token['gnosisContract'] ?? '';
+                                    if (gnosisAddress.isNotEmpty) {
+                                      Utils.launchURL(
+                                          'https://gnosisscan.io/address/$gnosisAddress');
+                                    } else {
+                                      ScaffoldMessenger.of(context)
+                                          .showSnackBar(
+                                        SnackBar(
+                                            content: Text(
+                                                S.of(context).notSpecified)),
+                                      );
+                                    }
+                                  },
+                                ),
+                              ],
+                            ),
+                            const SizedBox(height: 4),
+                            Text(
+                              token['gnosisContract'] ??
+                                  S.of(context).notSpecified,
+                              style: const TextStyle(fontSize: 13),
+                            ),
+                          ],
+                        ),
+                      ),
+
+                      // Onglet Insights
+                      SingleChildScrollView(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            // Graphique du rendement (Yield)
+                            Text(
+                              S
+                                  .of(context)
+                                  .yieldEvolution, // Utilisation de la traduction
+                              style: TextStyle(
+                                fontWeight: FontWeight.bold,
+                                fontSize: Platform.isAndroid
+                                    ? 14
+                                    : 15, // Réduction de la taille du texte pour Android
+                              ),
+                            ),
+                            const SizedBox(height: 10),
+                            _buildYieldChartOrMessage(
+                                context,
+                                token['historic']?['yields'] ?? [],
+                                token['historic']?['init_yield']),
+
                             const SizedBox(height: 20),
 
                             // Graphique des prix
                             Text(
-                              S.of(context).priceEvolution, // Utilisation de la traduction
+                              S
+                                  .of(context)
+                                  .priceEvolution, // Utilisation de la traduction
                               style: TextStyle(
                                 fontWeight: FontWeight.bold,
-                                fontSize: Platform.isAndroid ? 14 : 15,  // Réduction de la taille du texte pour Android
+                                fontSize: Platform.isAndroid
+                                    ? 14
+                                    : 15, // Réduction de la taille du texte pour Android
                               ),
                             ),
                             const SizedBox(height: 10),
-                            _buildPriceChartOrMessage(context, token['historic']?['prices'] ?? [], token['historic']?['init_price']),
+                            _buildPriceChartOrMessage(
+                                context,
+                                token['historic']?['prices'] ?? [],
+                                token['historic']?['init_price']),
                           ],
                         ),
                       ),
@@ -435,7 +476,7 @@ Future<void> showTokenDetails(BuildContext context, Map<String, dynamic> token) 
                           height: 36,
                           child: ElevatedButton(
                             onPressed: () =>
-                                _launchURL(token['marketplaceLink']),
+                                Utils.launchURL(token['marketplaceLink']),
                             style: ElevatedButton.styleFrom(
                               foregroundColor: Colors.white,
                               backgroundColor:
@@ -750,14 +791,5 @@ Color getRentalStatusColor(int rentedUnits, int totalUnits) {
     return Colors.green; // Tous les logements sont loués
   } else {
     return Colors.orange; // Partiellement loué
-  }
-}
-
-// Méthode pour ouvrir une URL dans le navigateur externe
-Future<void> _launchURL(String url) async {
-  if (await canLaunch(url)) {
-    await launch(url);
-  } else {
-    throw 'Impossible d\'ouvrir l\'URL: $url';
   }
 }
