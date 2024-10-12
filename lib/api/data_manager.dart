@@ -11,9 +11,9 @@ class DataManager extends ChangeNotifier {
   double rwaHoldingsValue = 0;
   int rentedUnits = 0;
   int totalUnits = 0;
-  int totalTokens = 0;
-  double walletTokensSums = 0;
-  double rmmTokensSums = 0;
+  double totalTokens = 0.0;
+  double walletTokensSums  = 0.0;
+  double rmmTokensSums = 0.0;
   double averageAnnualYield = 0;
   double dailyRent = 0;
   double weeklyRent = 0;
@@ -28,6 +28,7 @@ class DataManager extends ChangeNotifier {
   double totalUsdcBorrowBalance = 0;
   double totalXdaiDepositBalance = 0;
   double totalXdaiBorrowBalance = 0;
+  List<Map<String, dynamic>> detailedRentData = [];
 
 // Méthode pour ajouter des adresses à un userId
   void addAddressesForUserId(String userId, List<String> addresses) {
@@ -128,36 +129,30 @@ class DataManager extends ChangeNotifier {
 
   final String rwaTokenAddress = '0x0675e8f4a52ea6c845cb6427af03616a2af42170';
 
-  Future<void> fetchAndStoreAllTokens() async {
-    final realTokens = await ApiService
-        .fetchRealTokens(); // Garder realTokens en List<dynamic>
-    print(
-        "Tokens récupérés: $realTokens"); // Vérifiez que vous obtenez bien des tokens
+ Future<void> fetchAndStoreAllTokens() async {
+  final realTokens = await ApiService.fetchRealTokens(); // Garder realTokens en List<dynamic>
+  List<Map<String, dynamic>> allTokensList = [];
 
-    List<Map<String, dynamic>> allTokensList = [];
-
-    // Si des tokens existent, les ajouter à la liste des tokens
-    if (realTokens.isNotEmpty) {
-      _recentUpdates = _extractRecentUpdates(realTokens);
-      for (var realToken in realTokens.cast<Map<String, dynamic>>()) {
+  // Si des tokens existent, les ajouter à la liste des tokens
+  if (realTokens.isNotEmpty) {
+    _recentUpdates = _extractRecentUpdates(realTokens);
+    for (var realToken in realTokens.cast<Map<String, dynamic>>()) {
+      // Vérification: Ne pas ajouter si totalTokens est 0 ou si fullName commence par "OLD-"
+      if (realToken['totalTokens'] != null && realToken['totalTokens'] > 0 &&
+          realToken['fullName'] != null && !realToken['fullName'].startsWith('OLD-')) {
         allTokensList.add({
           'shortName': realToken['shortName'],
           'fullName': realToken['fullName'],
           'imageLink': realToken['imageLink'],
-          'amount': realToken['totalTokens']
-              .toString(), // Affiche le total des tokens disponibles
           'lat': realToken['coordinate']['lat'],
           'lng': realToken['coordinate']['lng'],
           'totalTokens': realToken['totalTokens'],
           'tokenPrice': realToken['tokenPrice'],
           'totalValue': realToken['totalInvestment'],
           'annualPercentageYield': realToken['annualPercentageYield'],
-          'dailyIncome':
-              realToken['netRentDayPerToken'] * realToken['totalTokens'],
-          'monthlyIncome':
-              realToken['netRentMonthPerToken'] * realToken['totalTokens'],
-          'yearlyIncome':
-              realToken['netRentYearPerToken'] * realToken['totalTokens'],
+          'dailyIncome': realToken['netRentDayPerToken'] * realToken['totalTokens'],
+          'monthlyIncome': realToken['netRentMonthPerToken'] * realToken['totalTokens'],
+          'yearlyIncome': realToken['netRentYearPerToken'] * realToken['totalTokens'],
           'initialLaunchDate': realToken['initialLaunchDate']?['date'],
           'totalInvestment': realToken['totalInvestment'],
           'underlyingAssetPrice': realToken['underlyingAssetPrice'],
@@ -177,44 +172,56 @@ class DataManager extends ChangeNotifier {
           'historic': realToken['historic'],
           'ethereumContract': realToken['ethereumContract'],
           'gnosisContract': realToken['gnosisContract'],
+          'totalRentReceived': 0.0, // Ajout du loyer total reçu
         });
       }
     }
-
-    // Mettre à jour la liste des tokens
-    _allTokens = allTokensList;
-
-    // Notifie les widgets que les données ont changé
-    notifyListeners();
   }
+
+  // Mettre à jour la liste des tokens
+  _allTokens = allTokensList;
+  print("Tokens récupérés: ${allTokensList.length}"); // Vérifiez que vous obtenez bien des tokens
+
+  // Notifie les widgets que les données ont changé
+  notifyListeners();
+}
+
 
   // Méthode pour récupérer et calculer les données pour le Dashboard et Portfolio
   Future<void> fetchAndCalculateData({bool forceFetch = false}) async {
     print("Début de la récupération des données de tokens...");
 
-    final walletTokensGnosis =
-        await ApiService.fetchTokensFromGnosis(forceFetch: forceFetch);
-    final walletTokensEtherum =
-        await ApiService.fetchTokensFromEtherum(forceFetch: forceFetch);
-    final rmmTokens = await ApiService.fetchRMMTokens(forceFetch: forceFetch);
-    final realTokens = await ApiService.fetchRealTokens(forceFetch: forceFetch);
+    try {
+    // Lancer toutes les requêtes API en parallèle
+    final results = await Future.wait([
+      ApiService.fetchTokensFromGnosis(forceFetch: forceFetch),
+      ApiService.fetchTokensFromEtherum(forceFetch: forceFetch),
+      ApiService.fetchRMMTokens(forceFetch: forceFetch),
+      ApiService.fetchRealTokens(forceFetch: forceFetch),
+      ApiService.fetchDetailedRentDataForAllWallets(),
+    ]);
 
-// Fusionner les tokens de Gnosis et d'Etherum
+    // Stocker les résultats de chaque requête API
+    final walletTokensGnosis = results[0];
+    final walletTokensEtherum = results[1];
+    final rmmTokens = results[2];
+    final realTokens = results[3];
+    detailedRentData = List<Map<String, dynamic>>.from(results[4]);
+
+    // Fusionner les tokens de Gnosis et d'Etherum
     final walletTokens = [...walletTokensGnosis, ...walletTokensEtherum];
 
     // Vérifier les données récupérées et loguer si elles sont vides
     if (walletTokensGnosis.isEmpty) {
       print("Aucun wallet récupéré depuis Gnosis.");
     } else {
-      print(
-          "Nombre de wallets récupérés depuis Gnosis: ${walletTokensGnosis.length}");
+      print("Nombre de wallets récupérés depuis Gnosis: ${walletTokensGnosis.length}");
     }
 
     if (walletTokensEtherum.isEmpty) {
       print("Aucun wallet récupéré depuis Etherum.");
     } else {
-      print(
-          "Nombre de wallets récupérés depuis Etherum: ${walletTokensEtherum.length}");
+      print("Nombre de wallets récupérés depuis Etherum: ${walletTokensEtherum.length}");
     }
 
     if (rmmTokens.isEmpty) {
@@ -281,13 +288,11 @@ class DataManager extends ChangeNotifier {
           // Compter les unités louées et totales si elles n'ont pas déjà été comptées
           if (!uniqueRentedUnitAddresses.contains(tokenAddress)) {
             rentedUnits += (matchingRealToken['rentedUnits'] ?? 0) as int;
-            uniqueRentedUnitAddresses.add(
-                tokenAddress); // Marquer cette adresse comme comptée pour les unités louées
+            uniqueRentedUnitAddresses.add(tokenAddress); // Marquer cette adresse comme comptée pour les unités louées
           }
           if (!uniqueTotalUnitAddresses.contains(tokenAddress)) {
             totalUnits += (matchingRealToken['totalUnits'] ?? 0) as int;
-            uniqueTotalUnitAddresses.add(
-                tokenAddress); // Marquer cette adresse comme comptée pour les unités totales
+            uniqueTotalUnitAddresses.add(tokenAddress); // Marquer cette adresse comme comptée pour les unités totales
           }
 
           if (tokenAddress == rwaTokenAddress.toLowerCase()) {
@@ -305,9 +310,12 @@ class DataManager extends ChangeNotifier {
             yearlyRentSum += matchingRealToken['netRentYearPerToken'] *
                 double.parse(walletToken['amount']);
           }
-
+           double totalRentReceived = 0.0;
+        final tokenContractAddress = matchingRealToken['uuid'] ?? ''; // Utiliser l'adresse du contrat du token
+       
           // Ajouter au Portfolio
           newPortfolio.add({
+            'id': matchingRealToken['id'],
             'shortName': matchingRealToken['shortName'],
             'fullName': matchingRealToken['fullName'],
             'imageLink': matchingRealToken['imageLink'],
@@ -319,18 +327,13 @@ class DataManager extends ChangeNotifier {
             'tokenPrice': tokenPrice,
             'totalValue': tokenValue,
             'annualPercentageYield': matchingRealToken['annualPercentageYield'],
-            'dailyIncome': matchingRealToken['netRentDayPerToken'] *
-                double.parse(walletToken['amount']),
-            'monthlyIncome': matchingRealToken['netRentMonthPerToken'] *
-                double.parse(walletToken['amount']),
-            'yearlyIncome': matchingRealToken['netRentYearPerToken'] *
-                double.parse(walletToken['amount']),
-            'initialLaunchDate': matchingRealToken['initialLaunchDate']
-                ?['date'],
+            'dailyIncome': matchingRealToken['netRentDayPerToken'] * double.parse(walletToken['amount']),
+            'monthlyIncome': matchingRealToken['netRentMonthPerToken'] * double.parse(walletToken['amount']),
+            'yearlyIncome': matchingRealToken['netRentYearPerToken'] * double.parse(walletToken['amount']),
+            'initialLaunchDate': matchingRealToken['initialLaunchDate'] ?['date'],
             'totalInvestment': matchingRealToken['totalInvestment'],
             'underlyingAssetPrice': matchingRealToken['underlyingAssetPrice'],
-            'initialMaintenanceReserve':
-                matchingRealToken['initialMaintenanceReserve'],
+            'initialMaintenanceReserve': matchingRealToken['initialMaintenanceReserve'],
             'rentalType': matchingRealToken['rentalType'],
             'rentStartDate': matchingRealToken['rentStartDate']?['date'],
             'rentedUnits': matchingRealToken['rentedUnits'],
@@ -346,7 +349,33 @@ class DataManager extends ChangeNotifier {
             'historic': matchingRealToken['historic'],
             'ethereumContract': matchingRealToken['ethereumContract'],
             'gnosisContract': matchingRealToken['gnosisContract'],
+            'totalRentReceived': totalRentReceived, // Ajout du loyer total reçu
           });
+
+         if (tokenContractAddress.isNotEmpty) {
+           // Récupérer les informations de loyer pour ce token
+        double? rentDetails = getRentDetailsForToken(tokenContractAddress);
+
+        if (rentDetails != null) {
+          double totalRentReceived = rentDetails;
+
+          // Une fois les données récupérées, mettre à jour l'élément du portfolio correspondant
+          final portfolioItem = newPortfolio.firstWhere(
+            (item) => item['shortName'] == matchingRealToken['shortName'], 
+            orElse: () => {},
+          );
+
+          portfolioItem['totalRentReceived'] = totalRentReceived;
+          print("Loyer total reçu pour $tokenContractAddress : $totalRentReceived");
+                } else {
+          print("Aucun détail de loyer trouvé pour $tokenContractAddress");
+        }
+
+        // Notifiez les listeners après avoir mis à jour le portfolio
+        notifyListeners();
+      }
+
+
         }
       }
     }
@@ -374,13 +403,11 @@ class DataManager extends ChangeNotifier {
         // Compter les unités louées et totales si elles n'ont pas déjà été comptées
         if (!uniqueRentedUnitAddresses.contains(tokenAddress)) {
           rentedUnits += (matchingRealToken['rentedUnits'] ?? 0) as int;
-          uniqueRentedUnitAddresses.add(
-              tokenAddress); // Marquer cette adresse comme comptée pour les unités louées
+          uniqueRentedUnitAddresses.add(tokenAddress); // Marquer cette adresse comme comptée pour les unités louées
         }
         if (!uniqueTotalUnitAddresses.contains(tokenAddress)) {
           totalUnits += (matchingRealToken['totalUnits'] ?? 0) as int;
-          uniqueTotalUnitAddresses.add(
-              tokenAddress); // Marquer cette adresse comme comptée pour les unités totales
+          uniqueTotalUnitAddresses.add(tokenAddress); // Marquer cette adresse comme comptée pour les unités totales
         }
 
         annualYieldSum += matchingRealToken['annualPercentageYield'];
@@ -389,14 +416,18 @@ class DataManager extends ChangeNotifier {
         monthlyRentSum += matchingRealToken['netRentMonthPerToken'] * amount;
         yearlyRentSum += matchingRealToken['netRentYearPerToken'] * amount;
 
+        double totalRentReceived = 0.0;
+        final tokenContractAddress = matchingRealToken['uuid'] ?? ''; // Utiliser l'adresse du contrat du token
+
         // Ajouter au Portfolio
         newPortfolio.add({
+          'id': matchingRealToken['id'],
           'shortName': matchingRealToken['shortName'],
           'fullName': matchingRealToken['fullName'],
           'imageLink': matchingRealToken['imageLink'],
           'lat': matchingRealToken['coordinate']['lat'],
           'lng': matchingRealToken['coordinate']['lng'],
-          'amount': amount.toString(),
+          'amount': amount,
           'totalTokens': matchingRealToken['totalTokens'],
           'walletTokensSum': matchingRealToken['walletTokensSum'],
           'source': 'RMM',
@@ -409,8 +440,7 @@ class DataManager extends ChangeNotifier {
           'initialLaunchDate': matchingRealToken['initialLaunchDate']?['date'],
           'totalInvestment': matchingRealToken['totalInvestment'],
           'underlyingAssetPrice': matchingRealToken['underlyingAssetPrice'],
-          'initialMaintenanceReserve':
-              matchingRealToken['initialMaintenanceReserve'],
+          'initialMaintenanceReserve': matchingRealToken['initialMaintenanceReserve'],
           'rentalType': matchingRealToken['rentalType'],
           'rentStartDate': matchingRealToken['rentStartDate']?['date'],
           'rentedUnits': matchingRealToken['rentedUnits'],
@@ -426,7 +456,32 @@ class DataManager extends ChangeNotifier {
           'historic': matchingRealToken['historic'],
           'ethereumContract': matchingRealToken['ethereumContract'],
           'gnosisContract': matchingRealToken['gnosisContract'],
+          'totalRentReceived': totalRentReceived, // Ajout du loyer total reçu
         });
+        
+         if (tokenContractAddress.isNotEmpty) {
+           // Récupérer les informations de loyer pour ce token
+        double? rentDetails = getRentDetailsForToken(tokenContractAddress);
+
+        if (rentDetails != null) {
+          double totalRentReceived = rentDetails;
+
+          // Une fois les données récupérées, mettre à jour l'élément du portfolio correspondant
+          final portfolioItem = newPortfolio.firstWhere(
+            (item) => item['shortName'] == matchingRealToken['shortName'], 
+            orElse: () => {},
+          );
+
+          portfolioItem['totalRentReceived'] = totalRentReceived;
+          print("Loyer total reçu pour $tokenContractAddress : $totalRentReceived");
+                } else {
+          print("Aucun détail de loyer trouvé pour $tokenContractAddress");
+        }
+
+        // Notifiez les listeners après avoir mis à jour le portfolio
+        notifyListeners();
+      }
+
       }
     }
 
@@ -443,7 +498,7 @@ class DataManager extends ChangeNotifier {
     rwaHoldingsValue = rwaValue;
     walletTokensSums = walletTokensSum;
     rmmTokensSums = rmmTokensSum;
-    totalTokens = (walletTokensSum + rmmTokensSum).toInt();
+    totalTokens = (walletTokensSum + rmmTokensSum);
     averageAnnualYield = yieldCount > 0 ? annualYieldSum / yieldCount : 0;
     dailyRent = dailyRentSum;
     weeklyRent = dailyRentSum * 7;
@@ -463,6 +518,9 @@ class DataManager extends ChangeNotifier {
 
     // Notify listeners that data has changed
     notifyListeners();
+    } catch (error) {
+    print("Erreur lors de la récupération des données: $error");
+  }
   }
 
   // Méthode pour extraire les mises à jour récentes sur les 30 derniers jours
@@ -474,9 +532,6 @@ class DataManager extends ChangeNotifier {
     List<Map<String, dynamic>> recentUpdates = [];
 
     for (var token in realTokens) {
-      // Imprimer le token pour vérifier sa structure
-      print("Token: $token");
-
       // Vérification si update30 existe, est une liste et est non vide
       if (token.containsKey('update30') &&
           token['update30'] is List &&
@@ -512,7 +567,6 @@ class DataManager extends ChangeNotifier {
     // Trier les mises à jour par date
     recentUpdates.sort((a, b) =>
         DateTime.parse(b['timsync']).compareTo(DateTime.parse(a['timsync'])));
-    print('Mises à jour extraites : $recentUpdates');
     return recentUpdates;
   }
 
@@ -629,7 +683,7 @@ class DataManager extends ChangeNotifier {
             }
           }
         } else {
-          print('Invalid token or missing address for token: $token');
+          //print('Invalid token or missing address for token: $token');
         }
       }
 
@@ -650,8 +704,8 @@ class DataManager extends ChangeNotifier {
     rentedUnits = 0;
     totalUnits = 0;
     totalTokens = 0;
-    walletTokensSums = 0;
-    rmmTokensSums = 0;
+    walletTokensSums = 0.0;
+    rmmTokensSums = 0.0;
     averageAnnualYield = 0;
     dailyRent = 0;
     weeklyRent = 0;
@@ -677,20 +731,30 @@ class DataManager extends ChangeNotifier {
   }
 
 // Méthode pour mettre à jour le taux de conversion et le symbole
-  Future<void> updateConversionRate(String currency, String selectedCurrency,
-      Map<String, dynamic> currencies) async {
-    selectedCurrency = currency;
-    if (currencies.containsKey(selectedCurrency)) {
-      conversionRate = currencies[selectedCurrency] ?? 1.0;
-    } else {
-      conversionRate = 1.0; // Par défaut, rester en USD
-    }
+Future<void> updateConversionRate(
+  String currency, 
+  String selectedCurrency, 
+  Map<String, dynamic> currencies,
+) async {
+  selectedCurrency = currency; // Mettez à jour la devise sélectionnée
 
-    // Mettre à jour le symbole de la devise, ou utiliser les 3 lettres si absent
-    currencySymbol = _currencySymbols[selectedCurrency] ??
-        selectedCurrency.toUpperCase(); // Si absent, utiliser les 3 lettres
-    notifyListeners();
+  // Vérifiez si la devise existe dans le Map des devises
+  if (currencies.containsKey(selectedCurrency)) {
+    // Récupérez le taux de conversion, ou 1.0 si absent
+    conversionRate = currencies[selectedCurrency] is double 
+        ? currencies[selectedCurrency] 
+        : 1.0;
+  } else {
+    conversionRate = 1.0; // Par défaut, utiliser 1.0 (USD)
   }
+
+  // Mettre à jour le symbole de la devise, ou utiliser les 3 lettres si le symbole est absent
+  currencySymbol = _currencySymbols[selectedCurrency] ?? 
+      selectedCurrency.toUpperCase(); // Utiliser les lettres de la devise si le symbole est absent
+
+  notifyListeners(); // Notifiez les écouteurs que quelque chose a changé
+}
+
 
   Future<void> loadSelectedCurrency() async {
     final prefs = await SharedPreferences.getInstance();
@@ -760,5 +824,27 @@ class DataManager extends ChangeNotifier {
 
   double getTotalRentReceived() {
       return rentData.fold(0.0, (total, rentEntry) => total + rentEntry['rent']);
+  }
+
+double getRentDetailsForToken(String token) {
+    double totalRent = 0.0;
+
+    // Parcourir chaque entrée de la liste detailedRentData
+    for (var entry in detailedRentData) {
+      // Vérifie si l'entrée contient une liste de 'rents'
+      if (entry.containsKey('rents') && entry['rents'] is List) {
+        List rents = entry['rents'];
+
+        // Parcourir chaque élément de la liste des loyers
+        for (var rentEntry in rents) {
+          if (rentEntry['token'] != null && rentEntry['token'].toLowerCase() == token.toLowerCase()) {
+            // Ajoute le rent à totalRent si le token correspond
+            totalRent += (rentEntry['rent'] ?? 0.0).toDouble();
+          }
+        }
+      }
+    }
+
+    return totalRent;
   }
 }

@@ -158,6 +158,10 @@ class MessageLookup extends MessageLookupByLibrary {
             MessageLookupByLibrary.simpleMessage("Bungalow de villégiature"),
         "revenue": MessageLookupByLibrary.simpleMessage("Revenu"),
         "rmm": MessageLookupByLibrary.simpleMessage("RMM"),
+        "roiAlertInfo": MessageLookupByLibrary.simpleMessage(
+            "Cette fonction ROIest en beta, elle est pur le moment calculé en fonction des revenus recus de la propriété et la valeur actuelle du token."),
+        "roiPerProperties":
+            MessageLookupByLibrary.simpleMessage("ROI de la propriété"),
         "rwaHoldings": MessageLookupByLibrary.simpleMessage("RWA Holdings SA"),
         "searchHint": MessageLookupByLibrary.simpleMessage("Rechercher..."),
         "sendDonations": MessageLookupByLibrary.simpleMessage(
@@ -168,13 +172,14 @@ class MessageLookup extends MessageLookupByLibrary {
             MessageLookupByLibrary.simpleMessage("Portefeuille SFR"),
         "singleFamily":
             MessageLookupByLibrary.simpleMessage("Maison individuelle"),
-        "sortByAPY":
-            MessageLookupByLibrary.simpleMessage("Trier par rendement"),
-        "sortByName": MessageLookupByLibrary.simpleMessage("Trier par nom"),
-        "sortByValue": MessageLookupByLibrary.simpleMessage("Trier par valeur"),
+        "sortByAPY": MessageLookupByLibrary.simpleMessage("Tri par rendement"),
+        "sortByInitialLaunchDate":
+            MessageLookupByLibrary.simpleMessage("tri par ajout recent"),
+        "sortByName": MessageLookupByLibrary.simpleMessage("Tri par nom"),
+        "sortByValue": MessageLookupByLibrary.simpleMessage("Tri par valeur"),
         "spanish": MessageLookupByLibrary.simpleMessage("Espagnol"),
         "specialThanks": MessageLookupByLibrary.simpleMessage(
-            "Remerciements spéciaux à @Sigri, @ehpst, et pitsbi pour leur soutien."),
+            "Remerciements spéciaux à @Sigri, @ehpst, et @pitsbi pour leur soutien."),
         "squareFeet":
             MessageLookupByLibrary.simpleMessage("Surface intérieure"),
         "statistics": MessageLookupByLibrary.simpleMessage("Statistiques"),

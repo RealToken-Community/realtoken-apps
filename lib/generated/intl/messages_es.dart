@@ -60,8 +60,8 @@ class MessageLookup extends MessageLookupByLibrary {
         "crypto": MessageLookupByLibrary.simpleMessage("Crypto"),
         "cryptoDonationAddress": MessageLookupByLibrary.simpleMessage(
             "Dirección de donación de criptomonedas"),
-        "cumulativeRentGraph":
-            MessageLookupByLibrary.simpleMessage("Cumul des loyers"),
+        "cumulativeRentGraph": MessageLookupByLibrary.simpleMessage(
+            "Gráfico Acumulativo de Alquileres"),
         "currency": MessageLookupByLibrary.simpleMessage("Moneda"),
         "daily": MessageLookupByLibrary.simpleMessage("Diario"),
         "dark": MessageLookupByLibrary.simpleMessage("Oscuro"),
@@ -84,8 +84,8 @@ class MessageLookup extends MessageLookupByLibrary {
             MessageLookupByLibrary.simpleMessage("Contrato de Gnosis"),
         "grossRentMonth":
             MessageLookupByLibrary.simpleMessage("Alquiler bruto por mes"),
-        "groupedRentGraph":
-            MessageLookupByLibrary.simpleMessage("Loyers groupés"),
+        "groupedRentGraph": MessageLookupByLibrary.simpleMessage(
+            "Gráfico de Alquiler Agrupado"),
         "hello": MessageLookupByLibrary.simpleMessage("Hola"),
         "initialLaunchDate": MessageLookupByLibrary.simpleMessage(
             "Fecha de lanzamiento inicial"),
@@ -159,6 +159,10 @@ class MessageLookup extends MessageLookupByLibrary {
             MessageLookupByLibrary.simpleMessage("Bungaló de resort"),
         "revenue": MessageLookupByLibrary.simpleMessage("Ingresos"),
         "rmm": MessageLookupByLibrary.simpleMessage("RMM"),
+        "roiAlertInfo": MessageLookupByLibrary.simpleMessage(
+            "Esta función de ROI está en beta y actualmente se calcula en función de los ingresos recibidos de la propiedad y el valor actual del token."),
+        "roiPerProperties":
+            MessageLookupByLibrary.simpleMessage("ROI de la propiedad"),
         "rwaHoldings": MessageLookupByLibrary.simpleMessage("RWA Holdings SA"),
         "searchHint": MessageLookupByLibrary.simpleMessage("Buscar..."),
         "sendDonations": MessageLookupByLibrary.simpleMessage(
@@ -170,13 +174,15 @@ class MessageLookup extends MessageLookupByLibrary {
             MessageLookupByLibrary.simpleMessage("Casa unifamiliar"),
         "sortByAPY":
             MessageLookupByLibrary.simpleMessage("Ordenar por rendimiento"),
+        "sortByInitialLaunchDate": MessageLookupByLibrary.simpleMessage(
+            "ordenar por agregado recientemente"),
         "sortByName":
             MessageLookupByLibrary.simpleMessage("Ordenar por nombre"),
         "sortByValue":
             MessageLookupByLibrary.simpleMessage("Ordenar por valor"),
         "spanish": MessageLookupByLibrary.simpleMessage("Espagnol"),
         "specialThanks": MessageLookupByLibrary.simpleMessage(
-            "Agradecimientos especiales a @Sigri, @ehpst, y pitsbi por su apoyo."),
+            "Agradecimientos especiales a @Sigri, @ehpst, y @pitsbi por su apoyo."),
         "squareFeet": MessageLookupByLibrary.simpleMessage("Tamaño interior"),
         "statistics": MessageLookupByLibrary.simpleMessage("Estadísticas"),
         "supportProject":
@@ -217,7 +223,7 @@ class MessageLookup extends MessageLookupByLibrary {
         "usdcDepositBalance":
             MessageLookupByLibrary.simpleMessage("Saldo de depósitos USDC"),
         "version": MessageLookupByLibrary.simpleMessage("Versión"),
-        "viewOnMap": MessageLookupByLibrary.simpleMessage("voir sur la carte"),
+        "viewOnMap": MessageLookupByLibrary.simpleMessage("Ver en el Mapa"),
         "viewOnRealT": MessageLookupByLibrary.simpleMessage("Ver en RealT"),
         "wallet": MessageLookupByLibrary.simpleMessage("Monedero"),
         "week": MessageLookupByLibrary.simpleMessage("Semana"),

@@ -264,6 +264,7 @@ return Scaffold(
   // Fonction pour déterminer la couleur du cluster en fonction des marqueurs qu'il contient
   Color _getClusterColor(List<Marker> markers) {
     int fullyRented = 0;
+    // ignore: unused_local_variable
     int partiallyRented = 0;
     int notRented = 0;
 

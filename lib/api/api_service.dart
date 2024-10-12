@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:convert';
 import 'package:http/http.dart' as http;
 import 'package:hive/hive.dart';
@@ -5,21 +6,15 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 class ApiService {
   static const theGraphApiKey = 'c57eb2612e998502f4418378a4cb9f35';
-  static const String gnosisUrl =
-      'https://gateway-arbitrum.network.thegraph.com/api/$theGraphApiKey/subgraphs/id/FPPoFB7S2dcCNrRyjM5QbaMwKqRZPdbTg8ysBrwXd4SP';
-  static const String etherumUrl =
-      'https://gateway-arbitrum.network.thegraph.com/api/$theGraphApiKey/subgraphs/id/EVjGN4mMd9h9JfGR7yLC6T2xrJf9syhjQNboFb7GzxVW';
-  static const String rmmUrl =
-      'https://gateway-arbitrum.network.thegraph.com/api/$theGraphApiKey/subgraphs/id/2dMMk7DbQYPX6Gi5siJm6EZ2gDQBF8nJcgKtpiPnPBsK';
-  static const String realTokensUrl =
-      'https://pitswap-api.herokuapp.com/api/realTokens_mobileapps/';
-  static const String rentTrackerUrl =
-      'https://ehpst.duckdns.org/realt_rent_tracker/api/rent_holder/';
+  static const String gnosisUrl = 'https://gateway-arbitrum.network.thegraph.com/api/$theGraphApiKey/subgraphs/id/FPPoFB7S2dcCNrRyjM5QbaMwKqRZPdbTg8ysBrwXd4SP';
+  static const String etherumUrl = 'https://gateway-arbitrum.network.thegraph.com/api/$theGraphApiKey/subgraphs/id/EVjGN4mMd9h9JfGR7yLC6T2xrJf9syhjQNboFb7GzxVW';
+  static const String rmmUrl = 'https://gateway-arbitrum.network.thegraph.com/api/$theGraphApiKey/subgraphs/id/2dMMk7DbQYPX6Gi5siJm6EZ2gDQBF8nJcgKtpiPnPBsK';
+  static const String realTokensUrl = 'https://pitswap-api.herokuapp.com/api/realTokens_mobileapps/';
+  static const String rentTrackerUrl = 'https://ehpst.duckdns.org/realt_rent_tracker/api/rent_holder/';
   static const Duration cacheDuration = Duration(hours: 1);
 
   // Méthode factorisée pour fetch les tokens depuis The Graph
-  static Future<List<dynamic>> fetchTokensFromUrl(String url, String cacheKey,
-      {bool forceFetch = false}) async {
+  static Future<List<dynamic>> fetchTokensFromUrl(String url, String cacheKey, {bool forceFetch = false}) async {
     var box = Hive.box('dashboardTokens');
     final lastFetchTime = box.get('lastFetchTime_$cacheKey');
     final DateTime now = DateTime.now();
@@ -66,12 +61,13 @@ class ApiService {
     );
 
     if (response.statusCode == 200) {
+       print("apiService: theGraph -> requete lancée");
       final data = json.decode(response.body)['data']['accounts'];
       box.put('cachedTokenData_$cacheKey', json.encode(data));
       box.put('lastFetchTime_$cacheKey', now.toIso8601String());
       return data;
     } else {
-      throw Exception('Failed to fetch tokens from $url');
+      throw Exception('apiService: theGraph -> Failed to fetch tokens from $url');
     }
   }
 
@@ -145,6 +141,8 @@ class ApiService {
       );
 
       if (response.statusCode == 200) {
+        print("apiService: theGraph -> requete lancée");
+
         final decodedResponse = json.decode(response.body);
         if (decodedResponse['data'] != null &&
             decodedResponse['data']['users'] != null &&
@@ -153,7 +151,7 @@ class ApiService {
           allBalances.addAll(data);
         }
       } else {
-        throw Exception('Failed to fetch RMM tokens for address: $address');
+        throw Exception('apiService: theGraph -> Failed to fetch RMM tokens for address: $address');
       }
     }
 
@@ -164,8 +162,7 @@ class ApiService {
   }
 
   // Récupérer la liste complète des RealTokens depuis l'API pitswap
-  static Future<List<dynamic>> fetchRealTokens(
-      {bool forceFetch = false}) async {
+  static Future<List<dynamic>> fetchRealTokens({bool forceFetch = false}) async {
     var box = Hive.box('realTokens');
     final lastFetchTime = box.get('lastFetchTime');
     final DateTime now = DateTime.now();
@@ -183,79 +180,107 @@ class ApiService {
     final response = await http.get(Uri.parse(realTokensUrl));
 
     if (response.statusCode == 200) {
+      print("apiService: pitSwap -> requete lancée");
+
       final data = json.decode(response.body);
       box.put('cachedRealTokens', json.encode(data));
       box.put('lastFetchTime', now.toIso8601String());
       return data;
     } else {
-      throw Exception('Failed to fetch RealTokens');
+      throw Exception('apiService: pitSwap -> Failed to fetch RealTokens');
     }
   }
 
   // Récupérer les données de loyer pour chaque wallet et les fusionner avec cache
-  static Future<List<Map<String, dynamic>>> fetchRentData(
-      {bool forceFetch = false}) async {
-    SharedPreferences prefs = await SharedPreferences.getInstance();
-    List<String> wallets = prefs.getStringList('evmAddresses') ?? [];
+  static Future<List<Map<String, dynamic>>> fetchRentData({bool forceFetch = false}) async {
+  SharedPreferences prefs = await SharedPreferences.getInstance();
+  List<String> wallets = prefs.getStringList('evmAddresses') ?? [];
 
-    if (wallets.isEmpty) {
-      return []; // Ne pas exécuter si la liste des wallets est vide
-    }
-
-    var box = Hive.box('rentData');
-    final lastFetchTime = box.get('lastRentFetchTime');
-    final DateTime now = DateTime.now();
-
-    // Si forceFetch est false, on vérifie le cache
-    if (!forceFetch && lastFetchTime != null) {
-      final DateTime lastFetch = DateTime.parse(lastFetchTime);
-      if (now.difference(lastFetch) < cacheDuration) {
-        final cachedData = box.get('cachedRentData');
-        if (cachedData != null) {
-          return List<Map<String, dynamic>>.from(json.decode(cachedData));
-        }
-      }
-    }
-
-    // Sinon, on effectue la requête API
-    List<Map<String, dynamic>> mergedRentData = [];
-
-    for (String wallet in wallets) {
-      final url = '$rentTrackerUrl$wallet';
-      final response = await http.get(Uri.parse(url));
-
-      if (response.statusCode == 200) {
-        List<Map<String, dynamic>> rentData =
-            List<Map<String, dynamic>>.from(json.decode(response.body));
-        for (var rentEntry in rentData) {
-          final existingEntry = mergedRentData.firstWhere(
-            (entry) => entry['date'] == rentEntry['date'],
-            orElse: () => <String, dynamic>{},
-          );
-
-          if (existingEntry.isNotEmpty) {
-            existingEntry['rent'] =
-                (existingEntry['rent'] ?? 0) + (rentEntry['rent'] ?? 0);
-          } else {
-            mergedRentData.add({
-              'date': rentEntry['date'],
-              'rent': rentEntry['rent'] ?? 0,
-            });
-          }
-        }
-      } else {
-        throw Exception('Failed to load rent data for wallet: $wallet');
-      }
-    }
-
-    mergedRentData.sort((a, b) => a['date'].compareTo(b['date']));
-
-    // Mise à jour du cache après la récupération des données
-    box.put('cachedRentData', json.encode(mergedRentData));
-    box.put('lastRentFetchTime', now.toIso8601String());
-
-    return mergedRentData;
+  if (wallets.isEmpty) {
+    return []; // Ne pas exécuter si la liste des wallets est vide
   }
+
+  var box = Hive.box('rentData');
+  final DateTime now = DateTime.now();
+
+  // Vérifier si une réponse 429 a été reçue récemment
+  final last429Time = box.get('lastRent429Time');
+  if (last429Time != null) {
+    final DateTime last429 = DateTime.parse(last429Time);
+    // Si on est dans la période d'attente de 3 minutes
+    if (now.difference(last429) < Duration(minutes: 3)) {
+      print('apiService: ehpst -> 429 reçu, attente avant nouvelle requête.');
+      // Retourner les données en cache si elles sont disponibles
+      final cachedData = box.get('cachedRentData');
+      if (cachedData != null) {
+        return List<Map<String, dynamic>>.from(json.decode(cachedData));
+      }
+      return []; // Si pas de cache, on retourne une liste vide
+    }
+  }
+
+  // Vérification du cache
+  final lastFetchTime = box.get('lastRentFetchTime');
+  if (!forceFetch && lastFetchTime != null) {
+    final DateTime lastFetch = DateTime.parse(lastFetchTime);
+    if (now.difference(lastFetch) < ApiService.cacheDuration) {
+      final cachedData = box.get('cachedRentData');
+      if (cachedData != null) {
+        return List<Map<String, dynamic>>.from(json.decode(cachedData));
+      }
+    }
+  }
+
+  // Sinon, on effectue la requête API
+  List<Map<String, dynamic>> mergedRentData = [];
+
+  for (String wallet in wallets) {
+    final url = '$rentTrackerUrl$wallet';
+    final response = await http.get(Uri.parse(url));
+
+    // Si on reçoit un code 429, sauvegarder l'heure et arrêter
+    if (response.statusCode == 429) {
+      print('apiService: ehpst -> 429 Too Many Requests');
+      // Sauvegarder le temps où la réponse 429 a été reçue
+      box.put('lastRent429Time', now.toIso8601String());
+      break; // Sortir de la boucle et arrêter la méthode
+    }
+
+    if (response.statusCode == 200) {
+      print("apiService: ehpst -> RentTracker, requete lancée");
+
+      List<Map<String, dynamic>> rentData =
+          List<Map<String, dynamic>>.from(json.decode(response.body));
+      for (var rentEntry in rentData) {
+        final existingEntry = mergedRentData.firstWhere(
+          (entry) => entry['date'] == rentEntry['date'],
+          orElse: () => <String, dynamic>{},
+        );
+
+        if (existingEntry.isNotEmpty) {
+          existingEntry['rent'] =
+              (existingEntry['rent'] ?? 0) + (rentEntry['rent'] ?? 0);
+        } else {
+          mergedRentData.add({
+            'date': rentEntry['date'],
+            'rent': rentEntry['rent'] ?? 0,
+          });
+        }
+      }
+    } else {
+      throw Exception('ehpst -> RentTracker, Failed to load rent data for wallet: $wallet');
+    }
+  }
+
+  mergedRentData.sort((a, b) => a['date'].compareTo(b['date']));
+
+  // Mise à jour du cache après la récupération des données
+  box.put('cachedRentData', json.encode(mergedRentData));
+  box.put('lastRentFetchTime', now.toIso8601String());
+
+  return mergedRentData;
+}
+
 
   Future<Map<String, dynamic>> fetchCurrencies() async {
     final prefs = await SharedPreferences.getInstance();
@@ -286,9 +311,7 @@ class ApiService {
 
       // Stocker les devises en cache
       await prefs.setString('cachedCurrencies', jsonEncode(currencies));
-      await prefs.setInt(
-          'cachedCurrenciesTime', currentTime); // Stocker l'heure actuelle
-
+      await prefs.setInt('cachedCurrenciesTime', currentTime); // Stocker l'heure actuelle
       return currencies;
     } else {
       throw Exception('Failed to load currencies');
@@ -344,11 +367,15 @@ class ApiService {
     );
 
     if (response.statusCode == 200) {
+            print("apiService: theGraph -> requete lancée");
       final data = json.decode(response.body);
       final accounts = data['data']['accounts'];
       if (accounts != null && accounts.isNotEmpty) {
         return List<String>.from(accounts.map((account) => account['address']));
       }
+    } else {
+      print("apiService: theGraph -> echec requete");
+
     }
     return [];
   }
@@ -362,32 +389,22 @@ class ApiService {
       return [];
     }
 
-    // Contrats pour USDC
-    const String usdcDepositContract =
-        '0xed56f76e9cbc6a64b821e9c016eafbd3db5436d1'; // Dépôt USDC
-    const String usdcBorrowContract =
-        '0x69c731ae5f5356a779f44c355abb685d84e5e9e6'; // Emprunt USDC
-
-    // Contrats pour XDAI
-    const String xdaiDepositContract =
-        '0x0ca4f5554dd9da6217d62d8df2816c82bba4157b'; // Dépôt XDAI
-    const String xdaiBorrowContract =
-        '0x9908801df7902675c3fedd6fea0294d18d5d5d34'; // Emprunt XDAI
+    // Contrats pour USDC & XDAI
+    const String usdcDepositContract = '0xed56f76e9cbc6a64b821e9c016eafbd3db5436d1'; // Dépôt USDC
+    const String usdcBorrowContract = '0x69c731ae5f5356a779f44c355abb685d84e5e9e6'; // Emprunt USDC
+    const String xdaiDepositContract = '0x0ca4f5554dd9da6217d62d8df2816c82bba4157b'; // Dépôt XDAI
+    const String xdaiBorrowContract = '0x9908801df7902675c3fedd6fea0294d18d5d5d34'; // Emprunt XDAI
 
     List<Map<String, dynamic>> allBalances = [];
 
     for (var address in evmAddresses) {
       // Requête pour le dépôt et l'emprunt de USDC
-      final usdcDepositResponse =
-          await _fetchBalance(usdcDepositContract, address);
-      final usdcBorrowResponse =
-          await _fetchBalance(usdcBorrowContract, address);
+      final usdcDepositResponse = await _fetchBalance(usdcDepositContract, address);
+      final usdcBorrowResponse = await _fetchBalance(usdcBorrowContract, address);
 
       // Requête pour le dépôt et l'emprunt de XDAI
-      final xdaiDepositResponse =
-          await _fetchBalance(xdaiDepositContract, address);
-      final xdaiBorrowResponse =
-          await _fetchBalance(xdaiBorrowContract, address);
+      final xdaiDepositResponse = await _fetchBalance(xdaiDepositContract, address);
+      final xdaiBorrowResponse = await _fetchBalance(xdaiBorrowContract, address);
 
       // Traitement des réponses
       if (usdcDepositResponse != null &&
@@ -410,38 +427,160 @@ class ApiService {
   }
 
 // Méthode pour simplifier la récupération des balances
-  static Future<BigInt?> _fetchBalance(String contract, String address) async {
-    final response = await http.post(
-      Uri.parse('https://rpc.gnosischain.com'), // RPC Gnosis
-      headers: {'Content-Type': 'application/json'},
-      body: json.encode({
-        "jsonrpc": "2.0",
-        "method": "eth_call",
-        "params": [
-          {
-            "to": contract, // Contrat à interroger
-            "data":
-                "0x70a08231000000000000000000000000${address.substring(2)}" // balanceOf(address)
-          },
-          "latest"
-        ],
-        "id": 1
-      }),
-    );
+static Future<BigInt?> _fetchBalance(String contract, String address, {bool forceFetch = false}) async {
+  final String cacheKey = 'cachedBalance_${contract}_$address';
+  final box = await Hive.openBox('balanceCache'); // Remplacez par le système de stockage persistant que vous utilisez
+  final now = DateTime.now();
 
-    if (response.statusCode == 200) {
-      final responseBody = json.decode(response.body);
-      final result = responseBody['result'];
+  // Récupérer l'heure de la dernière requête dans le cache
+  final String? lastFetchTime = box.get('lastFetchTime_$cacheKey');
 
-      if (result != null && result != "0x") {
-        return BigInt.parse(result.substring(2), radix: 16);
-      } else {
-        print("Invalid response for contract $contract: $result");
+  // Vérifier si on doit utiliser le cache ou forcer une nouvelle requête
+  if (!forceFetch && lastFetchTime != null) {
+    final DateTime lastFetch = DateTime.parse(lastFetchTime);
+    if (now.difference(lastFetch) < ApiService.cacheDuration) {
+      // Vérifier si le résultat est mis en cache
+      final cachedData = box.get(cacheKey);
+      if (cachedData != null) {
+        print('apiService: Utilisation des données du cache pour $contract');
+        return BigInt.tryParse(cachedData);
       }
-    } else {
-      print(
-          'Failed to fetch balance for contract $contract. Status code: ${response.statusCode}');
     }
-    return null;
   }
+
+  // Effectuer la requête si les données ne sont pas en cache ou expirées
+  final response = await http.post(
+    Uri.parse('https://rpc.gnosischain.com'),
+    headers: {'Content-Type': 'application/json'},
+    body: json.encode({
+      "jsonrpc": "2.0",
+      "method": "eth_call",
+      "params": [
+        {
+          "to": contract,
+          "data": "0x70a08231000000000000000000000000${address.substring(2)}"
+        },
+        "latest"
+      ],
+      "id": 1
+    }),
+  );
+
+  if (response.statusCode == 200) {
+    final responseBody = json.decode(response.body);
+    final result = responseBody['result'];
+    print("apiService: RPC gnosis -> requête lancée");
+
+    if (result != null && result != "0x") {
+      final balance = BigInt.parse(result.substring(2), radix: 16);
+      
+      // Sauvegarder le résultat dans le cache
+      await box.put(cacheKey, balance.toString());
+      await box.put('lastFetchTime_$cacheKey', now.toIso8601String());
+      
+      return balance;
+    } else {
+      print("apiService: RPC gnosis -> Invalid response for contract $contract: $result");
+    }
+  } else {
+    print('apiService: RPC gnosis -> Failed to fetch balance for contract $contract. Status code: ${response.statusCode}');
+  }
+
+  return null;
+}
+
+
+  // Nouvelle méthode pour récupérer les détails des loyers
+static Future<List<Map<String, dynamic>>> fetchDetailedRentDataForAllWallets({bool forceFetch = false}) async {
+  SharedPreferences prefs = await SharedPreferences.getInstance();
+  List<String> evmAddresses = prefs.getStringList('evmAddresses') ?? []; // Récupérer les adresses de tous les wallets
+
+  if (evmAddresses.isEmpty) {
+    return []; // Ne pas exécuter si la liste des wallets est vide
+  }
+
+  // Ouvrir la boîte Hive pour stocker en cache
+  var box = await Hive.openBox('detailedRentData');
+  final DateTime now = DateTime.now();
+
+  // Vérifier si une réponse 429 a été reçue récemment
+  final last429Time = box.get('last429Time');
+  if (last429Time != null) {
+    final DateTime last429 = DateTime.parse(last429Time);
+    // Si on est dans la période d'attente de 3 minutes
+    if (now.difference(last429) < Duration(minutes: 3)) {
+      print('apiService: ehpst -> 429 reçu, attente avant nouvelle requête.');
+      // Retourner les données en cache si elles sont disponibles
+      List<Map<String, dynamic>> cachedData = [];
+      for (var walletAddress in evmAddresses) {
+        final cachedWalletData = box.get('cachedDetailedRentData_$walletAddress');
+        if (cachedWalletData != null) {
+          cachedData.addAll(List<Map<String, dynamic>>.from(json.decode(cachedWalletData)));
+        }
+      }
+      return cachedData;
+    }
+  }
+
+  // Initialiser une liste pour stocker les données brutes
+  List<Map<String, dynamic>> allRentData = [];
+
+  // Boucle pour chaque adresse de wallet
+  for (var walletAddress in evmAddresses) {
+    final lastFetchTime = box.get('lastDetailedRentFetchTime_$walletAddress');
+
+    // Si le cache est valide, utiliser les données mises en cache
+    if (!forceFetch && lastFetchTime != null) {
+      final DateTime lastFetch = DateTime.parse(lastFetchTime);
+      if (now.difference(lastFetch) < ApiService.cacheDuration) {
+        final cachedData = box.get('cachedDetailedRentData_$walletAddress');
+        if (cachedData != null) {
+          final List<Map<String, dynamic>> rentData = List<Map<String, dynamic>>.from(json.decode(cachedData));
+          allRentData.addAll(rentData); // Ajouter les données brutes au tableau
+          continue;
+        }
+      }
+    }
+
+    // Si le cache n'est pas valide, effectuer la requête HTTP avec un timeout de 2 minutes
+    final url = 'https://ehpst.duckdns.org/realt_rent_tracker/api/detailed_rent_holder/$walletAddress';
+    try {
+      final response = await http.get(Uri.parse(url)).timeout(Duration(minutes: 2), onTimeout: () {
+        // Gérer le timeout ici
+        throw TimeoutException('La requête a expiré après 2 minutes');
+      });
+
+      // Si on reçoit un code 429, sauvegarder l'heure et arrêter
+      if (response.statusCode == 429) {
+        print('apiService: ehpst -> 429 Too Many Requests');
+        // Sauvegarder le temps où la réponse 429 a été reçue
+        box.put('last429Time', now.toIso8601String());
+        break; // Sortir de la boucle et arrêter la méthode
+      }
+
+      // Si la requête réussit avec un code 200, traiter les données
+      if (response.statusCode == 200) {
+        final List<Map<String, dynamic>> rentData = List<Map<String, dynamic>>.from(json.decode(response.body));
+      
+        // Sauvegarder dans le cache
+        box.put('cachedDetailedRentData_$walletAddress', json.encode(rentData));
+        box.put('lastDetailedRentFetchTime_$walletAddress', now.toIso8601String());
+        print("apiService: ehpst -> detailRent, requete lancée");
+
+        // Ajouter les données brutes au tableau
+        allRentData.addAll(rentData);
+      } else {
+        throw Exception('apiService: ehpst -> detailRent, Failed to fetch detailed rent data for wallet: $walletAddress');
+      }
+    } catch (e) {
+      print('Erreur lors de la requête HTTP : $e');
+      // Vous pouvez gérer les exceptions ici (timeout ou autres erreurs)
+    }
+  }
+
+  // Retourner les données brutes pour traitement dans DataManager
+  return allRentData;
+}
+
+
 }

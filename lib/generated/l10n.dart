@@ -910,10 +910,10 @@ class S {
     );
   }
 
-  /// `Special thanks to @Sigri, @ehpst, and pitsbi for their support.`
+  /// `Special thanks to @Sigri, @ehpst, and @pitsbi for their support.`
   String get specialThanks {
     return Intl.message(
-      'Special thanks to @Sigri, @ehpst, and pitsbi for their support.',
+      'Special thanks to @Sigri, @ehpst, and @pitsbi for their support.',
       name: 'specialThanks',
       desc: '',
       args: [],
@@ -1240,6 +1240,16 @@ class S {
     );
   }
 
+  /// `sort by recently added`
+  String get sortByInitialLaunchDate {
+    return Intl.message(
+      'sort by recently added',
+      name: 'sortByInitialLaunchDate',
+      desc: '',
+      args: [],
+    );
+  }
+
   /// `Ascending`
   String get ascending {
     return Intl.message(
@@ -1450,21 +1460,41 @@ class S {
     );
   }
 
-  /// `Loyers groupés`
+  /// `Grouped Rent Graph`
   String get groupedRentGraph {
     return Intl.message(
-      'Loyers groupés',
+      'Grouped Rent Graph',
       name: 'groupedRentGraph',
       desc: '',
       args: [],
     );
   }
 
-  /// `Cumul des loyers`
+  /// `Cumulative Rent Graph`
   String get cumulativeRentGraph {
     return Intl.message(
-      'Cumul des loyers',
+      'Cumulative Rent Graph',
       name: 'cumulativeRentGraph',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Property ROI`
+  String get roiPerProperties {
+    return Intl.message(
+      'Property ROI',
+      name: 'roiPerProperties',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `This ROI feature is in beta and is currently calculated based on the income received from the property and the current token value.`
+  String get roiAlertInfo {
+    return Intl.message(
+      'This ROI feature is in beta and is currently calculated based on the income received from the property and the current token value.',
+      name: 'roiAlertInfo',
       desc: '',
       args: [],
     );

@@ -13,6 +13,8 @@ import '../generated/l10n.dart'; // Import pour les traductions
 import 'package:carousel_slider/carousel_slider.dart';
 import 'portfolio/FullScreenCarousel.dart';
 import '../utils/utils.dart';
+import '../app_state.dart';
+
 
 // Fonction modifiée pour formater la monnaie avec le taux de conversion et le symbole
 String formatCurrency(BuildContext context, double value) {
@@ -105,10 +107,10 @@ String _formatSquareFeet(double sqft, bool convertToSquareMeters) {
 }
 
 // Fonction réutilisable pour afficher la BottomModalSheet avec les détails du token
-Future<void> showTokenDetails(
-    BuildContext context, Map<String, dynamic> token) async {
+Future<void> showTokenDetails( BuildContext context, Map<String, dynamic> token) async {
   final prefs = await SharedPreferences.getInstance();
   bool convertToSquareMeters = prefs.getBool('convertToSquareMeters') ?? false;
+  final appState = Provider.of<AppState>(context, listen: false);
 
   showModalBottomSheet(
     backgroundColor: Theme.of(context).cardColor,
@@ -180,7 +182,7 @@ Future<void> showTokenDetails(
                     token['fullName'],
                     style: TextStyle(
                       fontWeight: FontWeight.bold,
-                      fontSize: Platform.isAndroid ? 14 : 15,
+                      fontSize: 15 + appState.getTextSizeOffset(),
                     ),
                   ),
                 ),
@@ -230,9 +232,7 @@ Future<void> showTokenDetails(
                                 Text(
                                   '${S.of(context).rentedUnits} : ${token['rentedUnits'] ?? S.of(context).notSpecified} / ${token['totalUnits'] ?? S.of(context).notSpecified}',
                                   style: TextStyle(
-                                      fontSize: Platform.isAndroid
-                                          ? 12
-                                          : 13), // Réduction de la taille du texte pour Android
+                                      fontSize: 13 + appState.getTextSizeOffset()), // Réduction de la taille du texte pour Android
                                 ),
                               ],
                             ),
@@ -241,30 +241,30 @@ Future<void> showTokenDetails(
                               S.of(context).characteristics,
                               style: TextStyle(
                                 fontWeight: FontWeight.bold,
-                                fontSize: Platform.isAndroid ? 14 : 15,
+                                fontSize: 15 + appState.getTextSizeOffset(),
                               ),
                             ),
                             const SizedBox(height: 10),
-                            _buildDetailRow(
+                            _buildDetailRow(context,
                                 S.of(context).constructionYear,
                                 token['constructionYear']?.toString() ??
                                     S.of(context).notSpecified),
-                            _buildDetailRow(
+                            _buildDetailRow(context,
                                 S.of(context).propertyStories,
                                 token['propertyStories']?.toString() ??
                                     S.of(context).notSpecified),
-                            _buildDetailRow(
+                            _buildDetailRow(context,
                                 S.of(context).totalUnits,
                                 token['totalUnits']?.toString() ??
                                     S.of(context).notSpecified),
-                            _buildDetailRow(
+                            _buildDetailRow(context,
                               S.of(context).lotSize,
                               _formatSquareFeet(
                                 token['lotSize']?.toDouble() ?? 0,
                                 convertToSquareMeters,
                               ),
                             ),
-                            _buildDetailRow(
+                            _buildDetailRow(context,
                               S.of(context).squareFeet,
                               _formatSquareFeet(
                                 token['squareFeet']?.toDouble() ?? 0,
@@ -276,11 +276,11 @@ Future<void> showTokenDetails(
                               S.of(context).rents,
                               style: TextStyle(
                                 fontWeight: FontWeight.bold,
-                                fontSize: Platform.isAndroid ? 14 : 15,
+                                fontSize: 15 + appState.getTextSizeOffset(),
                               ),
                             ),
                             const SizedBox(height: 10),
-                            _buildDetailRow(
+                            _buildDetailRow(context,
                                 S.of(context).rentStartDate,
                                 Utils.formatReadableDate(
                                     token['rentStartDate']))
@@ -292,28 +292,29 @@ Future<void> showTokenDetails(
                       SingleChildScrollView(
                         child: Column(
                           children: [
-                            _buildDetailRow(
+                            _buildDetailRow(context,
                                 S.of(context).totalInvestment,
-                                formatCurrency(
-                                    context, token['totalInvestment'] ?? 0)),
-                            _buildDetailRow(
+                                formatCurrency(context, token['totalInvestment'] ?? 0)),
+                            _buildDetailRow(context,
                                 S.of(context).underlyingAssetPrice,
-                                formatCurrency(context,
-                                    token['underlyingAssetPrice'] ?? 0)),
-                            _buildDetailRow(
+                                formatCurrency(context,token['underlyingAssetPrice'] ?? 0)),
+                            _buildDetailRow(context,
                                 S.of(context).initialMaintenanceReserve,
-                                formatCurrency(context,
-                                    token['initialMaintenanceReserve'] ?? 0)),
-                            _buildDetailRow(
+                                formatCurrency(context,token['initialMaintenanceReserve'] ?? 0)),
+                            _buildDetailRow(context,
                                 S.of(context).grossRentMonth,
-                                formatCurrency(
-                                    context, token['grossRentMonth'] ?? 0)),
-                            _buildDetailRow(
+                                formatCurrency(context, token['grossRentMonth'] ?? 0)),
+                            _buildDetailRow(context,
                                 S.of(context).netRentMonth,
-                                formatCurrency(
-                                    context, token['netRentMonth'] ?? 0)),
-                            _buildDetailRow(S.of(context).annualPercentageYield,
-                                '${token['annualPercentageYield']?.toStringAsFixed(2) ?? S.of(context).notSpecified}%'),
+                                formatCurrency(context, token['netRentMonth'] ?? 0)),
+                            _buildDetailRow(context,
+                                S.of(context).annualPercentageYield,'${token['annualPercentageYield']?.toStringAsFixed(2) ?? S.of(context).notSpecified} %'),
+                            _buildDetailRow(context,
+                                S.of(context).totalRentReceived,
+                                formatCurrency(context, token['totalRentReceived'] ?? 0)),
+                            _buildDetailRow(context,
+                                S.of(context).roiPerProperties,
+                                "${(token['totalRentReceived'] / token['totalValue'] * 100 ).toStringAsFixed(2)} %"),
                           ],
                         ),
                       ),
@@ -327,7 +328,7 @@ Future<void> showTokenDetails(
                               S.of(context).blockchain,
                               style: TextStyle(
                                 fontWeight: FontWeight.bold,
-                                fontSize: Platform.isAndroid ? 14 : 15,
+                                fontSize: 15 + appState.getTextSizeOffset(),
                               ),
                             ),
                             const SizedBox(height: 10),
@@ -338,10 +339,12 @@ Future<void> showTokenDetails(
                               children: [
                                 Text(
                                   S.of(context).ethereumContract,
-                                  style: const TextStyle(
-                                      fontWeight: FontWeight.bold,
-                                      fontSize: 13),
+                                  style: TextStyle(
+                                    fontWeight: FontWeight.bold,
+                                    fontSize: 13 + appState.getTextSizeOffset(), // Rendre TextStyle non const
+                                  ),
                                 ),
+
                                 IconButton(
                                   icon: const Icon(Icons.link),
                                   onPressed: () {
@@ -366,7 +369,7 @@ Future<void> showTokenDetails(
                             Text(
                               token['ethereumContract'] ??
                                   S.of(context).notSpecified,
-                              style: const TextStyle(fontSize: 13),
+                              style: TextStyle(fontSize: 13 + appState.getTextSizeOffset()),
                             ),
 
                             const SizedBox(height: 10),
@@ -377,9 +380,9 @@ Future<void> showTokenDetails(
                               children: [
                                 Text(
                                   S.of(context).gnosisContract,
-                                  style: const TextStyle(
+                                  style: TextStyle(
                                       fontWeight: FontWeight.bold,
-                                      fontSize: 13),
+                                      fontSize: 13 + appState.getTextSizeOffset()),
                                 ),
                                 IconButton(
                                   icon: const Icon(Icons.link),
@@ -405,57 +408,98 @@ Future<void> showTokenDetails(
                             Text(
                               token['gnosisContract'] ??
                                   S.of(context).notSpecified,
-                              style: const TextStyle(fontSize: 13),
+                              style: TextStyle(fontSize: 13 + appState.getTextSizeOffset()),
                             ),
                           ],
                         ),
                       ),
 
                       // Onglet Insights
-                      SingleChildScrollView(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            // Graphique du rendement (Yield)
-                            Text(
-                              S
-                                  .of(context)
-                                  .yieldEvolution, // Utilisation de la traduction
-                              style: TextStyle(
-                                fontWeight: FontWeight.bold,
-                                fontSize: Platform.isAndroid
-                                    ? 14
-                                    : 15, // Réduction de la taille du texte pour Android
-                              ),
-                            ),
-                            const SizedBox(height: 10),
-                            _buildYieldChartOrMessage(
-                                context,
-                                token['historic']?['yields'] ?? [],
-                                token['historic']?['init_yield']),
+                     SingleChildScrollView(
+  child: Column(
+    crossAxisAlignment: CrossAxisAlignment.start,
+    children: [
+      // Graphique du rendement (Yield)
+      Text(
+        S.of(context).yieldEvolution, // Utilisation de la traduction
+        style: TextStyle(
+          fontWeight: FontWeight.bold,
+          fontSize: 15 + appState.getTextSizeOffset(), // Réduction de la taille du texte pour Android
+        ),
+      ),
+      const SizedBox(height: 10),
+      _buildYieldChartOrMessage(
+          context,
+          token['historic']?['yields'] ?? [],
+          token['historic']?['init_yield']),
 
-                            const SizedBox(height: 20),
+      const SizedBox(height: 20),
 
-                            // Graphique des prix
-                            Text(
-                              S
-                                  .of(context)
-                                  .priceEvolution, // Utilisation de la traduction
-                              style: TextStyle(
-                                fontWeight: FontWeight.bold,
-                                fontSize: Platform.isAndroid
-                                    ? 14
-                                    : 15, // Réduction de la taille du texte pour Android
-                              ),
-                            ),
-                            const SizedBox(height: 10),
-                            _buildPriceChartOrMessage(
-                                context,
-                                token['historic']?['prices'] ?? [],
-                                token['historic']?['init_price']),
-                          ],
-                        ),
-                      ),
+      // Jauge verticale du ROI de la propriété
+      Row(
+  children: [
+    Text(
+      S.of(context).roiPerProperties, // Titre de la jauge
+      style: TextStyle(
+        fontWeight: FontWeight.bold,
+        fontSize: 15 + appState.getTextSizeOffset(),
+      ),
+    ),
+    const SizedBox(width: 8), // Espace entre le texte et l'icône
+    GestureDetector(
+      onTap: () {
+        showDialog(
+          context: context,
+          builder: (BuildContext context) {
+            return AlertDialog(
+              title: Text(S.of(context).roiPerProperties), // Titre du popup
+              content: Text(S.of(context).roiAlertInfo), // Texte du popup
+              actions: <Widget>[
+                TextButton(
+                  onPressed: () {
+                    Navigator.of(context).pop(); // Fermer le popup
+                  },
+                  child: Text('OK'),
+                ),
+              ],
+            );
+          },
+        );
+      },
+      child: Icon(
+        Icons.help_outline, // Icône "?"
+        color: Colors.grey,
+        size: 20 + appState.getTextSizeOffset(), // Ajustez la taille en fonction du texte
+      ),
+    ),
+  ],
+),
+
+      const SizedBox(height: 10),
+      _buildGaugeForROI(
+        token['totalRentReceived'] / token['totalValue'] * 100, // Calcul du ROI
+        context,
+      ),
+
+      const SizedBox(height: 20),
+
+      // Graphique des prix
+      Text(
+        S.of(context).priceEvolution, // Utilisation de la traduction
+        style: TextStyle(
+          fontWeight: FontWeight.bold,
+          fontSize: 15 + appState.getTextSizeOffset(), // Réduction de la taille du texte pour Android
+        ),
+      ),
+      const SizedBox(height: 10),
+      _buildPriceChartOrMessage(
+          context,
+          token['historic']?['prices'] ?? [],
+          token['historic']?['init_price']),
+    ],
+  ),
+),
+
                     ],
                   ),
                 ),
@@ -475,19 +519,19 @@ Future<void> showTokenDetails(
                         SizedBox(
                           height: 36,
                           child: ElevatedButton(
-                            onPressed: () =>
-                                Utils.launchURL(token['marketplaceLink']),
+                            onPressed: () => Utils.launchURL(token['marketplaceLink']),
                             style: ElevatedButton.styleFrom(
                               foregroundColor: Colors.white,
-                              backgroundColor:
-                                  Colors.blue, // Bouton bleu pour RealT
-                              padding: const EdgeInsets.symmetric(
-                                  vertical: 8, horizontal: 16),
-                              textStyle: const TextStyle(fontSize: 13),
+                              backgroundColor: Colors.blue, // Bouton bleu pour RealT
+                              padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 16),
+                              textStyle: TextStyle(
+                                fontSize: 13 + appState.getTextSizeOffset(), // Rendre TextStyle non const
+                              ),
                             ),
                             child: Text(S.of(context).viewOnRealT),
                           ),
                         ),
+
                         const SizedBox(
                             width: 10), // Espacement entre les deux boutons
                         // Bouton pour voir sur la carte
@@ -502,8 +546,8 @@ Future<void> showTokenDetails(
                                   Colors.green, // Bouton vert pour la carte
                               padding: const EdgeInsets.symmetric(
                                   vertical: 8, horizontal: 16),
-                              textStyle: const TextStyle(fontSize: 13),
-                            ),
+                                  textStyle: TextStyle(fontSize: 13 + appState.getTextSizeOffset()),                            
+                              ),
                             child: Text(S.of(context).viewOnMap),
                           ),
                         ),
@@ -520,8 +564,57 @@ Future<void> showTokenDetails(
   );
 }
 
+Widget _buildGaugeForROI(double roiValue, BuildContext context) {
+  return Column(
+    crossAxisAlignment: CrossAxisAlignment.start, // Aligner la jauge à gauche
+    children: [
+      const SizedBox(height: 5),
+      // Utilisation de LayoutBuilder pour occuper toute la largeur disponible
+      LayoutBuilder(
+        builder: (context, constraints) {
+          double maxWidth = constraints.maxWidth; // Largeur disponible
+
+          return Stack(
+            children: [
+              // Fond gris
+              Container(
+                height: 20,
+                width: maxWidth, // Largeur maximale disponible
+                decoration: BoxDecoration(
+                  color: Colors.grey.shade300, // Couleur du fond grisé
+                  borderRadius: BorderRadius.circular(5), // Bordure arrondie
+                ),
+              ),
+              // Barre bleue représentant le ROI
+              Container(
+                height: 20,
+                width: roiValue.clamp(0, 100) / 100 * maxWidth, // Largeur de la barre bleue en fonction du ROI
+                decoration: BoxDecoration(
+                  color: Colors.blue, // Couleur de la barre
+                  borderRadius: BorderRadius.circular(5), // Bordure arrondie
+                ),
+              ),
+            ],
+          );
+        },
+      ),
+      const SizedBox(height: 5),
+      // Afficher la valeur du ROI
+      Text(
+        "${roiValue.toStringAsFixed(1)} %", // Afficher avec 1 chiffre après la virgule
+        style: TextStyle(
+          fontSize: 14,
+          fontWeight: FontWeight.bold,
+          color: Colors.blue,
+        ),
+      ),
+    ],
+  );
+}
+
 // Méthode pour construire les lignes de détails
-Widget _buildDetailRow(String label, String value) {
+Widget _buildDetailRow(BuildContext context, String label, String value) {
+    final appState = Provider.of<AppState>(context, listen: false);
   return Padding(
     padding: const EdgeInsets.symmetric(vertical: 4.0),
     child: Row(
@@ -530,44 +623,42 @@ Widget _buildDetailRow(String label, String value) {
         Text(label,
             style: TextStyle(
                 fontWeight: FontWeight.bold,
-                fontSize:
-                    Platform.isAndroid ? 12 : 13)), // Réduction pour Android
+                fontSize: 13 + appState.getTextSizeOffset())), // Réduction pour Android
         Text(value,
             style: TextStyle(
-                fontSize:
-                    Platform.isAndroid ? 12 : 13)), // Réduction pour Android
+                fontSize: 13 + appState.getTextSizeOffset())), // Réduction pour Android
       ],
     ),
   );
 }
 
 // Méthode pour afficher soit le graphique du yield, soit un message, avec % évolution
-Widget _buildYieldChartOrMessage(
-    BuildContext context, List<dynamic> yields, double? initYield) {
+Widget _buildYieldChartOrMessage(BuildContext context, List<dynamic> yields, double? initYield) {
+    final appState = Provider.of<AppState>(context, listen: false);
+
   if (yields.length <= 1) {
     // Afficher le message si une seule donnée est disponible
     return Text(
       "${S.of(context).noYieldEvolution} ${yields.isNotEmpty ? yields.first['yield'].toStringAsFixed(2) : S.of(context).notSpecified}",
       style: TextStyle(
-          fontSize: Platform.isAndroid ? 12 : 13), // Réduction pour Android
+          fontSize: 13 + appState.getTextSizeOffset()), // Réduction pour Android
     );
   } else {
     // Calculer l'évolution en pourcentage
     double lastYield = yields.last['yield']?.toDouble() ?? 0;
     double percentageChange =
-        ((lastYield - (initYield ?? lastYield)) / (initYield ?? lastYield)) *
-            100;
+        ((lastYield - (initYield ?? lastYield)) / (initYield ?? lastYield)) * 100;
 
     // Afficher le graphique et le % d'évolution
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        _buildYieldChart(yields),
+        _buildYieldChart(context,yields),
         const SizedBox(height: 10),
         Text(
-          "${S.of(context).yieldEvolutionPercentage} ${percentageChange.toStringAsFixed(2)}%",
+          "${S.of(context).yieldEvolutionPercentage} ${percentageChange.toStringAsFixed(2)} %",
           style: TextStyle(
-              fontSize: Platform.isAndroid ? 12 : 13), // Réduction pour Android
+              fontSize: 13 + appState.getTextSizeOffset()), // Réduction pour Android
         ),
       ],
     );
@@ -575,32 +666,32 @@ Widget _buildYieldChartOrMessage(
 }
 
 // Méthode pour afficher soit le graphique des prix, soit un message, avec % évolution
-Widget _buildPriceChartOrMessage(
-    BuildContext context, List<dynamic> prices, double? initPrice) {
+Widget _buildPriceChartOrMessage(BuildContext context, List<dynamic> prices, double? initPrice) {
+    final appState = Provider.of<AppState>(context, listen: false);
+
   if (prices.length <= 1) {
     // Afficher le message si une seule donnée est disponible
     return Text(
       "${S.of(context).noPriceEvolution} ${prices.isNotEmpty ? prices.first['price'].toStringAsFixed(2) : S.of(context).notSpecified}",
       style: TextStyle(
-          fontSize: Platform.isAndroid ? 12 : 13), // Réduction pour Android
+          fontSize: 13 + appState.getTextSizeOffset()), // Réduction pour Android
     );
   } else {
     // Calculer l'évolution en pourcentage
     double lastPrice = prices.last['price']?.toDouble() ?? 0;
     double percentageChange =
-        ((lastPrice - (initPrice ?? lastPrice)) / (initPrice ?? lastPrice)) *
-            100;
+        ((lastPrice - (initPrice ?? lastPrice)) / (initPrice ?? lastPrice)) * 100;
 
     // Afficher le graphique et le % d'évolution
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        _buildPriceChart(prices),
+        _buildPriceChart(context, prices),
         const SizedBox(height: 10),
         Text(
-          "${S.of(context).priceEvolutionPercentage} ${percentageChange.toStringAsFixed(2)}%",
+          "${S.of(context).priceEvolutionPercentage} ${percentageChange.toStringAsFixed(2)} %",
           style: TextStyle(
-              fontSize: Platform.isAndroid ? 12 : 13), // Réduction pour Android
+              fontSize: 13 + appState.getTextSizeOffset()), // Réduction pour Android
         ),
       ],
     );
@@ -608,7 +699,9 @@ Widget _buildPriceChartOrMessage(
 }
 
 // Méthode pour construire le graphique du yield
-Widget _buildYieldChart(List<dynamic> yields) {
+Widget _buildYieldChart(BuildContext context, List<dynamic> yields) {
+    final appState = Provider.of<AppState>(context, listen: false);
+
   List<FlSpot> spots = [];
   List<String> dateLabels = [];
 
@@ -647,9 +740,7 @@ Widget _buildYieldChart(List<dynamic> yields) {
                   return Text(
                     dateLabels[value.toInt()],
                     style: TextStyle(
-                        fontSize: Platform.isAndroid
-                            ? 9
-                            : 10), // Réduction de la taille pour Android
+                        fontSize: 10 + appState.getTextSizeOffset()), // Réduction de la taille pour Android
                   );
                 }
                 return const Text('');
@@ -665,9 +756,7 @@ Widget _buildYieldChart(List<dynamic> yields) {
                 return Text(
                   value.toStringAsFixed(2),
                   style: TextStyle(
-                      fontSize: Platform.isAndroid
-                          ? 9
-                          : 10), // Réduction de la taille pour Android
+                      fontSize: 10 + appState.getTextSizeOffset()), // Réduction de la taille pour Android
                 );
               },
             ),
@@ -689,7 +778,7 @@ Widget _buildYieldChart(List<dynamic> yields) {
           LineChartBarData(
             spots: spots,
             isCurved: true,
-            barWidth: 3,
+            barWidth: 2,
             belowBarData: BarAreaData(show: false),
           ),
         ],
@@ -699,7 +788,9 @@ Widget _buildYieldChart(List<dynamic> yields) {
 }
 
 // Méthode pour construire le graphique des prix
-Widget _buildPriceChart(List<dynamic> prices) {
+Widget _buildPriceChart(BuildContext context, List<dynamic> prices) {
+    final appState = Provider.of<AppState>(context, listen: false);
+
   List<FlSpot> spots = [];
   List<String> dateLabels = [];
 
@@ -732,9 +823,7 @@ Widget _buildPriceChart(List<dynamic> prices) {
                   return Text(
                     dateLabels[value.toInt()],
                     style: TextStyle(
-                        fontSize: Platform.isAndroid
-                            ? 9
-                            : 10), // Réduction de la taille pour Android
+                        fontSize: 10 + appState.getTextSizeOffset()), // Réduction de la taille pour Android
                   );
                 }
                 return const Text('');
@@ -750,9 +839,7 @@ Widget _buildPriceChart(List<dynamic> prices) {
                 return Text(
                   value.toStringAsFixed(2),
                   style: TextStyle(
-                      fontSize: Platform.isAndroid
-                          ? 9
-                          : 10), // Réduction de la taille pour Android
+                      fontSize: 10 + appState.getTextSizeOffset()), // Réduction de la taille pour Android
                 );
               },
             ),
@@ -774,7 +861,7 @@ Widget _buildPriceChart(List<dynamic> prices) {
           LineChartBarData(
             spots: spots,
             isCurved: true,
-            barWidth: 3,
+            barWidth: 2,
             belowBarData: BarAreaData(show: false),
           ),
         ],

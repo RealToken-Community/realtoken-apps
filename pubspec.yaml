@@ -4,7 +4,7 @@ description: "A community app for RealT"
 # pub.dev using `flutter pub publish`. This is preferred for private packages.
 publish_to: 'none' # Remove this line if you wish to publish to pub.dev
 
-version: 1.0.0+10
+version: 1.0.0+13
 
 environment:
   sdk: ^3.5.3
@@ -64,11 +64,12 @@ flutter_intl:
 
 flutter_native_splash:
   color: "#ffffff"
+  color_dark: "#121212"
   image: assets/logo.png
   android: true
+  android_gravity: center
   ios: true
   android_12:
     icon_background_color: "#ffffff" # Arrière-plan de l'icône pour Android 12+
   web: false
-  ios_content_mode: scaleAspectFit
-
+  ios_content_mode: center

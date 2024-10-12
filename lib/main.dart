@@ -10,6 +10,7 @@ import 'generated/l10n.dart'; // Import du fichier généré pour les traduction
 import 'package:firebase_core/firebase_core.dart';
 import 'firebase_options.dart';
 import 'package:flutter_native_splash/flutter_native_splash.dart'; // Import du package pour le splashscreen
+import 'app_state.dart'; // Import the global AppState
 
 void main() async {
   WidgetsBinding widgetsBinding = WidgetsFlutterBinding.ensureInitialized();
@@ -23,86 +24,47 @@ void main() async {
   await Hive.openBox('dashboardTokens');
   await Hive.openBox('realTokens');
   await Hive.openBox('rentData');
+  await Hive.openBox('detailedRentDataBox');
 
   // Initialisation de SharedPreferences et DataManager
   final dataManager = DataManager();
   await dataManager.loadSelectedCurrency(); // Charger la devise sélectionnée
   await dataManager.loadUserIdToAddresses(); // Charger les userIds et adresses
-  await dataManager.fetchAndCalculateData();
-
   FlutterNativeSplash.remove(); // Supprimer le splash screen natif après l'initialisation
+  await dataManager.fetchAndCalculateData();
 
   runApp(
     MultiProvider(
       providers: [
         ChangeNotifierProvider(create: (_) => dataManager), // Utilisez ici la même instance
+        ChangeNotifierProvider(create: (_) => AppState()), // AppState for global settings
       ],
       child: const MyApp(),
     ),
   );
 }
 
-class MyApp extends StatefulWidget {
+class MyApp extends StatelessWidget {
   const MyApp({super.key});
-
-  static _MyAppState? of(BuildContext context) =>
-      context.findAncestorStateOfType<_MyAppState>();
-
-  @override
-  _MyAppState createState() => _MyAppState();
-}
-
-class _MyAppState extends State<MyApp> {
-  final ValueNotifier<bool> _isDarkTheme = ValueNotifier(false);
-  Locale? _locale;
-
-  @override
-  void initState() {
-    super.initState();
-    _loadSettings();
-  }
-
-  Future<void> _loadSettings() async {
-    final prefs = await SharedPreferences.getInstance();
-    _isDarkTheme.value = prefs.getBool('isDarkTheme') ?? false;
-    String? languageCode = prefs.getString('language') ?? 'en';
-    setState(() {
-      _locale = Locale(languageCode);
-    });
-  }
-
-  // Ajout de la méthode pour changer la langue
-  void changeLanguage(String languageCode) async {
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.setString('language', languageCode);
-    setState(() {
-      _locale = Locale(languageCode);
-    });
-  }
 
   @override
   Widget build(BuildContext context) {
-    return ValueListenableBuilder<bool>(
-      valueListenable: _isDarkTheme,
-      builder: (context, isDarkTheme, child) {
+    return Consumer<AppState>(
+      builder: (context, appState, child) {
         return MaterialApp(
-          title: 'RealT mobile app',
-          locale: _locale,  // Utiliser la locale définie
-          supportedLocales: S.delegate.supportedLocales,  // Support des langues
+          title: 'RealToken mobile app',
+          locale: Locale(appState.selectedLanguage), // Use the global locale from AppState
+          supportedLocales: S.delegate.supportedLocales, // Support des langues
           localizationsDelegates: const [
-            S.delegate,  // Générateur de localisation
+            S.delegate, // Générateur de localisation
             GlobalMaterialLocalizations.delegate,
             GlobalWidgetsLocalizations.delegate,
             GlobalCupertinoLocalizations.delegate,
           ],
           theme: lightTheme,
           darkTheme: darkTheme,
-          themeMode: isDarkTheme ? ThemeMode.dark : ThemeMode.light,
-          home: MyHomePage(
-            onThemeChanged: (value) {
-              _isDarkTheme.value = value;
-            },
-          ),
+          themeMode: appState.isDarkTheme ? ThemeMode.dark : ThemeMode.light, // Switch between light and dark mode
+          home: const MyHomePage(), // No need to pass onThemeChanged anymore
         );
       },
     );

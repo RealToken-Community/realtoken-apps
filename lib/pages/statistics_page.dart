@@ -6,6 +6,8 @@ import 'package:intl/intl.dart';
 import 'package:flutter/scheduler.dart';
 import '../api/data_manager.dart';
 import '../generated/l10n.dart'; // Import pour les traductions
+import '../app_state.dart'; // Import AppState
+
 
 String formatCurrency(double value, String symbol) {
   final NumberFormat formatter = NumberFormat.currency(
@@ -210,9 +212,10 @@ class _StatisticsPageState extends State<StatisticsPage> {
 
   bool _showCumulativeRent = false;
 
-  Widget _buildRentGraphCard(
-      List<Map<String, dynamic>> groupedData, DataManager dataManager) {
+  Widget _buildRentGraphCard(List<Map<String, dynamic>> groupedData, DataManager dataManager) {
     const int maxPoints = 100;
+    final appState = Provider.of<AppState>(context);
+
     List<Map<String, dynamic>> limitedData = groupedData.length > maxPoints
         ? groupedData.sublist(0, maxPoints)
         : groupedData;
@@ -241,10 +244,10 @@ class _StatisticsPageState extends State<StatisticsPage> {
                 children: [
                   Text(
                     _showCumulativeRent
-                        ? S.of(context).groupedRentGraph
-                        : S.of(context).cumulativeRentGraph,
+                        ? S.of(context).cumulativeRentGraph
+                        : S.of(context).groupedRentGraph,
                     style: TextStyle(
-                      fontSize: Platform.isAndroid ? 19 : 20,
+                      fontSize: 20 + appState.getTextSizeOffset(),
                       fontWeight: FontWeight.bold,
                     ),
                   ),
@@ -279,7 +282,7 @@ class _StatisticsPageState extends State<StatisticsPage> {
                             return Text(
                               formatCurrency(value, dataManager.currencySymbol),
                               style: TextStyle(
-                                  fontSize: Platform.isAndroid ? 9 : 10),
+                                  fontSize: 10 + appState.getTextSizeOffset()),
                             );
                           },
                         ),
@@ -303,7 +306,7 @@ class _StatisticsPageState extends State<StatisticsPage> {
                                 child: Text(
                                   labels[value.toInt()],
                                   style: TextStyle(
-                                      fontSize: Platform.isAndroid ? 7 : 8),
+                                      fontSize: 8 + appState.getTextSizeOffset()),
                                 ),
                               );
                             } else {
@@ -369,6 +372,8 @@ class _StatisticsPageState extends State<StatisticsPage> {
   }
 
   Widget _buildTokenDistributionCard(DataManager dataManager) {
+    final appState = Provider.of<AppState>(context);
+
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 16.0),
       child: Card(
@@ -382,7 +387,7 @@ class _StatisticsPageState extends State<StatisticsPage> {
               Text(
                 S.of(context).tokenDistribution,
                 style: TextStyle(
-                    fontSize: Platform.isAndroid ? 19 : 20,
+                    fontSize: 20 + appState.getTextSizeOffset(),
                     fontWeight: FontWeight.bold),
               ),
               const SizedBox(height: 10),
@@ -407,6 +412,8 @@ class _StatisticsPageState extends State<StatisticsPage> {
   }
 
   Widget _buildTokenDistributionByCountryCard(DataManager dataManager) {
+    final appState = Provider.of<AppState>(context);
+
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 16.0),
       child: Card(
@@ -420,7 +427,7 @@ class _StatisticsPageState extends State<StatisticsPage> {
               Text(
                 S.of(context).tokenDistributionByCountry,
                 style: TextStyle(
-                    fontSize: Platform.isAndroid ? 19 : 20,
+                    fontSize: 20 + appState.getTextSizeOffset(),
                     fontWeight: FontWeight.bold),
               ),
               const SizedBox(height: 10),
@@ -445,6 +452,8 @@ class _StatisticsPageState extends State<StatisticsPage> {
   }
 
   Widget _buildTokenDistributionByRegionCard(DataManager dataManager) {
+    final appState = Provider.of<AppState>(context);
+
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 16.0),
       child: Card(
@@ -458,7 +467,7 @@ class _StatisticsPageState extends State<StatisticsPage> {
               Text(
                 S.of(context).tokenDistributionByRegion,
                 style: TextStyle(
-                    fontSize: Platform.isAndroid ? 19 : 20,
+                    fontSize: 20 + appState.getTextSizeOffset(),
                     fontWeight: FontWeight.bold),
               ),
               const SizedBox(height: 10),
@@ -483,6 +492,8 @@ class _StatisticsPageState extends State<StatisticsPage> {
   }
 
   Widget _buildTokenDistributionByCityCard(DataManager dataManager) {
+    final appState = Provider.of<AppState>(context);
+
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 16.0),
       child: Card(
@@ -496,7 +507,7 @@ class _StatisticsPageState extends State<StatisticsPage> {
               Text(
                 S.of(context).tokenDistributionByCity,
                 style: TextStyle(
-                    fontSize: Platform.isAndroid ? 19 : 20,
+                    fontSize: 20 + appState.getTextSizeOffset(),
                     fontWeight: FontWeight.bold),
               ),
               const SizedBox(height: 10),
@@ -530,9 +541,9 @@ class _StatisticsPageState extends State<StatisticsPage> {
     );
   }
 
-  Widget _buildPeriodButton(String period,
-      {bool isFirst = false, bool isLast = false}) {
+  Widget _buildPeriodButton(String period, {bool isFirst = false, bool isLast = false}) {
     bool isSelected = _selectedPeriod == period;
+    final appState = Provider.of<AppState>(context);
 
     return Expanded(
       child: GestureDetector(
@@ -554,7 +565,7 @@ class _StatisticsPageState extends State<StatisticsPage> {
           child: Text(
             period,
             style: TextStyle(
-              fontSize: Platform.isAndroid ? 13 : 14,
+              fontSize: 14 + appState.getTextSizeOffset(),
               color: isSelected ? Colors.white : Colors.black,
               fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
             ),
@@ -565,6 +576,8 @@ class _StatisticsPageState extends State<StatisticsPage> {
   }
 
   List<PieChartSectionData> _buildDonutChartData(DataManager dataManager) {
+    final appState = Provider.of<AppState>(context);
+
     return dataManager.propertyData.map((data) {
       final double percentage = (data['count'] /
               dataManager.propertyData
@@ -576,7 +589,7 @@ class _StatisticsPageState extends State<StatisticsPage> {
         color: _getPropertyColor(data['propertyType']),
         radius: 50,
         titleStyle: TextStyle(
-          fontSize: Platform.isAndroid ? 11 : 12,
+          fontSize: 12 + appState.getTextSizeOffset(),
           fontWeight: FontWeight.bold,
           color: Colors.white,
         ),
@@ -585,6 +598,8 @@ class _StatisticsPageState extends State<StatisticsPage> {
   }
 
   Widget _buildLegend(DataManager dataManager) {
+    final appState = Provider.of<AppState>(context);
+
     return Wrap(
       spacing: 8.0,
       runSpacing: 4.0,
@@ -600,7 +615,7 @@ class _StatisticsPageState extends State<StatisticsPage> {
             const SizedBox(width: 4),
             Text(
               getPropertyTypeName(data['propertyType']),
-              style: TextStyle(fontSize: Platform.isAndroid ? 12 : 13),
+              style: TextStyle(fontSize: 13 + appState.getTextSizeOffset()),
             ),
           ],
         );
@@ -610,6 +625,7 @@ class _StatisticsPageState extends State<StatisticsPage> {
 
   Widget _buildLegendByCountry(DataManager dataManager) {
     Map<String, int> countryCount = {};
+    final appState = Provider.of<AppState>(context);
 
     for (var token in dataManager.portfolio) {
       String fullName = token['fullName'];
@@ -642,7 +658,7 @@ class _StatisticsPageState extends State<StatisticsPage> {
             const SizedBox(width: 4),
             Text(
               '${entry.key}: ${entry.value}',
-              style: TextStyle(fontSize: Platform.isAndroid ? 12 : 13),
+              style: TextStyle(fontSize: 13 + appState.getTextSizeOffset()),
             ),
           ],
         );
@@ -652,6 +668,7 @@ class _StatisticsPageState extends State<StatisticsPage> {
 
   Widget _buildLegendByRegion(DataManager dataManager) {
     Map<String, int> regionCount = {};
+    final appState = Provider.of<AppState>(context);
 
     for (var token in dataManager.portfolio) {
       String fullName = token['fullName'];
@@ -682,7 +699,7 @@ class _StatisticsPageState extends State<StatisticsPage> {
             const SizedBox(width: 4),
             Text(
               '${entry.key}: ${entry.value}',
-              style: TextStyle(fontSize: Platform.isAndroid ? 12 : 13),
+              style: TextStyle(fontSize: 13 + appState.getTextSizeOffset()),
             ),
           ],
         );
@@ -692,6 +709,7 @@ class _StatisticsPageState extends State<StatisticsPage> {
 
   Widget _buildLegendByCity(DataManager dataManager) {
     Map<String, int> cityCount = {};
+    final appState = Provider.of<AppState>(context);
 
     for (var token in dataManager.portfolio) {
       String fullName = token['fullName'];
@@ -718,7 +736,7 @@ class _StatisticsPageState extends State<StatisticsPage> {
             const SizedBox(width: 4),
             Text(
               '${entry.key}: ${entry.value}',
-              style: TextStyle(fontSize: Platform.isAndroid ? 12 : 13),
+              style: TextStyle(fontSize: 13 + appState.getTextSizeOffset()),
             ),
           ],
         );
@@ -737,9 +755,9 @@ class _StatisticsPageState extends State<StatisticsPage> {
     return spots;
   }
 
-  List<PieChartSectionData> _buildDonutChartDataByCountry(
-      DataManager dataManager) {
+  List<PieChartSectionData> _buildDonutChartDataByCountry(DataManager dataManager) {
     Map<String, int> countryCount = {};
+    final appState = Provider.of<AppState>(context);
 
     for (var token in dataManager.portfolio) {
       String fullName = token['fullName'];
@@ -761,7 +779,7 @@ class _StatisticsPageState extends State<StatisticsPage> {
             Colors.cyan,
         radius: 50,
         titleStyle: TextStyle(
-          fontSize: Platform.isAndroid ? 11 : 12,
+          fontSize: 12 + appState.getTextSizeOffset(),
           fontWeight: FontWeight.bold,
           color: Colors.white,
         ),
@@ -769,9 +787,9 @@ class _StatisticsPageState extends State<StatisticsPage> {
     }).toList();
   }
 
-  List<PieChartSectionData> _buildDonutChartDataByRegion(
-      DataManager dataManager) {
+  List<PieChartSectionData> _buildDonutChartDataByRegion(DataManager dataManager) {
     Map<String, int> regionCount = {};
+    final appState = Provider.of<AppState>(context);
 
     for (var token in dataManager.portfolio) {
       String fullName = token['fullName'];
@@ -803,7 +821,7 @@ class _StatisticsPageState extends State<StatisticsPage> {
             Colors.accents.length],
         radius: 50,
         titleStyle: TextStyle(
-          fontSize: Platform.isAndroid ? 11 : 12,
+          fontSize: 12 + appState.getTextSizeOffset(),
           fontWeight: FontWeight.bold,
           color: Colors.white,
         ),
@@ -811,9 +829,9 @@ class _StatisticsPageState extends State<StatisticsPage> {
     }).toList();
   }
 
-  List<PieChartSectionData> _buildDonutChartDataByCity(
-      DataManager dataManager) {
+  List<PieChartSectionData> _buildDonutChartDataByCity(DataManager dataManager) {
     Map<String, int> cityCount = {};
+    final appState = Provider.of<AppState>(context);
 
     for (var token in dataManager.portfolio) {
       String fullName = token['fullName'];
@@ -834,7 +852,7 @@ class _StatisticsPageState extends State<StatisticsPage> {
             Colors.primaries.length],
         radius: 50,
         titleStyle: TextStyle(
-          fontSize: Platform.isAndroid ? 11 : 12,
+          fontSize: 12 + appState.getTextSizeOffset(),
           fontWeight: FontWeight.bold,
           color: Colors.white,
         ),

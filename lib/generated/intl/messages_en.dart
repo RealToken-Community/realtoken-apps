@@ -59,7 +59,7 @@ class MessageLookup extends MessageLookupByLibrary {
         "cryptoDonationAddress":
             MessageLookupByLibrary.simpleMessage("Crypto Donation Address"),
         "cumulativeRentGraph":
-            MessageLookupByLibrary.simpleMessage("Cumul des loyers"),
+            MessageLookupByLibrary.simpleMessage("Cumulative Rent Graph"),
         "currency": MessageLookupByLibrary.simpleMessage("Currency"),
         "daily": MessageLookupByLibrary.simpleMessage("Daily"),
         "dark": MessageLookupByLibrary.simpleMessage("Dark"),
@@ -83,7 +83,7 @@ class MessageLookup extends MessageLookupByLibrary {
         "grossRentMonth":
             MessageLookupByLibrary.simpleMessage("Gross rent per month"),
         "groupedRentGraph":
-            MessageLookupByLibrary.simpleMessage("Loyers groupés"),
+            MessageLookupByLibrary.simpleMessage("Grouped Rent Graph"),
         "hello": MessageLookupByLibrary.simpleMessage("Hello"),
         "initialLaunchDate":
             MessageLookupByLibrary.simpleMessage("Initial launch date"),
@@ -152,6 +152,10 @@ class MessageLookup extends MessageLookupByLibrary {
             MessageLookupByLibrary.simpleMessage("Resort Bungalow"),
         "revenue": MessageLookupByLibrary.simpleMessage("Revenue"),
         "rmm": MessageLookupByLibrary.simpleMessage("RMM"),
+        "roiAlertInfo": MessageLookupByLibrary.simpleMessage(
+            "This ROI feature is in beta and is currently calculated based on the income received from the property and the current token value."),
+        "roiPerProperties":
+            MessageLookupByLibrary.simpleMessage("Property ROI"),
         "rwaHoldings": MessageLookupByLibrary.simpleMessage("RWA Holdings SA"),
         "searchHint": MessageLookupByLibrary.simpleMessage("Search..."),
         "sendDonations": MessageLookupByLibrary.simpleMessage(
@@ -161,11 +165,13 @@ class MessageLookup extends MessageLookupByLibrary {
         "sfrPortfolio": MessageLookupByLibrary.simpleMessage("SFR Portfolio"),
         "singleFamily": MessageLookupByLibrary.simpleMessage("Single Family"),
         "sortByAPY": MessageLookupByLibrary.simpleMessage("Sort by APY"),
+        "sortByInitialLaunchDate":
+            MessageLookupByLibrary.simpleMessage("sort by recently added"),
         "sortByName": MessageLookupByLibrary.simpleMessage("Sort by Name"),
         "sortByValue": MessageLookupByLibrary.simpleMessage("Sort by Value"),
         "spanish": MessageLookupByLibrary.simpleMessage("Spanish"),
         "specialThanks": MessageLookupByLibrary.simpleMessage(
-            "Special thanks to @Sigri, @ehpst, and pitsbi for their support."),
+            "Special thanks to @Sigri, @ehpst, and @pitsbi for their support."),
         "squareFeet": MessageLookupByLibrary.simpleMessage("Interior size"),
         "statistics": MessageLookupByLibrary.simpleMessage("Statistics"),
         "supportProject":

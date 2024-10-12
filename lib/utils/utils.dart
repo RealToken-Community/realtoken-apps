@@ -1,4 +1,5 @@
 import 'package:intl/intl.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 class Utils {
@@ -32,6 +33,21 @@ class Utils {
     }
   } catch (e) {
     print('Erreur lors du lancement de l\'URL: $e');
+  }
+}
+
+// Fonction pour obtenir un offset de taille de texte à partir des préférences
+static Future<double> getTextSizeOffset() async {
+  final prefs = await SharedPreferences.getInstance();
+  String selectedTextSize = prefs.getString('selectedTextSize') ?? 'normal'; // 'normal' par défaut
+
+  switch (selectedTextSize) {
+    case 'petit':
+      return -2.0; // Réduire la taille de 2
+    case 'grand':
+      return 2.0;  // Augmenter la taille de 2
+    default:
+      return 0.0;  // Taille normale
   }
 }
 }
