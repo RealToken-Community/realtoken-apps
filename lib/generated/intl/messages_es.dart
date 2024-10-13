@@ -74,6 +74,7 @@ class MessageLookup extends MessageLookupByLibrary {
         "donationMessage": MessageLookupByLibrary.simpleMessage(
             "Si te gusta esta aplicación y quieres apoyar su desarrollo, puedes donar."),
         "duplex": MessageLookupByLibrary.simpleMessage("Dúplex"),
+        "duplicate": MessageLookupByLibrary.simpleMessage("duplicado"),
         "english": MessageLookupByLibrary.simpleMessage("Inglés"),
         "ethereumContract":
             MessageLookupByLibrary.simpleMessage("Contrato de Ethereum"),
@@ -115,8 +116,12 @@ class MessageLookup extends MessageLookupByLibrary {
         "network": MessageLookupByLibrary.simpleMessage("Red"),
         "noDataAvailable": MessageLookupByLibrary.simpleMessage(
             "No hay datos disponibles, por favor añade un nuevo monedero"),
+        "noImageAvailable": MessageLookupByLibrary.simpleMessage(
+            "Enlace de imagen no disponible"),
         "noPriceEvolution": MessageLookupByLibrary.simpleMessage(
             "Sin evolución del precio. El último precio es:"),
+        "noRecentUpdates": MessageLookupByLibrary.simpleMessage(
+            "No hay cambios recientes disponibles."),
         "noRentReceived":
             MessageLookupByLibrary.simpleMessage("No se ha recibido alquiler"),
         "noYieldEvolution": MessageLookupByLibrary.simpleMessage(
@@ -138,6 +143,8 @@ class MessageLookup extends MessageLookupByLibrary {
             MessageLookupByLibrary.simpleMessage("Lista de RealTokens"),
         "recentChanges":
             MessageLookupByLibrary.simpleMessage("Cambios recientes"),
+        "recentUpdatesTitle": MessageLookupByLibrary.simpleMessage(
+            "Cambios en los últimos 30 días"),
         "rentGraph": MessageLookupByLibrary.simpleMessage(
             "Gráfico de alquileres recibidos"),
         "rentStartDate":
@@ -218,6 +225,8 @@ class MessageLookup extends MessageLookupByLibrary {
         "unknown": MessageLookupByLibrary.simpleMessage("Desconocido"),
         "unknownCity":
             MessageLookupByLibrary.simpleMessage("Ciudad desconocida"),
+        "unknownTokenName":
+            MessageLookupByLibrary.simpleMessage("Nombre desconocido"),
         "usdcBorrowBalance":
             MessageLookupByLibrary.simpleMessage("Saldo de préstamos USDC"),
         "usdcDepositBalance":

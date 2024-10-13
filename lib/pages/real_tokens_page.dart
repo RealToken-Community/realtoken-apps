@@ -26,7 +26,7 @@ class _RealTokensPageState extends State<RealTokensPage> {
   String _sortOption = 'recentlyAdded';
   bool _isAscending = true;
   String? _selectedCity;
-  String _rentalStatusFilter = 'All';
+  final String _rentalStatusFilter = 'All';
 
   @override
   void initState() {
@@ -253,7 +253,7 @@ class _RealTokensPageState extends State<RealTokensPage> {
                                             ),
                                             const SizedBox(height: 8),
                                             Text(
-                                              'Expected Yield: ${token['annualPercentageYield']}',
+                                              'Expected Yield: ${token['annualPercentageYield'].toStringAsFixed(2)} %',
                                             ),
                                           ],
                                         ),

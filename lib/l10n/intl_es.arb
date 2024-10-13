@@ -144,5 +144,10 @@
   "groupedRentGraph": "Gráfico de Alquiler Agrupado",
   "cumulativeRentGraph": "Gráfico Acumulativo de Alquileres",
   "roiPerProperties": "ROI de la propiedad",
-  "roiAlertInfo": "Esta función de ROI está en beta y actualmente se calcula en función de los ingresos recibidos de la propiedad y el valor actual del token."
+  "roiAlertInfo": "Esta función de ROI está en beta y actualmente se calcula en función de los ingresos recibidos de la propiedad y el valor actual del token.",
+  "recentUpdatesTitle": "Cambios en los últimos 30 días",
+  "noRecentUpdates": "No hay cambios recientes disponibles.",
+  "unknownTokenName": "Nombre desconocido",
+  "noImageAvailable": "Enlace de imagen no disponible",
+  "duplicate": "duplicado"
   }

@@ -72,6 +72,7 @@ class MessageLookup extends MessageLookupByLibrary {
         "donationMessage": MessageLookupByLibrary.simpleMessage(
             "Si vous aimez cette application et souhaitez soutenir son développement, vous pouvez faire un don."),
         "duplex": MessageLookupByLibrary.simpleMessage("Duplex"),
+        "duplicate": MessageLookupByLibrary.simpleMessage("en doublon"),
         "english": MessageLookupByLibrary.simpleMessage("Anglais"),
         "ethereumContract":
             MessageLookupByLibrary.simpleMessage("Contract ethereum"),
@@ -115,8 +116,12 @@ class MessageLookup extends MessageLookupByLibrary {
         "network": MessageLookupByLibrary.simpleMessage("Réseau"),
         "noDataAvailable": MessageLookupByLibrary.simpleMessage(
             "Aucune donnée disponible, veuillez ajouter un nouveau portefeuille"),
+        "noImageAvailable": MessageLookupByLibrary.simpleMessage(
+            "Lien d\'image non disponible"),
         "noPriceEvolution": MessageLookupByLibrary.simpleMessage(
             "Aucune évolution de prix. Le dernier prix est :"),
+        "noRecentUpdates": MessageLookupByLibrary.simpleMessage(
+            "Aucune modification récente disponible."),
         "noRentReceived":
             MessageLookupByLibrary.simpleMessage("Aucun loyer reçu"),
         "noYieldEvolution": MessageLookupByLibrary.simpleMessage(
@@ -138,6 +143,8 @@ class MessageLookup extends MessageLookupByLibrary {
             MessageLookupByLibrary.simpleMessage("Liste des RealTokens"),
         "recentChanges":
             MessageLookupByLibrary.simpleMessage("Modifications récentes"),
+        "recentUpdatesTitle": MessageLookupByLibrary.simpleMessage(
+            "Modifications des 30 derniers jours"),
         "rentGraph":
             MessageLookupByLibrary.simpleMessage("Graphique des loyers reçus"),
         "rentStartDate":
@@ -159,7 +166,7 @@ class MessageLookup extends MessageLookupByLibrary {
         "revenue": MessageLookupByLibrary.simpleMessage("Revenu"),
         "rmm": MessageLookupByLibrary.simpleMessage("RMM"),
         "roiAlertInfo": MessageLookupByLibrary.simpleMessage(
-            "Cette fonction ROIest en beta, elle est pur le moment calculé en fonction des revenus recus de la propriété et la valeur actuelle du token."),
+            "Cette fonction ROI est en beta, elle est pour le moment calculé en fonction des revenus recus de la propriété et la valeur actuelle du token."),
         "roiPerProperties":
             MessageLookupByLibrary.simpleMessage("ROI de la propriété"),
         "rwaHoldings": MessageLookupByLibrary.simpleMessage("RWA Holdings SA"),
@@ -215,6 +222,7 @@ class MessageLookup extends MessageLookupByLibrary {
             "Prix de l\'actif sous-jacent"),
         "unknown": MessageLookupByLibrary.simpleMessage("Inconnu"),
         "unknownCity": MessageLookupByLibrary.simpleMessage("Ville inconnue"),
+        "unknownTokenName": MessageLookupByLibrary.simpleMessage("Nom inconnu"),
         "usdcBorrowBalance":
             MessageLookupByLibrary.simpleMessage("Solde des emprunts USDC"),
         "usdcDepositBalance":

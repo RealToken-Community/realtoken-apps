@@ -2,7 +2,6 @@ import 'package:RealToken/structure/home_page.dart';
 import 'package:flutter/material.dart';
 import 'package:hive_flutter/hive_flutter.dart';
 import 'package:provider/provider.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 import 'api/data_manager.dart';
 import 'settings/theme.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
@@ -28,10 +27,11 @@ void main() async {
 
   // Initialisation de SharedPreferences et DataManager
   final dataManager = DataManager();
+  await Future.delayed(Duration(seconds: 1));
+  FlutterNativeSplash.remove(); // Supprimer le splash screen natif après l'initialisation
   await dataManager.loadSelectedCurrency(); // Charger la devise sélectionnée
   await dataManager.loadUserIdToAddresses(); // Charger les userIds et adresses
-  FlutterNativeSplash.remove(); // Supprimer le splash screen natif après l'initialisation
-  await dataManager.fetchAndCalculateData();
+  // await dataManager.fetchAndCalculateData();
 
   runApp(
     MultiProvider(

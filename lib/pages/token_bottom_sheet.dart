@@ -1,12 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-// Importer le fichier utils
 import 'package:intl/intl.dart';
 import 'package:flutter_map/flutter_map.dart';
 import 'package:latlong2/latlong.dart'; // Import pour les coordonnées géographiques
 import 'package:fl_chart/fl_chart.dart';
-import 'dart:io'; // Import pour vérifier la plateforme
 import 'package:provider/provider.dart'; // Pour accéder à DataManager
 import '../api/data_manager.dart'; // Import de DataManager
 import '../generated/l10n.dart'; // Import pour les traductions
@@ -50,7 +48,7 @@ void _openMapModal(BuildContext context, dynamic lat, dynamic lng) {
         heightFactor: 0.7, // Ajuste la hauteur de la modale
         child: Scaffold(
           appBar: AppBar(
-            title: Text(S.of(context).viewOnMap), // Titre de la carte
+            title: Text('View on Map'), // Titre de la carte
             automaticallyImplyLeading: false,
             actions: [
               IconButton(
@@ -61,32 +59,52 @@ void _openMapModal(BuildContext context, dynamic lat, dynamic lng) {
               ),
             ],
           ),
-          body: FlutterMap(
-            options: MapOptions(
-              initialCenter:
-                  LatLng(latitude, longitude), // Utilise les valeurs converties
-              initialZoom: 10.0,
-            ),
+          body: Stack(
             children: [
-              TileLayer(
-                urlTemplate:
-                    'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',
-                subdomains: ['a', 'b', 'c'],
-              ),
-              MarkerLayer(
-                markers: [
-                  Marker(
-                    point:
-                        LatLng(latitude, longitude), // Coordonnées du marqueur
-                    width: 50, // Largeur du marqueur
-                    height: 50, // Hauteur du marqueur
-                    child: const Icon(
-                      Icons.location_on,
-                      color: Colors.red,
-                      size: 40, // Taille de l'icône de localisation
-                    ),
+              FlutterMap(
+                options: MapOptions(
+                  initialCenter:
+                      LatLng(latitude, longitude), // Utilise les valeurs converties
+                  initialZoom: 10.0,
+                ),
+                children: [
+                  TileLayer(
+                    urlTemplate:
+                        'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',
+                    subdomains: ['a', 'b', 'c'],
+                  ),
+                  MarkerLayer(
+                    markers: [
+                      Marker(
+                        point: LatLng(latitude, longitude), // Coordonnées du marqueur
+                        width: 50, // Largeur du marqueur
+                        height: 50, // Hauteur du marqueur
+                        child: const Icon(
+                          Icons.location_on,
+                          color: Colors.red,
+                          size: 40, // Taille de l'icône de localisation
+                        ),
+                      ),
+                    ],
                   ),
                 ],
+              ),
+              Positioned(
+                bottom: 20,
+                right: 20,
+                child: FloatingActionButton(
+                  onPressed: () {
+                    // Lancer Google Street View
+                    final googleStreetViewUrl =
+                        'https://www.google.com/maps/@?api=1&map_action=pano&viewpoint=$latitude,$longitude';
+                    Utils.launchURL(googleStreetViewUrl);
+                  },
+                  backgroundColor: Colors.blue,
+                  child: const Icon(
+                    Icons.streetview,
+                    color: Colors.white,
+                  ),
+                ),
               ),
             ],
           ),
@@ -192,6 +210,9 @@ Future<void> showTokenDetails( BuildContext context, Map<String, dynamic> token)
                 TabBar(
                   labelColor: Theme.of(context).primaryColor,
                   unselectedLabelColor: Colors.grey,
+                  labelStyle: TextStyle(fontSize: 13 + appState.getTextSizeOffset(),fontWeight: FontWeight.bold), // Taille du texte des onglets sélectionnés
+                  unselectedLabelStyle: TextStyle(fontSize: 13 + appState.getTextSizeOffset() ), // Taille du texte des onglets non sélectionnés
+                  labelPadding: EdgeInsets.symmetric(horizontal: 2.0), // Ajustez cette valeur selon vos besoins
                   tabs: [
                     Tab(text: S.of(context).properties),
                     Tab(text: S.of(context).finances),
@@ -777,6 +798,7 @@ Widget _buildYieldChart(BuildContext context, List<dynamic> yields) {
         lineBarsData: [
           LineChartBarData(
             spots: spots,
+            color: Colors.blue,
             isCurved: true,
             barWidth: 2,
             belowBarData: BarAreaData(show: false),
@@ -860,6 +882,7 @@ Widget _buildPriceChart(BuildContext context, List<dynamic> prices) {
         lineBarsData: [
           LineChartBarData(
             spots: spots,
+            color: Colors.blue,
             isCurved: true,
             barWidth: 2,
             belowBarData: BarAreaData(show: false),

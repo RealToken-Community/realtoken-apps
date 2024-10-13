@@ -20,12 +20,22 @@ class _SettingsPageState extends State<SettingsPage> {
   bool _convertToSquareMeters = false; // Variable pour la conversion des pieds carrés
   String _selectedCurrency = 'usd'; // Déclarez la devise sélectionnée
   final List<String> _languages = ['en', 'fr', 'es']; // Langues disponibles
-  final List<String> _textSizeOptions = ['verySmall','small', 'normal', 'big','veryBig']; // Options de taille de texte
+  final List<String> _textSizeOptions = ['verySmall', 'small', 'normal', 'big', 'veryBig']; // Options de taille de texte
 
   @override
   void initState() {
     super.initState();
+    _loadSettings(); // Charger les paramètres initiaux
     _fetchCurrencies(); // Récupérer les devises lors de l'initialisation
+  }
+
+  // Fonction pour charger les paramètres stockés localement (conversion des m² et devise)
+  Future<void> _loadSettings() async {
+    final prefs = await SharedPreferences.getInstance();
+    setState(() {
+      _convertToSquareMeters = prefs.getBool('convertToSquareMeters') ?? false;
+      _selectedCurrency = prefs.getString('selectedCurrency') ?? 'usd';
+    });
   }
 
   // Fonction pour récupérer les devises depuis l'API
@@ -138,7 +148,7 @@ class _SettingsPageState extends State<SettingsPage> {
                 }).toList(),
                 onChanged: (String? newValue) {
                   if (newValue != null) {
-                    appState.updateLocale(newValue); // Utiliser AppState pour changer la langue
+                    appState.updateLanguage(newValue); // Utiliser AppState pour changer la langue
                     ScaffoldMessenger.of(context).showSnackBar(
                       SnackBar(content: Text(S.of(context).languageUpdated(
                         newValue == 'en'

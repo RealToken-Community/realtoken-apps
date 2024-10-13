@@ -5,7 +5,7 @@ import '../settings/settings_page.dart'; // Importer la page des paramètres
 import '../pages/real_tokens_page.dart'; // Importer la page des RealTokens
 import '../about.dart'; // Importer la page About
 import '../updates_page.dart'; // Importer la page des mises à jour
-import 'dart:io'; // Pour détecter la plateforme
+// Pour détecter la plateforme
 import '../generated/l10n.dart'; // Importer les traductions
 import '../settings/manage_evm_addresses_page.dart'; // Ajouter cet import si ce n'est pas déjà le cas
 import '../app_state.dart'; // Importer AppState

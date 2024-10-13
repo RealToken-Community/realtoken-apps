@@ -1,8 +1,11 @@
 import 'package:intl/intl.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:url_launcher/url_launcher.dart';
+import 'package:logger/logger.dart';
 
 class Utils {
+  static final logger = Logger();  // Initialiser une instance de logger
+
   // Méthode pour formater une date en une chaîne compréhensible
   static String formatReadableDate(String dateString) {
     try {
@@ -20,7 +23,7 @@ class Utils {
   }
 
   static Future<void> launchURL(String url) async {
-  print('Tentative d\'ouverture de l\'URL: $url'); // Log pour capturer l'URL
+  logger.i('Tentative d\'ouverture de l\'URL: $url'); // Log pour capturer l'URL
   final Uri uri = Uri.parse(url);
   try {
     if (await canLaunchUrl(uri)) {
@@ -32,7 +35,7 @@ class Utils {
       throw 'Impossible de lancer l\'URL : $url';
     }
   } catch (e) {
-    print('Erreur lors du lancement de l\'URL: $e');
+    logger.i('Erreur lors du lancement de l\'URL: $e');
   }
 }
 

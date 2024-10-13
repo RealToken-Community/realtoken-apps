@@ -1499,6 +1499,56 @@ class S {
       args: [],
     );
   }
+
+  /// `Changes in the last 30 days`
+  String get recentUpdatesTitle {
+    return Intl.message(
+      'Changes in the last 30 days',
+      name: 'recentUpdatesTitle',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `No recent changes available.`
+  String get noRecentUpdates {
+    return Intl.message(
+      'No recent changes available.',
+      name: 'noRecentUpdates',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Unknown name`
+  String get unknownTokenName {
+    return Intl.message(
+      'Unknown name',
+      name: 'unknownTokenName',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Image link not available`
+  String get noImageAvailable {
+    return Intl.message(
+      'Image link not available',
+      name: 'noImageAvailable',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `dupicate`
+  String get duplicate {
+    return Intl.message(
+      'dupicate',
+      name: 'duplicate',
+      desc: '',
+      args: [],
+    );
+  }
 }
 
 class AppLocalizationDelegate extends LocalizationsDelegate<S> {

@@ -3,8 +3,10 @@ import 'dart:convert';
 import 'package:http/http.dart' as http;
 import 'package:hive/hive.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:logger/logger.dart';
 
 class ApiService {
+  static final logger = Logger();  // Initialiser une instance de logger
   static const theGraphApiKey = 'c57eb2612e998502f4418378a4cb9f35';
   static const String gnosisUrl = 'https://gateway-arbitrum.network.thegraph.com/api/$theGraphApiKey/subgraphs/id/FPPoFB7S2dcCNrRyjM5QbaMwKqRZPdbTg8ysBrwXd4SP';
   static const String etherumUrl = 'https://gateway-arbitrum.network.thegraph.com/api/$theGraphApiKey/subgraphs/id/EVjGN4mMd9h9JfGR7yLC6T2xrJf9syhjQNboFb7GzxVW';
@@ -61,7 +63,7 @@ class ApiService {
     );
 
     if (response.statusCode == 200) {
-       print("apiService: theGraph -> requete lancée");
+       logger.i("apiService: theGraph -> requete lancée");
       final data = json.decode(response.body)['data']['accounts'];
       box.put('cachedTokenData_$cacheKey', json.encode(data));
       box.put('lastFetchTime_$cacheKey', now.toIso8601String());
@@ -141,7 +143,7 @@ class ApiService {
       );
 
       if (response.statusCode == 200) {
-        print("apiService: theGraph -> requete lancée");
+        logger.i("apiService: theGraph -> requete lancée");
 
         final decodedResponse = json.decode(response.body);
         if (decodedResponse['data'] != null &&
@@ -180,7 +182,7 @@ class ApiService {
     final response = await http.get(Uri.parse(realTokensUrl));
 
     if (response.statusCode == 200) {
-      print("apiService: pitSwap -> requete lancée");
+      logger.i("apiService: pitSwap -> requete lancée");
 
       final data = json.decode(response.body);
       box.put('cachedRealTokens', json.encode(data));
@@ -209,7 +211,7 @@ class ApiService {
     final DateTime last429 = DateTime.parse(last429Time);
     // Si on est dans la période d'attente de 3 minutes
     if (now.difference(last429) < Duration(minutes: 3)) {
-      print('apiService: ehpst -> 429 reçu, attente avant nouvelle requête.');
+      logger.i('apiService: ehpst -> 429 reçu, attente avant nouvelle requête.');
       // Retourner les données en cache si elles sont disponibles
       final cachedData = box.get('cachedRentData');
       if (cachedData != null) {
@@ -240,14 +242,14 @@ class ApiService {
 
     // Si on reçoit un code 429, sauvegarder l'heure et arrêter
     if (response.statusCode == 429) {
-      print('apiService: ehpst -> 429 Too Many Requests');
+      logger.i('apiService: ehpst -> 429 Too Many Requests');
       // Sauvegarder le temps où la réponse 429 a été reçue
       box.put('lastRent429Time', now.toIso8601String());
       break; // Sortir de la boucle et arrêter la méthode
     }
 
     if (response.statusCode == 200) {
-      print("apiService: ehpst -> RentTracker, requete lancée");
+      logger.i("apiService: ehpst -> RentTracker, requete lancée");
 
       List<Map<String, dynamic>> rentData =
           List<Map<String, dynamic>>.from(json.decode(response.body));
@@ -367,14 +369,14 @@ class ApiService {
     );
 
     if (response.statusCode == 200) {
-            print("apiService: theGraph -> requete lancée");
+            logger.i("apiService: theGraph -> requete lancée");
       final data = json.decode(response.body);
       final accounts = data['data']['accounts'];
       if (accounts != null && accounts.isNotEmpty) {
         return List<String>.from(accounts.map((account) => account['address']));
       }
     } else {
-      print("apiService: theGraph -> echec requete");
+      logger.i("apiService: theGraph -> echec requete");
 
     }
     return [];
@@ -442,7 +444,7 @@ static Future<BigInt?> _fetchBalance(String contract, String address, {bool forc
       // Vérifier si le résultat est mis en cache
       final cachedData = box.get(cacheKey);
       if (cachedData != null) {
-        print('apiService: Utilisation des données du cache pour $contract');
+        logger.i('apiService: Utilisation des données du cache pour $contract');
         return BigInt.tryParse(cachedData);
       }
     }
@@ -469,7 +471,7 @@ static Future<BigInt?> _fetchBalance(String contract, String address, {bool forc
   if (response.statusCode == 200) {
     final responseBody = json.decode(response.body);
     final result = responseBody['result'];
-    print("apiService: RPC gnosis -> requête lancée");
+    logger.i("apiService: RPC gnosis -> requête lancée");
 
     if (result != null && result != "0x") {
       final balance = BigInt.parse(result.substring(2), radix: 16);
@@ -480,10 +482,10 @@ static Future<BigInt?> _fetchBalance(String contract, String address, {bool forc
       
       return balance;
     } else {
-      print("apiService: RPC gnosis -> Invalid response for contract $contract: $result");
+      logger.i("apiService: RPC gnosis -> Invalid response for contract $contract: $result");
     }
   } else {
-    print('apiService: RPC gnosis -> Failed to fetch balance for contract $contract. Status code: ${response.statusCode}');
+    logger.i('apiService: RPC gnosis -> Failed to fetch balance for contract $contract. Status code: ${response.statusCode}');
   }
 
   return null;
@@ -509,7 +511,7 @@ static Future<List<Map<String, dynamic>>> fetchDetailedRentDataForAllWallets({bo
     final DateTime last429 = DateTime.parse(last429Time);
     // Si on est dans la période d'attente de 3 minutes
     if (now.difference(last429) < Duration(minutes: 3)) {
-      print('apiService: ehpst -> 429 reçu, attente avant nouvelle requête.');
+      logger.i('apiService: ehpst -> 429 reçu, attente avant nouvelle requête.');
       // Retourner les données en cache si elles sont disponibles
       List<Map<String, dynamic>> cachedData = [];
       for (var walletAddress in evmAddresses) {
@@ -552,7 +554,7 @@ static Future<List<Map<String, dynamic>>> fetchDetailedRentDataForAllWallets({bo
 
       // Si on reçoit un code 429, sauvegarder l'heure et arrêter
       if (response.statusCode == 429) {
-        print('apiService: ehpst -> 429 Too Many Requests');
+        logger.i('apiService: ehpst -> 429 Too Many Requests');
         // Sauvegarder le temps où la réponse 429 a été reçue
         box.put('last429Time', now.toIso8601String());
         break; // Sortir de la boucle et arrêter la méthode
@@ -565,7 +567,7 @@ static Future<List<Map<String, dynamic>>> fetchDetailedRentDataForAllWallets({bo
         // Sauvegarder dans le cache
         box.put('cachedDetailedRentData_$walletAddress', json.encode(rentData));
         box.put('lastDetailedRentFetchTime_$walletAddress', now.toIso8601String());
-        print("apiService: ehpst -> detailRent, requete lancée");
+        logger.i("apiService: ehpst -> detailRent, requete lancée");
 
         // Ajouter les données brutes au tableau
         allRentData.addAll(rentData);
@@ -573,7 +575,7 @@ static Future<List<Map<String, dynamic>>> fetchDetailedRentDataForAllWallets({bo
         throw Exception('apiService: ehpst -> detailRent, Failed to fetch detailed rent data for wallet: $walletAddress');
       }
     } catch (e) {
-      print('Erreur lors de la requête HTTP : $e');
+      logger.i('Erreur lors de la requête HTTP : $e');
       // Vous pouvez gérer les exceptions ici (timeout ou autres erreurs)
     }
   }

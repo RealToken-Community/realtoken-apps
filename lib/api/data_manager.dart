@@ -2,8 +2,11 @@ import 'package:flutter/material.dart';
 import 'dart:convert';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'api_service.dart';
+import 'package:logger/logger.dart';
 
 class DataManager extends ChangeNotifier {
+  static final logger = Logger();  // Initialiser une instance de logger
+
   // Variables partagées pour le Dashboard et Portfolio
   double totalValue = 0;
   double walletValue = 0;
@@ -110,6 +113,8 @@ class DataManager extends ChangeNotifier {
   // Ajout des variables pour compter les tokens dans le wallet et RMM
   int walletTokenCount = 0;
   int rmmTokenCount = 0;
+  int totalTokenCount = 0;
+  int duplicateTokenCount = 0;
 
   bool isLoading = true;
 
@@ -180,7 +185,7 @@ class DataManager extends ChangeNotifier {
 
   // Mettre à jour la liste des tokens
   _allTokens = allTokensList;
-  print("Tokens récupérés: ${allTokensList.length}"); // Vérifiez que vous obtenez bien des tokens
+  logger.i("Tokens récupérés: ${allTokensList.length}"); // Vérifiez que vous obtenez bien des tokens
 
   // Notifie les widgets que les données ont changé
   notifyListeners();
@@ -189,7 +194,7 @@ class DataManager extends ChangeNotifier {
 
   // Méthode pour récupérer et calculer les données pour le Dashboard et Portfolio
   Future<void> fetchAndCalculateData({bool forceFetch = false}) async {
-    print("Début de la récupération des données de tokens...");
+    logger.i("Début de la récupération des données de tokens...");
 
     try {
     // Lancer toutes les requêtes API en parallèle
@@ -213,27 +218,27 @@ class DataManager extends ChangeNotifier {
 
     // Vérifier les données récupérées et loguer si elles sont vides
     if (walletTokensGnosis.isEmpty) {
-      print("Aucun wallet récupéré depuis Gnosis.");
+      logger.i("Aucun wallet récupéré depuis Gnosis.");
     } else {
-      print("Nombre de wallets récupérés depuis Gnosis: ${walletTokensGnosis.length}");
+      logger.i("Nombre de wallets récupérés depuis Gnosis: ${walletTokensGnosis.length}");
     }
 
     if (walletTokensEtherum.isEmpty) {
-      print("Aucun wallet récupéré depuis Etherum.");
+      logger.i("Aucun wallet récupéré depuis Etherum.");
     } else {
-      print("Nombre de wallets récupérés depuis Etherum: ${walletTokensEtherum.length}");
+      logger.i("Nombre de wallets récupérés depuis Etherum: ${walletTokensEtherum.length}");
     }
 
     if (rmmTokens.isEmpty) {
-      print("Aucun token dans le RMM.");
+      logger.i("Aucun token dans le RMM.");
     } else {
-      print("Nombre de tokens dans le RMM récupérés: ${rmmTokens.length}");
+      logger.i("Nombre de tokens dans le RMM récupérés: ${rmmTokens.length}");
     }
 
     if (realTokens.isEmpty) {
-      print("Aucun RealToken trouvé.");
+      logger.i("Aucun RealToken trouvé.");
     } else {
-      print("Nombre de RealTokens récupérés: ${realTokens.length}");
+      logger.i("Nombre de RealTokens récupérés: ${realTokens.length}");
     }
 
     // Variables temporaires pour calculer les valeurs
@@ -258,8 +263,8 @@ class DataManager extends ChangeNotifier {
     // Utilisation des ensembles pour stocker les adresses uniques
     Set<String> uniqueWalletTokens = {};
     Set<String> uniqueRmmTokens = {};
-    Set<String> uniqueRentedUnitAddresses =
-        {}; // Pour stocker les adresses uniques avec unités louées
+    Set<String> globalUniqueTokens = {}; // Pour stocker les tokens uniques globaux
+    Set<String> uniqueRentedUnitAddresses = {}; // Pour stocker les adresses uniques avec unités louées
     Set<String> uniqueTotalUnitAddresses =
         {}; // Pour stocker les adresses uniques avec unités totales
 
@@ -282,8 +287,7 @@ class DataManager extends ChangeNotifier {
 
         if (matchingRealToken.isNotEmpty) {
           final double tokenPrice = matchingRealToken['tokenPrice'];
-          final double tokenValue =
-              double.parse(walletToken['amount']) * tokenPrice;
+          final double tokenValue = double.parse(walletToken['amount']) * tokenPrice;
 
           // Compter les unités louées et totales si elles n'ont pas déjà été comptées
           if (!uniqueRentedUnitAddresses.contains(tokenAddress)) {
@@ -301,14 +305,26 @@ class DataManager extends ChangeNotifier {
             walletValueSum += tokenValue;
             walletTokensSum += double.parse(walletToken['amount']);
 
-            annualYieldSum += matchingRealToken['annualPercentageYield'];
-            yieldCount++;
-            dailyRentSum += matchingRealToken['netRentDayPerToken'] *
-                double.parse(walletToken['amount']);
-            monthlyRentSum += matchingRealToken['netRentMonthPerToken'] *
-                double.parse(walletToken['amount']);
-            yearlyRentSum += matchingRealToken['netRentYearPerToken'] *
-                double.parse(walletToken['amount']);
+            // Récupérer la date d'aujourd'hui
+            final today = DateTime.now();
+
+            // Convertir la chaîne de date 'initialLaunchDate' en objet DateTime
+            final launchDateString = matchingRealToken['initialLaunchDate']?['date'];
+            if (launchDateString != null) {
+              final launchDate = DateTime.tryParse(launchDateString);
+
+              // Comparer la date de lancement avec aujourd'hui
+              if (launchDate != null && launchDate.isBefore(today)) {
+                // Ajouter uniquement si la date de lancement est dans le passé
+                annualYieldSum += matchingRealToken['annualPercentageYield'];
+                yieldCount++;
+                dailyRentSum += matchingRealToken['netRentDayPerToken'] * double.parse(walletToken['amount']);
+                monthlyRentSum += matchingRealToken['netRentMonthPerToken'] * double.parse(walletToken['amount']);
+                yearlyRentSum += matchingRealToken['netRentYearPerToken'] * double.parse(walletToken['amount']);
+              }
+            }
+
+          
           }
            double totalRentReceived = 0.0;
         final tokenContractAddress = matchingRealToken['uuid'] ?? ''; // Utiliser l'adresse du contrat du token
@@ -356,21 +372,17 @@ class DataManager extends ChangeNotifier {
            // Récupérer les informations de loyer pour ce token
         double? rentDetails = getRentDetailsForToken(tokenContractAddress);
 
-        if (rentDetails != null) {
-          double totalRentReceived = rentDetails;
+        double totalRentReceived = rentDetails;
 
-          // Une fois les données récupérées, mettre à jour l'élément du portfolio correspondant
-          final portfolioItem = newPortfolio.firstWhere(
-            (item) => item['shortName'] == matchingRealToken['shortName'], 
-            orElse: () => {},
-          );
+        // Une fois les données récupérées, mettre à jour l'élément du portfolio correspondant
+        final portfolioItem = newPortfolio.firstWhere(
+          (item) => item['shortName'] == matchingRealToken['shortName'], 
+          orElse: () => {},
+        );
 
-          portfolioItem['totalRentReceived'] = totalRentReceived;
-          print("Loyer total reçu pour $tokenContractAddress : $totalRentReceived");
-                } else {
-          print("Aucun détail de loyer trouvé pour $tokenContractAddress");
-        }
-
+        portfolioItem['totalRentReceived'] = totalRentReceived;
+        logger.i("Loyer total reçu pour $tokenContractAddress : $totalRentReceived");
+              
         // Notifiez les listeners après avoir mis à jour le portfolio
         notifyListeners();
       }
@@ -383,8 +395,7 @@ class DataManager extends ChangeNotifier {
     // Process tokens dans le RMM (similaire au processus wallet)
     for (var rmmToken in rmmTokens) {
       final tokenAddress = rmmToken['token']['id'].toLowerCase();
-      uniqueRmmTokens
-          .add(tokenAddress); // Ajouter à l'ensemble des tokens uniques
+      uniqueRmmTokens.add(tokenAddress); // Ajouter à l'ensemble des tokens uniques
 
       final matchingRealToken =
           realTokens.cast<Map<String, dynamic>>().firstWhere(
@@ -410,11 +421,24 @@ class DataManager extends ChangeNotifier {
           uniqueTotalUnitAddresses.add(tokenAddress); // Marquer cette adresse comme comptée pour les unités totales
         }
 
-        annualYieldSum += matchingRealToken['annualPercentageYield'];
-        yieldCount++;
-        dailyRentSum += matchingRealToken['netRentDayPerToken'] * amount;
-        monthlyRentSum += matchingRealToken['netRentMonthPerToken'] * amount;
-        yearlyRentSum += matchingRealToken['netRentYearPerToken'] * amount;
+        // Récupérer la date d'aujourd'hui
+        final today = DateTime.now();
+
+        // Convertir la chaîne de date 'initialLaunchDate' en objet DateTime
+        final launchDateString = matchingRealToken['initialLaunchDate']?['date'];
+        if (launchDateString != null) {
+          final launchDate = DateTime.tryParse(launchDateString);
+
+          // Comparer la date de lancement avec aujourd'hui
+          if (launchDate != null && launchDate.isBefore(today)) {
+            // Ajouter uniquement si la date de lancement est dans le passé
+            annualYieldSum += matchingRealToken['annualPercentageYield'];
+            yieldCount++;
+            dailyRentSum += matchingRealToken['netRentDayPerToken'] * amount;
+            monthlyRentSum += matchingRealToken['netRentMonthPerToken'] * amount;
+            yearlyRentSum += matchingRealToken['netRentYearPerToken'] * amount;
+          }
+        }
 
         double totalRentReceived = 0.0;
         final tokenContractAddress = matchingRealToken['uuid'] ?? ''; // Utiliser l'adresse du contrat du token
@@ -463,21 +487,17 @@ class DataManager extends ChangeNotifier {
            // Récupérer les informations de loyer pour ce token
         double? rentDetails = getRentDetailsForToken(tokenContractAddress);
 
-        if (rentDetails != null) {
-          double totalRentReceived = rentDetails;
+        double totalRentReceived = rentDetails;
 
-          // Une fois les données récupérées, mettre à jour l'élément du portfolio correspondant
-          final portfolioItem = newPortfolio.firstWhere(
-            (item) => item['shortName'] == matchingRealToken['shortName'], 
-            orElse: () => {},
-          );
+        // Une fois les données récupérées, mettre à jour l'élément du portfolio correspondant
+        final portfolioItem = newPortfolio.firstWhere(
+          (item) => item['shortName'] == matchingRealToken['shortName'], 
+          orElse: () => {},
+        );
 
-          portfolioItem['totalRentReceived'] = totalRentReceived;
-          print("Loyer total reçu pour $tokenContractAddress : $totalRentReceived");
-                } else {
-          print("Aucun détail de loyer trouvé pour $tokenContractAddress");
-        }
-
+        portfolioItem['totalRentReceived'] = totalRentReceived;
+        logger.i("Loyer total reçu pour $tokenContractAddress : $totalRentReceived");
+              
         // Notifiez les listeners après avoir mis à jour le portfolio
         notifyListeners();
       }
@@ -505,21 +525,36 @@ class DataManager extends ChangeNotifier {
     monthlyRent = monthlyRentSum;
     yearlyRent = yearlyRentSum;
 
-    // Compter les tokens uniques pour wallet et RMM
+   // Compter les tokens uniques pour wallet et RMM
     walletTokenCount = uniqueWalletTokens.length;
     rmmTokenCount = uniqueRmmTokens.length;
+
+    // Crée des sets pour contenir les tokens uniques
+    final Set<String> walletTokensSet = uniqueWalletTokens.toSet();
+    final Set<String> rmmTokensSet = uniqueRmmTokens.toSet();
+    final Set<String> allUniqueTokens = {...walletTokensSet, ...rmmTokensSet};
+
+    // Comptabilise le nombre de tokens uniques
+    totalTokenCount = allUniqueTokens.length;
+
+    // Trouve l'intersection des deux ensembles (tokens présents dans les deux sets)
+    final Set<String> duplicateTokens = walletTokensSet.intersection(rmmTokensSet);
+
+    // Comptabilise le nombre de tokens en doublons
+    duplicateTokenCount = duplicateTokens.length;
+
+
 
     // Mise à jour des données pour le Portfolio
     _portfolio = newPortfolio;
 
-    print("Portfolio mis à jour avec ${_portfolio.length} éléments.");
-    print(
-        "Unité louées uniques: $rentedUnits, Unités totales uniques: $totalUnits");
+    logger.i("Portfolio mis à jour avec ${_portfolio.length} éléments.");
+    logger.i("Unité louées uniques: $rentedUnits, Unités totales uniques: $totalUnits");
 
     // Notify listeners that data has changed
     notifyListeners();
     } catch (error) {
-    print("Erreur lors de la récupération des données: $error");
+    logger.i("Erreur lors de la récupération des données: $error");
   }
   }
 
@@ -536,7 +571,7 @@ class DataManager extends ChangeNotifier {
       if (token.containsKey('update30') &&
           token['update30'] is List &&
           token['update30'].isNotEmpty) {
-        print(
+        logger.i(
             "Processing updates for token: ${token['shortName'] ?? 'Nom inconnu'}");
 
         // Récupérer les informations de base du token
@@ -559,7 +594,7 @@ class DataManager extends ChangeNotifier {
         // Ajouter les mises à jour extraites dans recentUpdates
         recentUpdates.addAll(updatesWithDetails);
       } else {
-        print(
+        logger.i(
             'Aucune mise à jour pour le token : ${token['shortName'] ?? 'Nom inconnu'}');
       }
     }
@@ -614,7 +649,7 @@ class DataManager extends ChangeNotifier {
           await ApiService.fetchRentData(forceFetch: forceFetch);
       this.rentData = rentData;
     } catch (e) {
-      print("Error fetching rent data: $e");
+      logger.i("Error fetching rent data: $e");
     }
     notifyListeners();
   }
@@ -623,13 +658,10 @@ class DataManager extends ChangeNotifier {
   Future<void> fetchPropertyData({bool forceFetch = false}) async {
     try {
       // Récupérer les tokens depuis l'API
-      final walletTokensGnosis =
-          await ApiService.fetchTokensFromGnosis(forceFetch: forceFetch);
-      final walletTokensEtherum =
-          await ApiService.fetchTokensFromEtherum(forceFetch: forceFetch);
+      final walletTokensGnosis = await ApiService.fetchTokensFromGnosis(forceFetch: forceFetch);
+      final walletTokensEtherum = await ApiService.fetchTokensFromEtherum(forceFetch: forceFetch);
       final rmmTokens = await ApiService.fetchRMMTokens(forceFetch: forceFetch);
-      final realTokens =
-          await ApiService.fetchRealTokens(forceFetch: forceFetch);
+      final realTokens = await ApiService.fetchRealTokens(forceFetch: forceFetch);
 
       // Fusionner les tokens de Gnosis et d'Etherum
       final walletTokens = [...walletTokensGnosis, ...walletTokensEtherum];
@@ -683,13 +715,13 @@ class DataManager extends ChangeNotifier {
             }
           }
         } else {
-          //print('Invalid token or missing address for token: $token');
+          //logger.i('Invalid token or missing address for token: $token');
         }
       }
 
       this.propertyData = propertyData;
     } catch (e) {
-      print("Error fetching property data: $e");
+      logger.i("Error fetching property data: $e");
     }
     notifyListeners();
   }
@@ -721,6 +753,8 @@ class DataManager extends ChangeNotifier {
     // Réinitialiser les compteurs
     walletTokenCount = 0;
     rmmTokenCount = 0;
+    totalTokenCount = 0;
+    duplicateTokenCount = 0;
 
     // Notifier les observateurs que les données ont été réinitialisées
     notifyListeners();
@@ -778,7 +812,7 @@ Future<void> updateConversionRate(
     try {
       // Récupérer les balances de l'API
       List<Map<String, dynamic>> balances = await ApiService.fetchRmmBalances();
-      print(balances);
+      logger.i(balances);
 
       double usdcDepositSum = 0;
       double usdcBorrowSum = 0;
@@ -818,7 +852,7 @@ Future<void> updateConversionRate(
 
       notifyListeners(); // Notifier l'interface que les données ont été mises à jour
     } catch (e) {
-      print('Error fetching RMM balances: $e');
+      logger.i('Error fetching RMM balances: $e');
     }
   }
 

@@ -1,4 +1,3 @@
-import 'dart:io'; // Import pour Platform
 import 'package:flutter/material.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:intl/intl.dart'; // Import de la bibliothèque intl
@@ -62,7 +61,7 @@ class PortfolioDisplay2 extends StatelessWidget {
                     Text(
                       S.of(context).noDataAvailable, // Traduction pour "Aucune donnée disponible"
                       style: TextStyle(
-                        fontSize: (Platform.isAndroid ? 16 : 18) + appState.getTextSizeOffset(),
+                        fontSize: 18 + appState.getTextSizeOffset(),
                         fontWeight: FontWeight.bold,
                         color: Colors.grey,
                       ),
@@ -84,7 +83,7 @@ class PortfolioDisplay2 extends StatelessWidget {
                       child: Text(
                         S.of(context).manageAddresses, // Traduction pour "Gérer les adresses"
                         style: TextStyle(
-                          fontSize: (Platform.isAndroid ? 14 : 16) + appState.getTextSizeOffset(),
+                          fontSize: 16 + appState.getTextSizeOffset(),
                         ),
                       ),
                     ),
@@ -141,7 +140,7 @@ class PortfolioDisplay2 extends StatelessWidget {
                                       child: Text(
                                         token['shortName'] ?? S.of(context).nameUnavailable,
                                         style: TextStyle(
-                                          fontSize: (Platform.isAndroid ? 16 : 18) + appState.getTextSizeOffset(),
+                                          fontSize: 18 + appState.getTextSizeOffset(),
                                           fontWeight: FontWeight.bold,
                                         ),
                                       ),
@@ -189,7 +188,7 @@ class PortfolioDisplay2 extends StatelessWidget {
                                 Text(
                                   city,
                                   style: TextStyle(
-                                    fontSize: (Platform.isAndroid ? 14 : 16) + appState.getTextSizeOffset(),
+                                    fontSize: 16 + appState.getTextSizeOffset(),
                                     color: Colors.grey,
                                   ),
                                 ),
@@ -197,19 +196,19 @@ class PortfolioDisplay2 extends StatelessWidget {
                                 Text(
                                   '${S.of(context).totalValue}: ${formatCurrency(context, token['totalValue'])}',
                                   style: TextStyle(
-                                    fontSize: (Platform.isAndroid ? 14 : 15) + appState.getTextSizeOffset(),
+                                    fontSize: 15 + appState.getTextSizeOffset(),
                                   ),
                                 ),
                                 Text(
                                   '${S.of(context).amount}: ${token['amount']} / ${token['totalTokens']}',
                                   style: TextStyle(
-                                    fontSize: (Platform.isAndroid ? 14 : 15) + appState.getTextSizeOffset(),
+                                    fontSize: 15 + appState.getTextSizeOffset(),
                                   ),
                                 ),
                                 Text(
                                   '${S.of(context).apy}: ${token['annualPercentageYield']?.toStringAsFixed(2)}%',
                                   style: TextStyle(
-                                    fontSize: (Platform.isAndroid ? 14 : 15) + appState.getTextSizeOffset(),
+                                    fontSize: 15 + appState.getTextSizeOffset(),
                                   ),
                                 ),
                                 const SizedBox(height: 8),
@@ -217,7 +216,7 @@ class PortfolioDisplay2 extends StatelessWidget {
                                   '${S.of(context).revenue}:',
                                   style: TextStyle(
                                     fontWeight: FontWeight.bold,
-                                    fontSize: (Platform.isAndroid ? 14 : 16) + appState.getTextSizeOffset(),
+                                    fontSize: 16 + appState.getTextSizeOffset(),
                                   ),
                                 ),
                                 Padding(
@@ -229,11 +228,11 @@ class PortfolioDisplay2 extends StatelessWidget {
                                         children: [
                                           Text(S.of(context).day,
                                               style: TextStyle(
-                                                fontSize: (Platform.isAndroid ? 12 : 13) + appState.getTextSizeOffset(),
+                                                fontSize: 13 + appState.getTextSizeOffset(),
                                               )),
                                           Text(formatCurrency(context, token['dailyIncome'] ?? 0),
                                               style: TextStyle(
-                                                fontSize: (Platform.isAndroid ? 12 : 13) + appState.getTextSizeOffset(),
+                                                fontSize: 13 + appState.getTextSizeOffset(),
                                               )),
                                         ],
                                       ),
@@ -241,11 +240,11 @@ class PortfolioDisplay2 extends StatelessWidget {
                                         children: [
                                           Text(S.of(context).week,
                                               style: TextStyle(
-                                                fontSize: (Platform.isAndroid ? 12 : 13) + appState.getTextSizeOffset(),
+                                                fontSize: 13 + appState.getTextSizeOffset(),
                                               )),
                                           Text(formatCurrency(context, token['dailyIncome'] * 7 ?? 0),
                                               style: TextStyle(
-                                                fontSize: (Platform.isAndroid ? 12 : 13) + appState.getTextSizeOffset(),
+                                                fontSize: 13 + appState.getTextSizeOffset(),
                                               )),
                                         ],
                                       ),
@@ -253,11 +252,11 @@ class PortfolioDisplay2 extends StatelessWidget {
                                         children: [
                                           Text(S.of(context).month,
                                               style: TextStyle(
-                                                fontSize: (Platform.isAndroid ? 12 : 13) + appState.getTextSizeOffset(),
+                                                fontSize: 13 + appState.getTextSizeOffset(),
                                               )),
                                           Text(formatCurrency(context, token['monthlyIncome'] ?? 0),
                                               style: TextStyle(
-                                                fontSize: (Platform.isAndroid ? 12 : 13) + appState.getTextSizeOffset(),
+                                                fontSize: 13 + appState.getTextSizeOffset(),
                                               )),
                                         ],
                                       ),
@@ -265,11 +264,11 @@ class PortfolioDisplay2 extends StatelessWidget {
                                         children: [
                                           Text(S.of(context).year,
                                               style: TextStyle(
-                                                fontSize: (Platform.isAndroid ? 12 : 13) + appState.getTextSizeOffset(),
+                                                fontSize: 13 + appState.getTextSizeOffset(),
                                               )),
                                           Text(formatCurrency(context, token['yearlyIncome'] ?? 0),
                                               style: TextStyle(
-                                                fontSize: (Platform.isAndroid ? 12 : 13) + appState.getTextSizeOffset(),
+                                                fontSize: 13 + appState.getTextSizeOffset(),
                                               )),
                                         ],
                                       ),

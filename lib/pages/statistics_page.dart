@@ -1,4 +1,4 @@
-import 'dart:io'; // Import pour Platform
+// Import pour Platform
 import 'package:flutter/material.dart';
 import 'package:fl_chart/fl_chart.dart';
 import 'package:provider/provider.dart';
@@ -7,6 +7,7 @@ import 'package:flutter/scheduler.dart';
 import '../api/data_manager.dart';
 import '../generated/l10n.dart'; // Import pour les traductions
 import '../app_state.dart'; // Import AppState
+import 'package:logger/logger.dart';
 
 
 String formatCurrency(double value, String symbol) {
@@ -26,6 +27,8 @@ class StatisticsPage extends StatefulWidget {
 }
 
 class _StatisticsPageState extends State<StatisticsPage> {
+  static final logger = Logger();  // Initialiser une instance de logger
+
   late String _selectedPeriod;
 
   // Carte des abréviations d'États des États-Unis à leurs noms complets
@@ -88,12 +91,12 @@ class _StatisticsPageState extends State<StatisticsPage> {
     SchedulerBinding.instance.addPostFrameCallback((_) {
       try {
         final dataManager = Provider.of<DataManager>(context, listen: false);
-        print("Fetching rent data and property data...");
+        logger.i("Fetching rent data and property data...");
         dataManager.fetchRentData();
         dataManager.fetchPropertyData();
       } catch (e, stacktrace) {
-        print("Error during initState: $e");
-        print("Stacktrace: $stacktrace");
+        logger.i("Error during initState: $e");
+        logger.i("Stacktrace: $stacktrace");
       }
     });
   }
@@ -178,8 +181,8 @@ class _StatisticsPageState extends State<StatisticsPage> {
     try {
       dataManager = Provider.of<DataManager>(context);
     } catch (e, stacktrace) {
-      print("Error accessing DataManager: $e");
-      print("Stacktrace: $stacktrace");
+      logger.i("Error accessing DataManager: $e");
+      logger.i("Stacktrace: $stacktrace");
       return Center(child: Text("Error loading data"));
     }
 
@@ -213,7 +216,7 @@ class _StatisticsPageState extends State<StatisticsPage> {
   bool _showCumulativeRent = false;
 
   Widget _buildRentGraphCard(List<Map<String, dynamic>> groupedData, DataManager dataManager) {
-    const int maxPoints = 100;
+    const int maxPoints = 1000;
     final appState = Provider.of<AppState>(context);
 
     List<Map<String, dynamic>> limitedData = groupedData.length > maxPoints
@@ -225,8 +228,7 @@ class _StatisticsPageState extends State<StatisticsPage> {
       return {
         'date': entry['date'],
         'rent': convertedRent,
-        'cumulativeRent':
-            entry['cumulativeRent'] ?? 0.0, // Ajout des données cumulatives
+        'cumulativeRent': entry['cumulativeRent'] ?? 0.0, // Ajout des données cumulatives
       };
     }).toList();
 
@@ -275,14 +277,12 @@ class _StatisticsPageState extends State<StatisticsPage> {
                       leftTitles: AxisTitles(
                         sideTitles: SideTitles(
                           showTitles: true,
-                          reservedSize:
-                              50, // Augmenter la taille réservée à l'échelle de gauche
+                          reservedSize: 55, // Augmenter la taille réservée à l'échelle de gauche
                           interval: _calculateLeftInterval(convertedData),
                           getTitlesWidget: (value, meta) {
                             return Text(
                               formatCurrency(value, dataManager.currencySymbol),
-                              style: TextStyle(
-                                  fontSize: 10 + appState.getTextSizeOffset()),
+                              style: TextStyle( fontSize: 10 + appState.getTextSizeOffset()),
                             );
                           },
                         ),
@@ -331,9 +331,7 @@ class _StatisticsPageState extends State<StatisticsPage> {
                         color: _showCumulativeRent ? Colors.green : Colors.blue,
                         belowBarData: BarAreaData(
                           show: true,
-                          color:
-                              (_showCumulativeRent ? Colors.green : Colors.blue)
-                                  .withOpacity(0.3),
+                          color: (_showCumulativeRent ? Colors.green : Colors.blue).withOpacity(0.3),
                         ),
                       ),
                     ],
@@ -861,25 +859,36 @@ class _StatisticsPageState extends State<StatisticsPage> {
   }
 
   Color _getPropertyColor(int propertyType) {
-    switch (propertyType) {
-      case 1:
-        return Colors.blue;
-      case 2:
-        return Colors.green;
-      case 3:
-        return Colors.orange;
-      case 4:
-        return Colors.red;
-      case 5:
-        return Colors.purple;
-      case 6:
-        return Colors.yellow;
-      case 7:
-        return Colors.teal;
-      default:
-        return Colors.grey;
-    }
+  switch (propertyType) {
+    case 1:
+      return Colors.blue;
+    case 2:
+      return Colors.green;
+    case 3:
+      return Colors.orange;
+    case 4:
+      return Colors.red;
+    case 5:
+      return Colors.purple;
+    case 6:
+      return Colors.yellow;
+    case 7:
+      return Colors.teal;
+    case 8:
+      return Colors.brown;
+    case 9:
+      return Colors.pink;
+    case 10:
+      return Colors.cyan;
+    case 11:
+      return Colors.lime;
+    case 12:
+      return Colors.indigo;
+    default:
+      return Colors.grey;
   }
+}
+
 
   String getPropertyTypeName(int propertyType) {
     switch (propertyType) {

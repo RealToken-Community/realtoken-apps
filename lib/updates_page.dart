@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'api/data_manager.dart'; // Assurez-vous d'importer votre DataManager
+import '../generated/l10n.dart'; // Import pour les traductions
 
 class UpdatesPage extends StatefulWidget {
   const UpdatesPage({super.key});
@@ -27,10 +28,10 @@ class _UpdatesPageState extends State<UpdatesPage> {
     if (dataManager.recentUpdates.isEmpty) {
       return Scaffold(
         appBar: AppBar(
-          title: const Text('Modifications des 30 derniers jours'),
+          title: Text(S.of(context).recentUpdatesTitle), // Utilisation des traductions
         ),
-        body: const Center(
-          child: Text('Aucune modification récente disponible.'),
+        body: Center(
+          child: Text(S.of(context).noRecentUpdates), // Utilisation des traductions
         ),
       );
     }
@@ -42,7 +43,7 @@ class _UpdatesPageState extends State<UpdatesPage> {
           .toLocal()
           .toString()
           .split(' ')[0]; // Date sans l'heure
-      final String tokenKey = update['shortName'] ?? 'Nom inconnu';
+      final String tokenKey = update['shortName'] ?? S.of(context).unknownTokenName;
 
       // Si la date n'existe pas, on la crée
       if (!groupedUpdates.containsKey(dateKey)) {
@@ -60,7 +61,7 @@ class _UpdatesPageState extends State<UpdatesPage> {
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Modifications des 30 derniers jours'),
+        title: Text(S.of(context).recentUpdatesTitle), // Utilisation des traductions
       ),
       body: ListView.builder(
         itemCount: groupedUpdates.keys.length,
@@ -88,7 +89,7 @@ class _UpdatesPageState extends State<UpdatesPage> {
 
                 // Assumer que toutes les mises à jour pour un token partagent la même image
                 final String imageUrl = updatesForToken.first['imageLink'] ??
-                    'Lien d\'image non disponible';
+                    S.of(context).noImageAvailable;
 
                 return Padding(
                   padding: const EdgeInsets.symmetric(
@@ -107,7 +108,7 @@ class _UpdatesPageState extends State<UpdatesPage> {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         // Afficher l'image du token si elle est disponible
-                        if (imageUrl != 'Lien d\'image non disponible')
+                        if (imageUrl != S.of(context).noImageAvailable)
                           Image.network(
                             imageUrl,
                             height: 100,

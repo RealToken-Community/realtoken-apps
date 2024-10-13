@@ -14,9 +14,10 @@ class FullScreenCarousel extends StatelessWidget {
       appBar: AppBar(
         backgroundColor: Colors.black,
         leading: IconButton(
-          icon: Icon(Icons.close,            
-          color: Colors.grey[300], // Icône en gris clair
-        ),
+          icon: Icon(
+            Icons.close,
+            color: Colors.grey[300], // Icône en gris clair
+          ),
           onPressed: () {
             Navigator.pop(context);
           },
@@ -29,12 +30,18 @@ class FullScreenCarousel extends StatelessWidget {
             enableInfiniteScroll: true,
             enlargeCenterPage: true,
             autoPlay: true,
+            autoPlayInterval: Duration(seconds: 2), // Défilement automatique après 2 secondes
           ),
           items: imageLinks.map<Widget>((imageUrl) {
-            return CachedNetworkImage(
-              imageUrl: imageUrl,
-              width: double.infinity,
-              fit: BoxFit.contain,
+            return InteractiveViewer(
+              panEnabled: true, // Permet de déplacer l'image
+              minScale: 0.8,    // Zoom minimal
+              maxScale: 4.0,    // Zoom maximal
+              child: CachedNetworkImage(
+                imageUrl: imageUrl,
+                width: double.infinity,
+                fit: BoxFit.contain,
+              ),
             );
           }).toList(),
         ),

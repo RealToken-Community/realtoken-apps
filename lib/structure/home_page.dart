@@ -6,7 +6,6 @@ import '../pages/portfolio/portfolio_page.dart';
 import '../pages/statistics_page.dart';
 import '../pages/maps_page.dart';
 import 'dart:ui'; // Import for blur effect
-import 'dart:io'; // Platform detection
 import 'package:provider/provider.dart';
 import '../app_state.dart'; // Import the global AppState
 
@@ -74,7 +73,7 @@ class _MyHomePageState extends State<MyHomePage> {
               child: BackdropFilter(
                 filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
                 child: Container(
-                  height: Platform.isAndroid ? 65 : 80, // Adjust height for blur
+                  height: 80, // Adjust height for blur
                   color: Theme.of(context).brightness == Brightness.dark
                       ? Colors.black.withOpacity(0.3)
                       : Colors.white.withOpacity(0.3),

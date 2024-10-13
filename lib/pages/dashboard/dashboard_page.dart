@@ -1,4 +1,3 @@
-import 'dart:io'; // Import nécessaire pour Platform
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:fl_chart/fl_chart.dart';
@@ -30,7 +29,6 @@ class DashboardPage extends StatefulWidget {
 
 class _DashboardPageState extends State<DashboardPage> {
   bool _showAmounts = true; // Variable pour contrôler la visibilité des montants
-  bool isLoading = true; // Ajoutez cette variable pour suivre l'état de chargement
 
   @override
   void initState() {
@@ -42,30 +40,21 @@ class _DashboardPageState extends State<DashboardPage> {
   }
 
     Future<void> _loadData() async {
-    setState(() {
-      isLoading = true; // Afficher le chargement avant de commencer à charger les données
-    });
-
     final dataManager = Provider.of<DataManager>(context, listen: false);
-    await Future.delayed(const Duration(seconds: 1)); 
-
     await dataManager.fetchRmmBalances();
-    await dataManager.fetchAndCalculateData(); // Charger les données du portefeuille
     await dataManager.fetchRentData(); // Charger les données de loyer
     await dataManager.fetchPropertyData(); // Charger les données de propriété
-
-    setState(() {
-      isLoading = false; // Masquer l'indicateur de chargement après avoir chargé les données
-    });
+    await dataManager.fetchAndCalculateData(); // Charger les données du portefeuille
   }
 
   Future<void> _refreshData() async {
     // Forcer la mise à jour des données en appelant les méthodes de récupération avec forceFetch = true
     final dataManager = Provider.of<DataManager>(context, listen: false);
-    await dataManager.fetchAndCalculateData(forceFetch: true);
     await dataManager.fetchRentData(forceFetch: true);
     await dataManager.fetchPropertyData(forceFetch: true);
     await dataManager.fetchRmmBalances();
+    await dataManager.fetchAndCalculateData(forceFetch: true);
+
   }
 
   // Méthode pour basculer l'état de visibilité des montants
@@ -469,7 +458,7 @@ Widget build(BuildContext context) {
                         visibilityButton,
                       ],
                     ),
-                    if (lastRentReceived == S.of(context).noRentReceived || dataManager.walletValue == 0) _buildNoWalletCard(context),
+                    if (lastRentReceived == S.of(context).lastRentReceived || dataManager.walletValue == 0) _buildNoWalletCard(context),
                     const SizedBox(height: 8),
                     RichText(
                       text: TextSpan(
@@ -568,7 +557,7 @@ Widget build(BuildContext context) {
                       ),
                       [
                         Text(
-                          '${S.of(context).properties}: ${(dataManager.walletTokenCount + dataManager.rmmTokenCount)}',
+                          '${S.of(context).properties}: ${dataManager.totalTokenCount}',
                           style: TextStyle(fontSize: 13 + appState.getTextSizeOffset()),
                         ),
                         Text(
@@ -576,7 +565,7 @@ Widget build(BuildContext context) {
                           style: TextStyle(fontSize: 13 + appState.getTextSizeOffset()),
                         ),
                         Text(
-                          '${S.of(context).rmm}: ${dataManager.rmmTokenCount.toInt()}',
+                          '${S.of(context).rmm}: ${dataManager.rmmTokenCount.toInt()} (${dataManager.duplicateTokenCount.toInt()} ${S.of(context).duplicate})',
                           style: TextStyle(fontSize: 13 + appState.getTextSizeOffset()),
                         ),
                         Text(
@@ -591,7 +580,7 @@ Widget build(BuildContext context) {
                     _buildCard(
                       S.of(context).tokens,
                       Icons.account_balance_wallet,
-                      _buildValueBeforeText('${dataManager.totalTokens.toStringAsFixed(2)}', S.of(context).totalTokens),
+                      _buildValueBeforeText(dataManager.totalTokens.toStringAsFixed(2), S.of(context).totalTokens),
                       [
                         Text(
                           '${S.of(context).wallet}: ${dataManager.walletTokensSums.toStringAsFixed(2)}',
@@ -639,10 +628,6 @@ Widget build(BuildContext context) {
               ),
             ),
           ),
-          if (isLoading)
-            Center(
-              child: CircularProgressIndicator(), // Indicateur de chargement centré
-            ),
         ],
       ),
     );
@@ -669,10 +654,7 @@ Widget build(BuildContext context) {
             style: TextStyle(
               fontSize: 13, // Taille du texte ajustée
               fontWeight: FontWeight.bold,
-              color: Theme.of(context)
-                  .textTheme
-                  .bodyLarge
-                  ?.color, // Couleur en fonction du thème
+              color: Theme.of(context).textTheme.bodyLarge?.color, // Couleur en fonction du thème
             ),
           ),
           const SizedBox(width: 8), // Espace entre le montant et le label
@@ -680,9 +662,7 @@ Widget build(BuildContext context) {
             label, // Affiche le label après le montant
             style: TextStyle(
               fontSize: 11 + appState.getTextSizeOffset(), // Texte légèrement plus petit
-              color: Theme.of(context)
-                  .textTheme
-                  .bodyLarge
+              color: Theme.of(context).textTheme.bodyLarge
                   ?.color, // Couleur en fonction du thème
             ),
           ),

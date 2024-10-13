@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import '../generated/l10n.dart'; // Import pour les traductions
+import '../app_state.dart'; // Importer AppState
 
 class CustomBottomNavigationBar extends StatelessWidget {
   final int selectedIndex;
@@ -13,20 +15,27 @@ class CustomBottomNavigationBar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final appState = Provider.of<AppState>(context); // Récupérer AppState
+    final double textSizeOffset = appState.getTextSizeOffset(); // Obtenir l'offset de taille de texte
+
     return BottomNavigationBar(
       items: <BottomNavigationBarItem>[
         BottomNavigationBarItem(
-            icon: const Icon(Icons.dashboard),
-            label: S.of(context).dashboard), // Traduction pour "Dashboard"
+          icon: Icon(Icons.dashboard, size: 24.0 + textSizeOffset), // Ajuster la taille de l'icône
+          label: S.of(context).dashboard, // Traduction pour "Dashboard"
+        ),
         BottomNavigationBarItem(
-            icon: const Icon(Icons.pie_chart),
-            label: S.of(context).portfolio), // Traduction pour "Portfolio"
+          icon: Icon(Icons.pie_chart, size: 24.0 + textSizeOffset), // Ajuster la taille de l'icône
+          label: S.of(context).portfolio, // Traduction pour "Portfolio"
+        ),
         BottomNavigationBarItem(
-            icon: const Icon(Icons.bar_chart),
-            label: S.of(context).statistics), // Traduction pour "Statistiques"
+          icon: Icon(Icons.bar_chart, size: 24.0 + textSizeOffset), // Ajuster la taille de l'icône
+          label: S.of(context).statistics, // Traduction pour "Statistiques"
+        ),
         BottomNavigationBarItem(
-            icon: const Icon(Icons.map),
-            label: S.of(context).maps), // Traduction pour "Maps"
+          icon: Icon(Icons.map, size: 24.0 + textSizeOffset), // Ajuster la taille de l'icône
+          label: S.of(context).maps, // Traduction pour "Maps"
+        ),
       ],
       currentIndex: selectedIndex,
       elevation: 0,
@@ -35,6 +44,8 @@ class CustomBottomNavigationBar extends StatelessWidget {
       backgroundColor: Colors.transparent,
       type: BottomNavigationBarType.fixed,
       onTap: onItemTapped,
+      selectedLabelStyle: TextStyle(fontSize: 14.0 + textSizeOffset), // Ajuster la taille du texte sélectionné
+      unselectedLabelStyle: TextStyle(fontSize: 12.0 + textSizeOffset), // Ajuster la taille du texte non sélectionné
     );
   }
 }

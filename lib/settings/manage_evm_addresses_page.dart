@@ -161,6 +161,10 @@ class _ManageEthAddressesPageState extends State<ManageEvmAddressesPage> {
                 const SizedBox(width: 10),
                 ElevatedButton(
                   onPressed: _scanQRCode,
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.blue, // Fond bleu
+                    foregroundColor: Colors.white, // Icône blanche
+                  ),
                   child: const Icon(Icons.qr_code_scanner),
                 ),
               ],
@@ -178,6 +182,10 @@ class _ManageEthAddressesPageState extends State<ManageEvmAddressesPage> {
                   );
                 }
               },
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.blue, // Fond bleu
+                foregroundColor: Colors.white, // Texte blanc
+              ),
               child: Text(
                 'Save Address',
                 style: TextStyle(fontSize: 14 + appState.getTextSizeOffset()),

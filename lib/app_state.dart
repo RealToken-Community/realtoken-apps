@@ -4,8 +4,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 class AppState extends ChangeNotifier {
   bool isDarkTheme = false;
   String selectedTextSize = 'normal'; // Default text size
-  String _selectedLanguage = 'en'; // Langue par défaut
-  String get selectedLanguage => _selectedLanguage;
+  String selectedLanguage = 'en'; // Langue par défaut
 
   AppState() {
     _loadSettings();
@@ -16,6 +15,8 @@ class AppState extends ChangeNotifier {
     final prefs = await SharedPreferences.getInstance();
     isDarkTheme = prefs.getBool('isDarkTheme') ?? false;
     selectedTextSize = prefs.getString('textSize') ?? 'normal';
+    selectedLanguage = prefs.getString('language') ?? 'en';
+
     notifyListeners(); // Notify listeners to rebuild widgets
   }
 
@@ -29,21 +30,13 @@ class AppState extends ChangeNotifier {
 
   // Update language and save to SharedPreferences
 void updateLanguage(String languageCode) async {
-  _selectedLanguage = languageCode; // Mettre à jour la variable privée
+  selectedLanguage = languageCode; // Mettre à jour la variable privée
   final prefs = await SharedPreferences.getInstance();
   await prefs.setString('language', languageCode);
   notifyListeners(); // Notify listeners about the language change
 }
 
-  // Méthode pour mettre à jour la langue
-  Future<void> updateLocale(String languageCode) async {
-    _selectedLanguage = languageCode;
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.setString('language', languageCode);
-    notifyListeners(); // Notifie les widgets écoutant ce changement
-  }
-
-  // Update text size and save to SharedPreferences
+  // Update text size and save to Shar  edPreferences
   void updateTextSize(String textSize) async {
     selectedTextSize = textSize;
     final prefs = await SharedPreferences.getInstance();

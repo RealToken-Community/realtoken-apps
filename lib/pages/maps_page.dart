@@ -1,3 +1,4 @@
+import 'package:RealToken/utils/utils.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_map/flutter_map.dart';
 import 'package:flutter_map_marker_cluster/flutter_map_marker_cluster.dart';
@@ -217,7 +218,7 @@ return Scaffold(
         child: Container(
           padding: const EdgeInsets.all(8),
           decoration: BoxDecoration(
-            color: Colors.white.withOpacity(0.9),
+            color: Theme.of(context).cardColor,
             borderRadius: BorderRadius.circular(8),
             boxShadow: [
               BoxShadow(
@@ -231,24 +232,33 @@ return Scaffold(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Row(
-                children: const [
+                children:  [
                   Icon(Icons.location_on, color: Colors.green),
                   SizedBox(width: 4),
-                  Text("Fully Rented", style: TextStyle(color: Colors.black)),
+                  Text("Fully Rented", style: TextStyle(
+                  fontSize: 13, // Taille du texte ajustée
+              ),
+              ),
                 ],
               ),
               Row(
                 children: const [
                   Icon(Icons.location_on, color: Colors.orange),
                   SizedBox(width: 4),
-                  Text("Partially Rented", style: TextStyle(color: Colors.black)),
+                  Text("Partially Rented", style: TextStyle(
+                  fontSize: 13, // Taille du texte ajustée
+              ),
+                  ),
                 ],
               ),
               Row(
                 children: const [
                   Icon(Icons.location_on, color: Colors.red),
                   SizedBox(width: 4),
-                  Text("Not Rented", style: TextStyle(color: Colors.black)),
+                  Text("Not Rented", style: TextStyle(
+                  fontSize: 13, // Taille du texte ajustée
+              ),
+                  ),
                 ],
               ),
             ],
@@ -294,74 +304,85 @@ return Scaffold(
     }
   }
 
-  void _showMarkerPopup(BuildContext context, dynamic matchingToken) {
-    showDialog(
-      context: context,
-      builder: (BuildContext context) {
-        final rentedUnits = matchingToken['rentedUnits'] ?? 0;
-        final totalUnits = matchingToken['totalUnits'] ?? 1;
+void _showMarkerPopup(BuildContext context, dynamic matchingToken) {
+  showDialog(
+    context: context,
+    builder: (BuildContext context) {
+      final rentedUnits = matchingToken['rentedUnits'] ?? 0;
+      final totalUnits = matchingToken['totalUnits'] ?? 1;
+      final lat = double.tryParse(matchingToken['lat']) ?? 0.0;
+      final lng = double.tryParse(matchingToken['lng']) ?? 0.0;
 
-        return AlertDialog(
-          content: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.center,
-            children: [
-              if (matchingToken['imageLink'] != null)
-                Image.network(
-                  matchingToken['imageLink'][0],
-                  width: 200,
-                  fit: BoxFit.cover,
+      return AlertDialog(
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.center,
+          children: [
+            if (matchingToken['imageLink'] != null)
+              Image.network(
+                matchingToken['imageLink'][0],
+                width: 200,
+                fit: BoxFit.cover,
+              ),
+            Padding(
+              padding: const EdgeInsets.all(8.0),
+              child: Text(
+                matchingToken['shortName'],
+                style: const TextStyle(
+                  fontSize: 16,
+                  fontWeight: FontWeight.bold,
                 ),
-              Padding(
-                padding: const EdgeInsets.all(8.0),
-                child: Text(
-                  matchingToken['shortName'],
-                  style: const TextStyle(
-                    fontSize: 16,
-                    fontWeight: FontWeight.bold,
-                  ),
-                  textAlign: TextAlign.center,
+                textAlign: TextAlign.center,
+              ),
+            ),
+            const SizedBox(height: 8.0),
+            Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const Text(
+                  'Token Price: ',
+                  style: TextStyle(fontWeight: FontWeight.bold),
                 ),
-              ),
-              const SizedBox(height: 8.0),
-              Row(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  const Text(
-                    'Token Price: ',
-                    style: TextStyle(fontWeight: FontWeight.bold),
-                  ),
-                  Text('${matchingToken['tokenPrice'] ?? 'N/A'}'),
-                ],
-              ),
-              Row(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  const Text(
-                    'Token Yield: ',
-                    style: TextStyle(fontWeight: FontWeight.bold),
-                  ),
-                  Text(
-                      '${matchingToken['annualPercentageYield'] != null ? matchingToken['annualPercentageYield'].toStringAsFixed(2) : 'N/A'}'),
-                ],
-              ),
-              Row(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  const Text(
-                    'Units Rented: ',
-                    style: TextStyle(fontWeight: FontWeight.bold),
-                  ),
-                  Text('$rentedUnits / $totalUnits'),
-                ],
-              ),
-            ],
-          ),
-        );
-      },
-    );
-  }
-
+                Text('${matchingToken['tokenPrice'] ?? 'N/A'}'),
+              ],
+            ),
+            Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const Text(
+                  'Token Yield: ',
+                  style: TextStyle(fontWeight: FontWeight.bold),
+                ),
+                Text(
+                    '${matchingToken['annualPercentageYield'] != null ? matchingToken['annualPercentageYield'].toStringAsFixed(2) : 'N/A'}'),
+              ],
+            ),
+            Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const Text(
+                  'Units Rented: ',
+                  style: TextStyle(fontWeight: FontWeight.bold),
+                ),
+                Text('$rentedUnits / $totalUnits'),
+              ],
+            ),
+            const SizedBox(height: 16.0),
+            IconButton(
+              icon: const Icon(Icons.streetview, color: Colors.blue),
+              onPressed: () {
+                final googleStreetViewUrl =
+                    'https://www.google.com/maps/@?api=1&map_action=pano&viewpoint=$lat,$lng';
+                Utils.launchURL(googleStreetViewUrl);
+              },
+            ),
+            const Text('View in Street View'),
+          ],
+        ),
+      );
+    },
+  );
+}
   Color getRentalStatusColor(int rentedUnits, int totalUnits) {
     if (rentedUnits == 0) {
       return Colors.red;

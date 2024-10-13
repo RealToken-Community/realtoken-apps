@@ -146,6 +146,11 @@
   "cumulativeRentGraph": "Cumulative Rent Graph",
   "roiPerProperties": "Property ROI",
   "roiAlertInfo": "This ROI feature is in beta and is currently calculated based on the income received from the property and the current token value.",
+  "recentUpdatesTitle": "Changes in the last 30 days",
+  "noRecentUpdates": "No recent changes available.",
+  "unknownTokenName": "Unknown name",
+  "noImageAvailable": "Image link not available",
+  "duplicate": "dupicate",
   "@dashboard": {
     "description": "Label for the Dashboard tab"
   },
