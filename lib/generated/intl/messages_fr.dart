@@ -72,7 +72,7 @@ class MessageLookup extends MessageLookupByLibrary {
         "donationMessage": MessageLookupByLibrary.simpleMessage(
             "Si vous aimez cette application et souhaitez soutenir son développement, vous pouvez faire un don."),
         "duplex": MessageLookupByLibrary.simpleMessage("Duplex"),
-        "duplicate": MessageLookupByLibrary.simpleMessage("en doublon"),
+        "duplicate": MessageLookupByLibrary.simpleMessage("déja comptabilisé"),
         "english": MessageLookupByLibrary.simpleMessage("Anglais"),
         "ethereumContract":
             MessageLookupByLibrary.simpleMessage("Contract ethereum"),
@@ -80,6 +80,7 @@ class MessageLookup extends MessageLookupByLibrary {
             MessageLookupByLibrary.simpleMessage("Retour d\'expérience"),
         "finances": MessageLookupByLibrary.simpleMessage("Finances"),
         "french": MessageLookupByLibrary.simpleMessage("Français"),
+        "futureRents": MessageLookupByLibrary.simpleMessage("Loyers futurs"),
         "gnosisContract":
             MessageLookupByLibrary.simpleMessage("Contract gnosis"),
         "grossRentMonth":
@@ -94,6 +95,8 @@ class MessageLookup extends MessageLookupByLibrary {
         "insights": MessageLookupByLibrary.simpleMessage("Aperçus"),
         "language": MessageLookupByLibrary.simpleMessage("Langue"),
         "languageUpdated": m0,
+        "lastExecution":
+            MessageLookupByLibrary.simpleMessage("Derniere mise a jour"),
         "lastRentReceived": MessageLookupByLibrary.simpleMessage(
             "Votre dernier loyer reçu s\'élève à "),
         "light": MessageLookupByLibrary.simpleMessage("Clair"),
@@ -114,8 +117,14 @@ class MessageLookup extends MessageLookupByLibrary {
         "netRentMonth":
             MessageLookupByLibrary.simpleMessage("Loyer net par mois"),
         "network": MessageLookupByLibrary.simpleMessage("Réseau"),
+        "nextRondays":
+            MessageLookupByLibrary.simpleMessage("Prochains Rondays"),
+        "noCommunicatedDate":
+            MessageLookupByLibrary.simpleMessage("Date non communiquée"),
         "noDataAvailable": MessageLookupByLibrary.simpleMessage(
             "Aucune donnée disponible, veuillez ajouter un nouveau portefeuille"),
+        "noFutureRents":
+            MessageLookupByLibrary.simpleMessage("Aucun loyer futur"),
         "noImageAvailable": MessageLookupByLibrary.simpleMessage(
             "Lien d\'image non disponible"),
         "noPriceEvolution": MessageLookupByLibrary.simpleMessage(
@@ -173,6 +182,8 @@ class MessageLookup extends MessageLookupByLibrary {
         "searchHint": MessageLookupByLibrary.simpleMessage("Rechercher..."),
         "sendDonations": MessageLookupByLibrary.simpleMessage(
             "Envoyez vos dons à l\'adresse suivante :"),
+        "serviceStatusPage":
+            MessageLookupByLibrary.simpleMessage("Statut des services"),
         "settings": MessageLookupByLibrary.simpleMessage("Paramètres"),
         "settingsTitle": MessageLookupByLibrary.simpleMessage("Paramètres"),
         "sfrPortfolio":

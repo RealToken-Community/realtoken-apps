@@ -56,9 +56,6 @@ class _ManageEthAddressesPageState extends State<ManageEvmAddressesPage> {
       await prefs.setStringList('evmAddresses', ethAddresses);
 
       final dataManager = Provider.of<DataManager>(context, listen: false);
-      dataManager.fetchRentData(forceFetch: true); // Forcer le fetch des données de loyer
-      dataManager.fetchPropertyData(forceFetch: true); // Forcer le fetch des données de propriété
-      dataManager.fetchAndCalculateData(forceFetch: true); // Forcer le fetch
 
       // Récupérer le userId associé à l'adresse via ApiService
       final userId = await ApiService.fetchUserIdFromAddress(address);
@@ -73,6 +70,9 @@ class _ManageEthAddressesPageState extends State<ManageEvmAddressesPage> {
 
         await prefs.setStringList('evmAddresses', ethAddresses);
       }
+      await dataManager.updateGlobalVariables();
+      dataManager.fetchRentData(forceFetch: true); // Forcer le fetch des données de loyer
+      dataManager.fetchAndCalculateData(forceFetch: true); // Forcer le fetch
     }
   }
 

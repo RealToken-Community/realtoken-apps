@@ -22,6 +22,21 @@ class Utils {
     }
   }
 
+  static String formatReadableDateWithTime(String dateString) {
+  try {
+    // Parse la date depuis le format donné
+    DateTime parsedDate = DateTime.parse(dateString);
+
+    // Formater la date avec l'heure dans un format lisible: 1 Dec 2024 14:30:45
+    String formattedDate = DateFormat('d MMM yyyy HH:mm:ss').format(parsedDate);
+
+    return formattedDate;
+  } catch (e) {
+    // Si une erreur survient, retourne la date d'origine
+    return dateString;
+  }
+}
+
   static Future<void> launchURL(String url) async {
   logger.i('Tentative d\'ouverture de l\'URL: $url'); // Log pour capturer l'URL
   final Uri uri = Uri.parse(url);
@@ -53,4 +68,15 @@ static Future<double> getTextSizeOffset() async {
       return 0.0;  // Taille normale
   }
 }
+
+// Fonction de formatage des valeurs monétaires avec des espaces pour les milliers
+static String formatCurrency(double value, String symbol) {
+  final NumberFormat formatter = NumberFormat.currency(
+    locale: 'fr_FR',
+    symbol: symbol, // Utilisation du symbole sélectionné
+    decimalDigits: 2,
+  );
+  return formatter.format(value);
+}
+
 }

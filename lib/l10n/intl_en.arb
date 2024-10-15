@@ -151,6 +151,12 @@
   "unknownTokenName": "Unknown name",
   "noImageAvailable": "Image link not available",
   "duplicate": "dupicate",
+    "futureRents": "Future Rents",
+  "noFutureRents": "No future rents",
+  "nextRondays": "Next Rondays",
+  "noCommunicatedDate": "Date not provided",
+  "serviceStatusPage": "Services status",
+  "lastExecution": "Last update",
   "@dashboard": {
     "description": "Label for the Dashboard tab"
   },

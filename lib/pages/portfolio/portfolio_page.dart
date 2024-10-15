@@ -21,20 +21,31 @@ class _PortfolioPageState extends State<PortfolioPage> {
   String? _selectedCity;
   String _rentalStatusFilter = 'All'; // Nouveau filtre pour le statut de location
 
-  @override
-  void initState() {
-    super.initState();
+@override
+void initState() {
+  super.initState();
+  WidgetsBinding.instance.addPostFrameCallback((_) {
     final dataManager = Provider.of<DataManager>(context, listen: false);
+    dataManager.updateGlobalVariables();
+    dataManager.updatedDetailRentVariables();
     dataManager.fetchAndCalculateData();
+    
     _loadDisplayPreference();
-    _loadFilterPreferences(); // Charger les filtres et tri depuis SharedPreferences
-  }
+    _loadFilterPreferences();
+  });
+}
 
   // Charger les préférences d'affichage
   Future<void> _loadDisplayPreference() async {
     SharedPreferences prefs = await SharedPreferences.getInstance();
-    setState(() {
-      _isDisplay1 = prefs.getBool('isDisplay1') ?? true;
+    
+    // Assurez-vous d'utiliser addPostFrameCallback même ici
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) { // Vérifie que le widget est toujours monté
+        setState(() {
+          _isDisplay1 = prefs.getBool('isDisplay1') ?? true;
+        });
+      }
     });
   }
 
@@ -52,16 +63,23 @@ class _PortfolioPageState extends State<PortfolioPage> {
   }
 
   // Charger les filtres et tri depuis SharedPreferences
-  Future<void> _loadFilterPreferences() async {
-    SharedPreferences prefs = await SharedPreferences.getInstance();
-    setState(() {
-      _searchQuery = prefs.getString('searchQuery') ?? '';
-      _sortOption = prefs.getString('sortOption') ?? 'Name';
-      _isAscending = prefs.getBool('isAscending') ?? true;
-      _selectedCity = prefs.getString('selectedCity')?.isEmpty ?? true ? null : prefs.getString('selectedCity');
-      _rentalStatusFilter = prefs.getString('rentalStatusFilter') ?? 'All';
-    });
-  }
+Future<void> _loadFilterPreferences() async {
+  SharedPreferences prefs = await SharedPreferences.getInstance();
+  
+  // Assurez-vous d'utiliser addPostFrameCallback même ici
+  WidgetsBinding.instance.addPostFrameCallback((_) {
+    if (mounted) { // Vérifie que le widget est toujours monté
+      setState(() {
+        _searchQuery = prefs.getString('searchQuery') ?? '';
+        _sortOption = prefs.getString('sortOption') ?? 'Name';
+        _isAscending = prefs.getBool('isAscending') ?? false;  // Charger l'état de tri
+        _selectedCity = prefs.getString('selectedCity')?.isEmpty ?? true ? null : prefs.getString('selectedCity');
+        _rentalStatusFilter = prefs.getString('rentalStatusFilter') ?? 'All';
+      });
+    }
+  });
+}
+
 
   // Sauvegarder les filtres et tri dans SharedPreferences
   Future<void> _saveFilterPreferences() async {
@@ -170,6 +188,10 @@ List<Map<String, dynamic>> _groupAndSumPortfolio(List<Map<String, dynamic>> port
     filteredPortfolio.sort((a, b) => _isAscending
         ? a['annualPercentageYield'].compareTo(b['annualPercentageYield'])
         : b['annualPercentageYield'].compareTo(a['annualPercentageYield']));
+  }  else if (_sortOption == S.of(context).sortByInitialLaunchDate) {  // Nouveau tri par initialLaunchDate
+    filteredPortfolio.sort((a, b) => _isAscending
+        ? DateTime.parse(a['initialLaunchDate']).compareTo(DateTime.parse(b['initialLaunchDate']))
+        : DateTime.parse(b['initialLaunchDate']).compareTo(DateTime.parse(a['initialLaunchDate'])));
   }
 
   return filteredPortfolio;
@@ -291,46 +313,55 @@ List<Map<String, dynamic>> _groupAndSumPortfolio(List<Map<String, dynamic>> port
                           },
                         ),
                         const SizedBox(width: 8.0),
-                        PopupMenuButton<String>(
-                          icon: const Icon(Icons.sort),
-                          onSelected: (String value) {
-                            if (value == 'asc' || value == 'desc') {
-                              setState(() {
-                                _isAscending = (value == 'asc');
-                              });
-                            } else {
-                              _updateSortOption(value);
-                            }
-                          },
-                          itemBuilder: (BuildContext context) {
-                            return [
-                              PopupMenuItem(
-                                value: S.of(context).sortByName,
-                                child: Text(S.of(context).sortByName),
-                              ),
-                              PopupMenuItem(
-                                value: S.of(context).sortByValue,
-                                child: Text(S.of(context).sortByValue),
-                              ),
-                              PopupMenuItem(
-                                value: S.of(context).sortByAPY,
-                                child: Text(S.of(context).sortByAPY),
-                              ),
-                              const PopupMenuDivider(),
-                              CheckedPopupMenuItem(
-                                value: 'asc',
-                                checked: _isAscending,
-                                child: Text(S.of(context).ascending),
-                              ),
-                              CheckedPopupMenuItem(
-                                value: 'desc',
-                                checked: !_isAscending,
-                                child: Text(S.of(context).descending),
-                              ),
-                            ];
-                          },
-                        ),
-                      ],
+                       PopupMenuButton<String>(
+  icon: const Icon(Icons.sort),
+  onSelected: (String value) {
+    if (value == 'asc' || value == 'desc') {
+      setState(() {
+        _isAscending = (value == 'asc');
+      });
+      _saveFilterPreferences();  // Sauvegarder après la modification
+    } else {
+      _updateSortOption(value);
+    }
+  },
+  itemBuilder: (BuildContext context) {
+    return [
+      CheckedPopupMenuItem(
+        value: S.of(context).sortByName,
+        checked: _sortOption == S.of(context).sortByName,
+        child: Text(S.of(context).sortByName),
+      ),
+      CheckedPopupMenuItem(
+        value: S.of(context).sortByValue,
+        checked: _sortOption == S.of(context).sortByValue,
+        child: Text(S.of(context).sortByValue),
+      ),
+      CheckedPopupMenuItem(
+        value: S.of(context).sortByAPY,
+        checked: _sortOption == S.of(context).sortByAPY,
+        child: Text(S.of(context).sortByAPY),
+      ),
+      CheckedPopupMenuItem(
+        value: S.of(context).sortByInitialLaunchDate,
+        checked: _sortOption == S.of(context).sortByInitialLaunchDate,
+        child: Text(S.of(context).sortByInitialLaunchDate),
+      ),
+      const PopupMenuDivider(),
+      CheckedPopupMenuItem(
+        value: 'asc',
+        checked: _isAscending,
+        child: Text(S.of(context).ascending),
+      ),
+      CheckedPopupMenuItem(
+        value: 'desc',
+        checked: !_isAscending,
+        child: Text(S.of(context).descending),
+      ),
+    ];
+  },
+),
+],
                     ),
                   ),
                 ];

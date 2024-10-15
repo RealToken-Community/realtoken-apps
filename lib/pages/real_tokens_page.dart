@@ -1,18 +1,9 @@
+import 'package:RealToken/utils/utils.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart'; // Importer provider
 import 'package:cached_network_image/cached_network_image.dart';
-import 'package:intl/intl.dart';
 import '../api/data_manager.dart';
 import 'token_bottom_sheet.dart'; // Import du modal bottom sheet
-
-String formatCurrency(double value) {
-  final NumberFormat formatter = NumberFormat.currency(
-    locale: 'fr_FR',
-    symbol: '\$',
-    decimalDigits: 2,
-  );
-  return formatter.format(value);
-}
 
 class RealTokensPage extends StatefulWidget {
   const RealTokensPage({super.key});
@@ -120,43 +111,46 @@ class _RealTokensPageState extends State<RealTokensPage> {
                     ),
                     const SizedBox(width: 8.0),
                     PopupMenuButton<String>(
-                      icon: const Icon(Icons.sort),
-                      onSelected: (value) {
-                        setState(() {
-                          if (value == 'asc' || value == 'desc') {
-                            _isAscending = value == 'asc';
-                          } else {
-                            _sortOption = value;
-                          }
-                        });
-                      },
-                      itemBuilder: (context) => [
-                        PopupMenuItem(
-                          value: 'name',
-                          child: const Text('Sort by Name'),
-                        ),
-                        PopupMenuItem(
-                          value: 'price',
-                          child: const Text('Sort by Price'),
-                        ),
-                        PopupMenuItem(
-                          value: 'recentlyAdded',
-                          child: const Text('Sort by Recently Added'),
-                        ),
-                        const PopupMenuDivider(),
-                        CheckedPopupMenuItem(
-                          value: 'asc',
-                          checked: _isAscending,
-                          child: const Text('Ascending'),
-                        ),
-                        CheckedPopupMenuItem(
-                          value: 'desc',
-                          checked: !_isAscending,
-                          child: const Text('Descending'),
-                        ),
-                      ],
-                    ),
-                    const SizedBox(width: 8.0),
+                    icon: const Icon(Icons.sort),
+                    onSelected: (value) {
+                      setState(() {
+                        if (value == 'asc' || value == 'desc') {
+                          _isAscending = value == 'asc';
+                        } else {
+                          _sortOption = value;
+                        }
+                      });
+                    },
+                    itemBuilder: (context) => [
+                      CheckedPopupMenuItem(
+                        value: 'name',
+                        checked: _sortOption == 'name',
+                        child: const Text('Sort by Name'),
+                      ),
+                      CheckedPopupMenuItem(
+                        value: 'price',
+                        checked: _sortOption == 'price',
+                        child: const Text('Sort by Price'),
+                      ),
+                      CheckedPopupMenuItem(
+                        value: 'recentlyAdded',
+                        checked: _sortOption == 'recentlyAdded',
+                        child: const Text('Sort by Recently Added'),
+                      ),
+                      const PopupMenuDivider(),
+                      CheckedPopupMenuItem(
+                        value: 'asc',
+                        checked: _isAscending,
+                        child: const Text('Ascending'),
+                      ),
+                      CheckedPopupMenuItem(
+                        value: 'desc',
+                        checked: !_isAscending,
+                        child: const Text('Descending'),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(width: 8.0),
                     PopupMenuButton<String>(
                       icon: const Icon(Icons.location_city),
                       onSelected: (String value) {
@@ -246,7 +240,7 @@ class _RealTokensPageState extends State<RealTokensPage> {
                                             ),
                                             const SizedBox(height: 4),
                                             Text(
-                                              'Asset price: ${formatCurrency(token['totalInvestment'] ?? 0)}',
+                                              'Asset price: ${Utils.formatCurrency(token['totalInvestment'], dataManager.currencySymbol)}',
                                             ),
                                             Text(
                                               'Token price: ${token['tokenPrice']}',

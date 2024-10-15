@@ -81,6 +81,8 @@ class MessageLookup extends MessageLookupByLibrary {
         "feedback": MessageLookupByLibrary.simpleMessage("Comentarios"),
         "finances": MessageLookupByLibrary.simpleMessage("Finanzas"),
         "french": MessageLookupByLibrary.simpleMessage("Francés"),
+        "futureRents":
+            MessageLookupByLibrary.simpleMessage("Alquileres futuros"),
         "gnosisContract":
             MessageLookupByLibrary.simpleMessage("Contrato de Gnosis"),
         "grossRentMonth":
@@ -95,6 +97,8 @@ class MessageLookup extends MessageLookupByLibrary {
         "insights": MessageLookupByLibrary.simpleMessage("Información"),
         "language": MessageLookupByLibrary.simpleMessage("Idioma"),
         "languageUpdated": m0,
+        "lastExecution":
+            MessageLookupByLibrary.simpleMessage("Última actualización"),
         "lastRentReceived": MessageLookupByLibrary.simpleMessage(
             "Su último alquiler recibido asciende a "),
         "light": MessageLookupByLibrary.simpleMessage("Claro"),
@@ -114,8 +118,14 @@ class MessageLookup extends MessageLookupByLibrary {
         "netRentMonth":
             MessageLookupByLibrary.simpleMessage("Alquiler neto por mes"),
         "network": MessageLookupByLibrary.simpleMessage("Red"),
+        "nextRondays":
+            MessageLookupByLibrary.simpleMessage("siguiente Rondays"),
+        "noCommunicatedDate":
+            MessageLookupByLibrary.simpleMessage("fecha no comunicada"),
         "noDataAvailable": MessageLookupByLibrary.simpleMessage(
             "No hay datos disponibles, por favor añade un nuevo monedero"),
+        "noFutureRents":
+            MessageLookupByLibrary.simpleMessage("No hay alquileres futuros"),
         "noImageAvailable": MessageLookupByLibrary.simpleMessage(
             "Enlace de imagen no disponible"),
         "noPriceEvolution": MessageLookupByLibrary.simpleMessage(
@@ -174,6 +184,8 @@ class MessageLookup extends MessageLookupByLibrary {
         "searchHint": MessageLookupByLibrary.simpleMessage("Buscar..."),
         "sendDonations": MessageLookupByLibrary.simpleMessage(
             "Envía tus donaciones a la siguiente dirección:"),
+        "serviceStatusPage":
+            MessageLookupByLibrary.simpleMessage("Estado de los servicios"),
         "settings": MessageLookupByLibrary.simpleMessage("Configuración"),
         "settingsTitle": MessageLookupByLibrary.simpleMessage("Configuración"),
         "sfrPortfolio": MessageLookupByLibrary.simpleMessage("Cartera SFR"),

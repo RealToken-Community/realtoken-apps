@@ -40,9 +40,8 @@ class _SettingsPageState extends State<SettingsPage> {
 
   // Fonction pour récupérer les devises depuis l'API
   Future<void> _fetchCurrencies() async {
-    final apiService = ApiService(); // Créez une instance d'ApiService
     try {
-      final currencies = await apiService.fetchCurrencies(); // Utilisez l'instance pour appeler la méthode
+      final currencies = await ApiService.fetchCurrencies(); // Utilisez l'instance pour appeler la méthode
       setState(() {
         _currencies = currencies;
       });

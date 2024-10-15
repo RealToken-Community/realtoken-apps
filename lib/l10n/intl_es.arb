@@ -149,5 +149,11 @@
   "noRecentUpdates": "No hay cambios recientes disponibles.",
   "unknownTokenName": "Nombre desconocido",
   "noImageAvailable": "Enlace de imagen no disponible",
-  "duplicate": "duplicado"
+  "duplicate": "duplicado",
+    "futureRents": "Alquileres futuros",
+  "noFutureRents": "No hay alquileres futuros",
+  "nextRondays": "siguiente Rondays",
+  "noCommunicatedDate": "fecha no comunicada",
+  "serviceStatusPage": "Estado de los servicios",
+  "lastExecution": "Última actualización" 
   }

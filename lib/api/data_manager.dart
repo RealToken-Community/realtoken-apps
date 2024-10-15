@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:hive/hive.dart';
 import 'dart:convert';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'api_service.dart';
@@ -25,13 +26,146 @@ class DataManager extends ChangeNotifier {
   double conversionRate = 1.0; // Taux de conversion par défaut (USD)
   String currencySymbol = '\$'; // Symbole par défaut (USD)
   String selectedCurrency = 'usd'; // Devise par défaut
-  // Map pour stocker les userIds et leurs adresses associées
   Map<String, List<String>> userIdToAddresses = {};
   double totalUsdcDepositBalance = 0;
   double totalUsdcBorrowBalance = 0;
   double totalXdaiDepositBalance = 0;
   double totalXdaiBorrowBalance = 0;
+  List<Map<String, dynamic>> rentData = [];
   List<Map<String, dynamic>> detailedRentData = [];
+  List<Map<String, dynamic>> propertyData = [];
+  List<Map<String, dynamic>> rmmBalances = [];
+
+  // Ajout des variables pour compter les tokens dans le wallet et RMM
+  int walletTokenCount = 0;
+  int rmmTokenCount = 0;
+  int totalTokenCount = 0;
+  int duplicateTokenCount = 0;
+
+  bool isLoading = true;
+
+  List<Map<String, dynamic>> _allTokens = []; // Liste privée pour tous les tokens
+
+  // Getter pour accéder à tous les tokens
+  List<Map<String, dynamic>> get allTokens => _allTokens;
+
+  // Portfolio data for PortfolioPage
+  List<Map<String, dynamic>> _portfolio = [];
+  List<Map<String, dynamic>> get portfolio => _portfolio;
+
+  // Ajout des données pour les mises à jour récentes
+  List<Map<String, dynamic>> _recentUpdates = [];
+  List<Map<String, dynamic>> get recentUpdates => _recentUpdates;
+  // Initialisation des variables pour les données
+  List<Map<String, dynamic>> walletTokensGnosis = [];
+  List<Map<String, dynamic>> walletTokensEtherum = [];
+  List<Map<String, dynamic>> rmmTokens = [];
+  List<Map<String, dynamic>> realTokens = [];
+  List<Map<String, dynamic>> tempRentData = [];
+
+  final String rwaTokenAddress = '0x0675e8f4a52ea6c845cb6427af03616a2af42170';
+
+
+
+  Future<void> updateGlobalVariables({bool forceFetch = false}) async {
+  var box = Hive.box('realTokens'); // Ouvrir la boîte Hive pour le cache
+  
+  try {
+    // Mise à jour des données Gnosis
+    var gnosisData = await ApiService.fetchTokensFromGnosis(forceFetch: forceFetch);
+    if (gnosisData.isNotEmpty) {
+      logger.i("Mise à jour des données Gnosis avec de nouvelles valeurs.");
+      box.put('cachedTokenData_gnosis', json.encode(gnosisData));
+      walletTokensGnosis = gnosisData.cast<Map<String, dynamic>>();
+      notifyListeners(); // Notifier les listeners après la mise à jour
+    } else {
+      logger.d("Les résultats Gnosis sont vides, pas de mise à jour.");
+    }
+
+    // Mise à jour des données Ethereum
+    var etherumData = await ApiService.fetchTokensFromEtherum(forceFetch: forceFetch);
+    if (etherumData.isNotEmpty) {
+      logger.i("Mise à jour des données Ethereum avec de nouvelles valeurs.");
+      box.put('cachedTokenData_etherum', json.encode(etherumData));
+      walletTokensEtherum = etherumData.cast<Map<String, dynamic>>();
+      notifyListeners(); // Notifier les listeners après la mise à jour
+    } else {
+      logger.d("Les résultats Ethereum sont vides, pas de mise à jour.");
+    }
+
+    // Mise à jour des données RMM
+    var rmmData = await ApiService.fetchRMMTokens(forceFetch: forceFetch);
+    if (rmmData.isNotEmpty) {
+      logger.i("Mise à jour des données RMM avec de nouvelles valeurs.");
+      box.put('cachedRMMData', json.encode(rmmData));
+      rmmTokens = rmmData.cast<Map<String, dynamic>>();
+      notifyListeners(); // Notifier les listeners après la mise à jour
+    } else {
+      logger.d("Les résultats RMM sont vides, pas de mise à jour.");
+    }
+
+    // Mise à jour des RealTokens
+    var realTokensData = await ApiService.fetchRealTokens(forceFetch: forceFetch);
+    if (realTokensData.isNotEmpty) {
+      logger.i("Mise à jour des RealTokens avec de nouvelles valeurs.");
+      box.put('cachedRealTokens', json.encode(realTokensData));
+      realTokens = realTokensData.cast<Map<String, dynamic>>();
+      notifyListeners(); // Notifier les listeners après la mise à jour
+    } else {
+      logger.d("Les RealTokens sont vides, pas de mise à jour.");
+    }
+
+    // Mise à jour des RMM Balances
+    var rmmBalancesData = await ApiService.fetchRmmBalances();
+    if (rmmBalancesData.isNotEmpty) {
+      logger.i("Mise à jour des RMM Balances avec de nouvelles valeurs.");
+      box.put('rmmBalances', json.encode(rmmBalancesData));
+      rmmBalances = rmmBalancesData.cast<Map<String, dynamic>>();
+      notifyListeners(); // Notifier les listeners après la mise à jour
+    } else {
+      logger.d("Les RMM Balances sont vides, pas de mise à jour.");
+    }
+
+    // Mise à jour des données de loyer temporaires
+    var rentData = await ApiService.fetchRentData(forceFetch: forceFetch);
+    if (rentData.isNotEmpty) {
+      logger.i("Mise à jour des données de loyer temporaires avec de nouvelles valeurs.");
+      box.put('tempRentData', json.encode(rentData));
+      tempRentData = rentData.cast<Map<String, dynamic>>();
+      notifyListeners(); // Notifier les listeners après la mise à jour
+    } else {
+      logger.d("Les données de loyer temporaires sont vides, pas de mise à jour.");
+    }
+
+  } catch (error) {
+    logger.w("Erreur lors de la récupération des données: $error");
+  }
+}
+
+ Future<void> updatedDetailRentVariables({bool forceFetch = false}) async {
+  var box = Hive.box('realTokens'); // Ouvrir la boîte Hive pour le cache
+  
+  try {
+
+    // Mise à jour des détails de loyer détaillés
+    var detailedRentDataResult = await ApiService.fetchDetailedRentDataForAllWallets();
+    if (detailedRentDataResult.isNotEmpty) {
+      logger.i("Mise à jour des détails de loyer avec de nouvelles valeurs.");
+      box.put('detailedRentData', json.encode(detailedRentDataResult));
+      detailedRentData = detailedRentDataResult.cast<Map<String, dynamic>>();
+      notifyListeners(); // Notifier les listeners après la mise à jour
+    } else {
+      logger.d("Les détails de loyer sont vides, pas de mise à jour.");
+    }
+
+
+  } catch (error) {
+    logger.w("Erreur lors de la récupération des données: $error");
+  }
+}
+
+
+
 
 // Méthode pour ajouter des adresses à un userId
   void addAddressesForUserId(String userId, List<String> addresses) {
@@ -102,40 +236,19 @@ class DataManager extends ChangeNotifier {
 
   // Dictionnaire des symboles de devises
   final Map<String, String> _currencySymbols = {
-    'usd': '\$', 'eur': '€', 'gbp': '£', 'jpy': '¥', 'inr': '₹',
-    'btc': '₿', 'eth': 'Ξ', // Ajouter plus de devises selon vos besoins
+    'usd': '\$', 'eur': '€', 'gbp': '£', 'jpy': '¥', 'inr': '₹', 'btc': '₿', 'eth': 'Ξ', // Ajouter plus de devises selon vos besoins
   };
 
-  // Variables pour stocker les données de loyers et de propriétés
-  List<Map<String, dynamic>> rentData = [];
-  List<Map<String, dynamic>> propertyData = [];
-
-  // Ajout des variables pour compter les tokens dans le wallet et RMM
-  int walletTokenCount = 0;
-  int rmmTokenCount = 0;
-  int totalTokenCount = 0;
-  int duplicateTokenCount = 0;
-
-  bool isLoading = true;
-
-  List<Map<String, dynamic>> _allTokens =
-      []; // Liste privée pour tous les tokens
-
-  // Getter pour accéder à tous les tokens
-  List<Map<String, dynamic>> get allTokens => _allTokens;
-
-  // Portfolio data for PortfolioPage
-  List<Map<String, dynamic>> _portfolio = [];
-  List<Map<String, dynamic>> get portfolio => _portfolio;
-
-  // Ajout des données pour les mises à jour récentes
-  List<Map<String, dynamic>> _recentUpdates = [];
-  List<Map<String, dynamic>> get recentUpdates => _recentUpdates;
-
-  final String rwaTokenAddress = '0x0675e8f4a52ea6c845cb6427af03616a2af42170';
+ 
 
  Future<void> fetchAndStoreAllTokens() async {
-  final realTokens = await ApiService.fetchRealTokens(); // Garder realTokens en List<dynamic>
+  var box = Hive.box('realTokens');
+
+    final cachedRealTokens = box.get('cachedRealTokens');
+  if (cachedRealTokens != null) {
+    realTokens = List<Map<String, dynamic>>.from(json.decode(cachedRealTokens));
+    logger.i("Données RealTokens en cache utilisées.");
+  }
   List<Map<String, dynamic>> allTokensList = [];
 
   // Si des tokens existent, les ajouter à la liste des tokens
@@ -192,26 +305,43 @@ class DataManager extends ChangeNotifier {
 }
 
 
+
   // Méthode pour récupérer et calculer les données pour le Dashboard et Portfolio
   Future<void> fetchAndCalculateData({bool forceFetch = false}) async {
-    logger.i("Début de la récupération des données de tokens...");
+   logger.i("Début de la récupération des données de tokens...");
 
-    try {
-    // Lancer toutes les requêtes API en parallèle
-    final results = await Future.wait([
-      ApiService.fetchTokensFromGnosis(forceFetch: forceFetch),
-      ApiService.fetchTokensFromEtherum(forceFetch: forceFetch),
-      ApiService.fetchRMMTokens(forceFetch: forceFetch),
-      ApiService.fetchRealTokens(forceFetch: forceFetch),
-      ApiService.fetchDetailedRentDataForAllWallets(),
-    ]);
+  var box = Hive.box('realTokens');
 
-    // Stocker les résultats de chaque requête API
-    final walletTokensGnosis = results[0];
-    final walletTokensEtherum = results[1];
-    final rmmTokens = results[2];
-    final realTokens = results[3];
-    detailedRentData = List<Map<String, dynamic>>.from(results[4]);
+  // Charger les données en cache si disponibles
+  final cachedGnosisTokens = box.get('cachedTokenData_gnosis');
+  if (cachedGnosisTokens != null) {
+    walletTokensGnosis = List<Map<String, dynamic>>.from(json.decode(cachedGnosisTokens));
+    logger.i("Données Gnosis en cache utilisées.");
+  }
+
+  final cachedEtherumTokens = box.get('cachedTokenData_ethereum');
+  if (cachedEtherumTokens != null) {
+    walletTokensEtherum = List<Map<String, dynamic>>.from(json.decode(cachedEtherumTokens));
+    logger.i("Données Etherum en cache utilisées.");
+  }
+
+  final cachedRMMTokens = box.get('cachedRMMData');
+  if (cachedRMMTokens != null) {
+    rmmTokens = List<Map<String, dynamic>>.from(json.decode(cachedRMMTokens));
+    logger.i("Données RMM en cache utilisées.");
+  }
+
+  final cachedRealTokens = box.get('cachedRealTokens');
+  if (cachedRealTokens != null) {
+    realTokens = List<Map<String, dynamic>>.from(json.decode(cachedRealTokens));
+    logger.i("Données RealTokens en cache utilisées.");
+  }
+
+  final cachedDetailedRentData = box.get('detailedRentData');
+  if (cachedDetailedRentData != null) {
+    detailedRentData = List<Map<String, dynamic>>.from(json.decode(cachedDetailedRentData));
+    logger.i("Données Rent en cache utilisées.");
+  }
 
     // Fusionner les tokens de Gnosis et d'Etherum
     final walletTokens = [...walletTokensGnosis, ...walletTokensEtherum];
@@ -265,8 +395,7 @@ class DataManager extends ChangeNotifier {
     Set<String> uniqueRmmTokens = {};
     Set<String> globalUniqueTokens = {}; // Pour stocker les tokens uniques globaux
     Set<String> uniqueRentedUnitAddresses = {}; // Pour stocker les adresses uniques avec unités louées
-    Set<String> uniqueTotalUnitAddresses =
-        {}; // Pour stocker les adresses uniques avec unités totales
+    Set<String> uniqueTotalUnitAddresses ={}; // Pour stocker les adresses uniques avec unités totales
 
     // **Itérer sur chaque wallet** pour récupérer tous les tokens
     for (var wallet in walletTokens) {
@@ -286,8 +415,8 @@ class DataManager extends ChangeNotifier {
                 );
 
         if (matchingRealToken.isNotEmpty) {
-          final double tokenPrice = matchingRealToken['tokenPrice'];
-          final double tokenValue = double.parse(walletToken['amount']) * tokenPrice;
+          final double tokenPrice = matchingRealToken['tokenPrice'] ?? 0.0;
+          final double tokenValue = (double.parse(walletToken['amount']) * tokenPrice) ?? 0.0;
 
           // Compter les unités louées et totales si elles n'ont pas déjà été comptées
           if (!uniqueRentedUnitAddresses.contains(tokenAddress)) {
@@ -309,7 +438,7 @@ class DataManager extends ChangeNotifier {
             final today = DateTime.now();
 
             // Convertir la chaîne de date 'initialLaunchDate' en objet DateTime
-            final launchDateString = matchingRealToken['initialLaunchDate']?['date'];
+            final launchDateString = matchingRealToken['rentStartDate']?['date'];
             if (launchDateString != null) {
               final launchDate = DateTime.tryParse(launchDateString);
 
@@ -381,7 +510,6 @@ class DataManager extends ChangeNotifier {
         );
 
         portfolioItem['totalRentReceived'] = totalRentReceived;
-        logger.i("Loyer total reçu pour $tokenContractAddress : $totalRentReceived");
               
         // Notifiez les listeners après avoir mis à jour le portfolio
         notifyListeners();
@@ -496,7 +624,6 @@ class DataManager extends ChangeNotifier {
         );
 
         portfolioItem['totalRentReceived'] = totalRentReceived;
-        logger.i("Loyer total reçu pour $tokenContractAddress : $totalRentReceived");
               
         // Notifiez les listeners après avoir mis à jour le portfolio
         notifyListeners();
@@ -553,10 +680,44 @@ class DataManager extends ChangeNotifier {
 
     // Notify listeners that data has changed
     notifyListeners();
-    } catch (error) {
-    logger.i("Erreur lors de la récupération des données: $error");
+  
+
   }
+  
+// Méthode pour afficher l'évolution des loyers cumulés jusqu'à chaque 'rentStartDate'
+List<Map<String, dynamic>> getCumulativeRentEvolution() {
+  List<Map<String, dynamic>> cumulativeRentList = [];
+  double cumulativeRent = 0.0;
+
+  // Trier les données de `_portfolio` par 'rentStartDate'
+  _portfolio.sort((a, b) {
+    DateTime dateA = a['rentStartDate'] != null
+        ? DateTime.parse(a['rentStartDate'])
+        : DateTime.now(); // Utiliser DateTime.now() ou une autre valeur par défaut si null
+    DateTime dateB = b['rentStartDate'] != null
+        ? DateTime.parse(b['rentStartDate'])
+        : DateTime.now(); // Utiliser DateTime.now() ou une autre valeur par défaut si null
+    return dateA.compareTo(dateB);
+  });
+
+  // Parcourir chaque élément de `_portfolio` et accumuler les loyers
+  for (var portfolioEntry in _portfolio) {
+    if (portfolioEntry['rentStartDate'] != null) {
+      DateTime rentStartDate = DateTime.parse(portfolioEntry['rentStartDate']);
+
+      // Ajoutez la valeur de loyer au cumul jusqu'à cette date
+      cumulativeRent += (portfolioEntry['dailyIncome'] * 7) ?? 0.0;
+
+      // Ajoutez cette entrée à la liste des loyers cumulés (peu importe la date)
+      cumulativeRentList.add({
+        'rentStartDate': rentStartDate,
+        'cumulativeRent': cumulativeRent,
+      });
+    }
   }
+
+  return cumulativeRentList;
+}
 
   // Méthode pour extraire les mises à jour récentes sur les 30 derniers jours
 
@@ -643,41 +804,51 @@ class DataManager extends ChangeNotifier {
   }
 
   // Méthode pour récupérer les données des loyers
-  Future<void> fetchRentData({bool forceFetch = false}) async {
-    try {
-      List<Map<String, dynamic>> rentData =
-          await ApiService.fetchRentData(forceFetch: forceFetch);
-      this.rentData = rentData;
-    } catch (e) {
-      logger.i("Error fetching rent data: $e");
-    }
-    notifyListeners();
+Future<void> fetchRentData({bool forceFetch = false}) async {
+  var box = Hive.box('realTokens');
+
+  // Charger les données en cache si disponibles
+  final cachedRentData = box.get('cachedRentData');
+  if (cachedRentData != null) {
+    rentData = List<Map<String, dynamic>>.from(json.decode(cachedRentData));
+    logger.i("Données rentData en cache utilisées.");
   }
+  Future(() async {
+    try {
+      // Exécuter l'appel d'API pour récupérer les données de loyer
+
+      // Vérifier si les résultats ne sont pas vides avant de mettre à jour les variables
+      if (tempRentData.isNotEmpty) {
+        logger.i("Mise à jour des données de rentData avec de nouvelles valeurs.");
+        rentData = tempRentData;  // Mise à jour de la variable locale
+        box.put('cachedRentData', json.encode(tempRentData));
+
+      } else {
+        logger.d("Les résultats des données de rentData sont vides, pas de mise à jour.");
+      }
+
+    } catch (e) {
+      logger.e("Erreur lors de la récupération des données de loyer: $e");
+    }
+  }).then((_) {
+  notifyListeners();  // Notifier les listeners une fois les données mises à jour
+});
+}
+
 
   // Méthode pour récupérer les données des propriétés
   Future<void> fetchPropertyData({bool forceFetch = false}) async {
-    try {
-      // Récupérer les tokens depuis l'API
-      final walletTokensGnosis = await ApiService.fetchTokensFromGnosis(forceFetch: forceFetch);
-      final walletTokensEtherum = await ApiService.fetchTokensFromEtherum(forceFetch: forceFetch);
-      final rmmTokens = await ApiService.fetchRMMTokens(forceFetch: forceFetch);
-      final realTokens = await ApiService.fetchRealTokens(forceFetch: forceFetch);
+          List<Map<String, dynamic>> tempPropertyData = [];
 
       // Fusionner les tokens de Gnosis et d'Etherum
       final walletTokens = [...walletTokensGnosis, ...walletTokensEtherum];
 
-      final List<Map<String, dynamic>> realTokensCasted =
-          realTokens.cast<Map<String, dynamic>>();
-
       // Fusionner les tokens du portefeuille (Gnosis, Ethereum) et du RMM
       List<dynamic> allTokens = [];
       for (var wallet in walletTokens) {
-        allTokens.addAll(
-            wallet['balances']); // Ajouter tous les balances des wallets
+        allTokens.addAll(wallet['balances']); // Ajouter tous les balances des wallets
       }
       allTokens.addAll(rmmTokens); // Ajouter les tokens du RMM
-
-      List<Map<String, dynamic>> propertyData = [];
 
       // Parcourir chaque token du portefeuille et du RMM
       for (var token in allTokens) {
@@ -687,23 +858,18 @@ class DataManager extends ChangeNotifier {
           final tokenAddress = token['token']['address'].toLowerCase();
 
           // Correspondre avec les RealTokens
-          final matchingRealToken =
-              realTokens.cast<Map<String, dynamic>>().firstWhere(
-                    (realToken) =>
-                        realToken['uuid'].toLowerCase() ==
-                        tokenAddress.toLowerCase(),
-                    orElse: () => <String, dynamic>{},
-                  );
+          final matchingRealToken = realTokens.cast<Map<String, dynamic>>().firstWhere(
+            (realToken) => realToken['uuid'].toLowerCase() == tokenAddress.toLowerCase(),
+            orElse: () => <String, dynamic>{},
+          );
 
-          if (matchingRealToken.isNotEmpty &&
-              matchingRealToken['propertyType'] != null) {
+          if (matchingRealToken.isNotEmpty && matchingRealToken['propertyType'] != null) {
             final propertyType = matchingRealToken['propertyType'];
 
             // Vérifiez si le type de propriété existe déjà dans propertyData
-            final existingPropertyType = propertyData.firstWhere(
+            final existingPropertyType = tempPropertyData.firstWhere(
               (data) => data['propertyType'] == propertyType,
-              orElse: () => <String,
-                  dynamic>{}, // Renvoie un map vide si aucune correspondance n'est trouvée
+              orElse: () => <String, dynamic>{}, // Renvoie un map vide si aucune correspondance n'est trouvée
             );
 
             if (existingPropertyType.isNotEmpty) {
@@ -711,7 +877,7 @@ class DataManager extends ChangeNotifier {
               existingPropertyType['count'] += 1;
             } else {
               // Ajouter une nouvelle entrée si la propriété n'existe pas encore
-              propertyData.add({'propertyType': propertyType, 'count': 1});
+              tempPropertyData.add({'propertyType': propertyType, 'count': 1});
             }
           }
         } else {
@@ -719,13 +885,11 @@ class DataManager extends ChangeNotifier {
         }
       }
 
-      this.propertyData = propertyData;
-    } catch (e) {
-      logger.i("Error fetching property data: $e");
-    }
+      propertyData = tempPropertyData;
+   
     notifyListeners();
   }
-
+  
   // Méthode pour réinitialiser toutes les données
   Future<void> resetData() async {
     // Remettre toutes les variables à leurs valeurs initiales
@@ -772,14 +936,15 @@ Future<void> updateConversionRate(
 ) async {
   selectedCurrency = currency; // Mettez à jour la devise sélectionnée
 
-  // Vérifiez si la devise existe dans le Map des devises
-  if (currencies.containsKey(selectedCurrency)) {
+  if (selectedCurrency == "usd") {
+    conversionRate = 1.0; // Forcer le taux à 1 pour USD
+  } else if (currencies.containsKey(selectedCurrency)) {
     // Récupérez le taux de conversion, ou 1.0 si absent
     conversionRate = currencies[selectedCurrency] is double 
         ? currencies[selectedCurrency] 
         : 1.0;
   } else {
-    conversionRate = 1.0; // Par défaut, utiliser 1.0 (USD)
+    conversionRate = 1.0; // Par défaut, utiliser 1.0 (si devise inconnue)
   }
 
   // Mettre à jour le symbole de la devise, ou utiliser les 3 lettres si le symbole est absent
@@ -794,9 +959,7 @@ Future<void> updateConversionRate(
     final prefs = await SharedPreferences.getInstance();
     selectedCurrency = prefs.getString('selectedCurrency') ?? 'usd';
 
-    // Utilisez ApiService pour récupérer les devises
-    final apiService = ApiService();
-    final currencies = await apiService.fetchCurrencies();
+    final currencies = await ApiService.fetchCurrencies();
 
     // Appeler updateConversionRate avec les trois paramètres nécessaires
     await updateConversionRate(selectedCurrency, selectedCurrency, currencies);
@@ -811,15 +974,13 @@ Future<void> updateConversionRate(
   Future<void> fetchRmmBalances() async {
     try {
       // Récupérer les balances de l'API
-      List<Map<String, dynamic>> balances = await ApiService.fetchRmmBalances();
-      logger.i(balances);
 
       double usdcDepositSum = 0;
       double usdcBorrowSum = 0;
       double xdaiDepositSum = 0;
       double xdaiBorrowSum = 0;
 
-      for (var balance in balances) {
+      for (var balance in rmmBalances) {
         // Vérifier si les valeurs existent avant de les traiter
         double usdcDepositBalance = balance['usdcDepositBalance'] != null
             ? double.parse(balance['usdcDepositBalance']) / (1e6)

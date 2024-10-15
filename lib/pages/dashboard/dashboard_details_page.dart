@@ -1,3 +1,4 @@
+import 'package:RealToken/utils/utils.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../api/data_manager.dart';
@@ -12,14 +13,7 @@ class DashboardRentsDetailsPage extends StatelessWidget {
     return DateFormat('dd/MM/yyyy').format(parsedDate);
   }
 
-  String _formatAmount(double amount, String currencySymbol) {
-    final NumberFormat formatter = NumberFormat.currency(
-      locale: 'fr_FR',
-      symbol: currencySymbol,
-      decimalDigits: 2,
-    );
-    return formatter.format(amount);
-  }
+  
 
   @override
   Widget build(BuildContext context) {
@@ -69,10 +63,7 @@ class DashboardRentsDetailsPage extends StatelessWidget {
                       itemBuilder: (context, index) {
                         final rentEntry = dataManager.rentData[index];
                         final rentDate = _formatDate(rentEntry['date']);
-                        final rentAmount = _formatAmount(
-                          rentEntry['rent'],
-                          dataManager.currencySymbol,
-                        );
+                        final rentAmount = Utils.formatCurrency(dataManager.convert(rentEntry['rent']), dataManager.currencySymbol);
 
                         return Padding(
                           padding: const EdgeInsets.symmetric(vertical: 8.0), // Padding pour chaque ligne

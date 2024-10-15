@@ -15,9 +15,12 @@ class ApiService {
   static const String rentTrackerUrl = 'https://ehpst.duckdns.org/realt_rent_tracker/api/rent_holder/';
   static const Duration cacheDuration = Duration(hours: 1);
 
+
   // Méthode factorisée pour fetch les tokens depuis The Graph
   static Future<List<dynamic>> fetchTokensFromUrl(String url, String cacheKey, {bool forceFetch = false}) async {
-    var box = Hive.box('dashboardTokens');
+    logger.i("apiService: fetchTokensFromUrl -> Lancement de la requete");
+
+    var box = Hive.box('realTokens');
     final lastFetchTime = box.get('lastFetchTime_$cacheKey');
     final DateTime now = DateTime.now();
 
@@ -25,6 +28,7 @@ class ApiService {
     List<String>? evmAddresses = prefs.getStringList('evmAddresses');
 
     if (evmAddresses == null || evmAddresses.isEmpty) {
+      logger.i("apiService: fetchTokensFromUrl -> wallet non renseigné");
       return [];
     }
 
@@ -33,7 +37,8 @@ class ApiService {
       if (now.difference(lastFetch) < cacheDuration) {
         final cachedData = box.get('cachedTokenData_$cacheKey');
         if (cachedData != null) {
-          return List<dynamic>.from(json.decode(cachedData));
+          logger.i("apiService: fetchTokensFromUrl -> Requete annulée, temps minimum pas atteint");
+          return [];
         }
       }
     }
@@ -63,13 +68,16 @@ class ApiService {
     );
 
     if (response.statusCode == 200) {
-       logger.i("apiService: theGraph -> requete lancée");
+      logger.i("apiService: fetchTokensFromUrl -> requete lancée avec success");
       final data = json.decode(response.body)['data']['accounts'];
       box.put('cachedTokenData_$cacheKey', json.encode(data));
       box.put('lastFetchTime_$cacheKey', now.toIso8601String());
+
+      // Enregistrer uniquement la dernière date et heure d'exécution
+      box.put('lastExecutionTime_Portfolio_$cacheKey', now.toIso8601String());
       return data;
     } else {
-      throw Exception('apiService: theGraph -> Failed to fetch tokens from $url');
+      throw Exception('apiService: fetchTokensFromUrl -> Failed to fetch tokens from $url');
     }
   }
 
@@ -87,7 +95,9 @@ class ApiService {
 
   // Récupérer les tokens sur le RealToken Marketplace (RMM)
   static Future<List<dynamic>> fetchRMMTokens({bool forceFetch = false}) async {
-    var box = Hive.box('dashboardTokens');
+        logger.i("apiService: fetchRMMTokens -> Lancement de la requete");
+
+    var box = Hive.box('realTokens');
     final lastFetchTime = box.get('lastRMMFetchTime');
     final DateTime now = DateTime.now();
 
@@ -95,6 +105,7 @@ class ApiService {
     List<String>? evmAddresses = prefs.getStringList('evmAddresses');
 
     if (evmAddresses == null || evmAddresses.isEmpty) {
+      logger.i("apiService: fetchRMMTokens -> wallet non renseigné");
       return [];
     }
 
@@ -103,7 +114,8 @@ class ApiService {
       if (now.difference(lastFetch) < cacheDuration) {
         final cachedData = box.get('cachedRMMData');
         if (cachedData != null) {
-          return List<dynamic>.from(json.decode(cachedData));
+          logger.i("apiService: fetchRMMTokens -> Requete annulée, temps minimum pas atteint");
+          return [];
         }
       }
     }
@@ -143,7 +155,7 @@ class ApiService {
       );
 
       if (response.statusCode == 200) {
-        logger.i("apiService: theGraph -> requete lancée");
+        logger.i("apiService: fetchRMMTokens -> requete lancée avec succes");
 
         final decodedResponse = json.decode(response.body);
         if (decodedResponse['data'] != null &&
@@ -159,12 +171,15 @@ class ApiService {
 
     box.put('cachedRMMData', json.encode(allBalances));
     box.put('lastRMMFetchTime', now.toIso8601String());
+      box.put('lastExecutionTime_RMM', now.toIso8601String());
 
     return allBalances;
   }
 
   // Récupérer la liste complète des RealTokens depuis l'API pitswap
   static Future<List<dynamic>> fetchRealTokens({bool forceFetch = false}) async {
+    logger.i("apiService: fetchRealTokens -> Lancement de la requete");
+
     var box = Hive.box('realTokens');
     final lastFetchTime = box.get('lastFetchTime');
     final DateTime now = DateTime.now();
@@ -174,7 +189,8 @@ class ApiService {
       if (now.difference(lastFetch) < cacheDuration) {
         final cachedData = box.get('cachedRealTokens');
         if (cachedData != null) {
-          return List<dynamic>.from(json.decode(cachedData));
+          logger.i("apiService: fetchRealTokens -> Requete annulée, temps minimum pas atteint");
+          return [];
         }
       }
     }
@@ -182,14 +198,17 @@ class ApiService {
     final response = await http.get(Uri.parse(realTokensUrl));
 
     if (response.statusCode == 200) {
-      logger.i("apiService: pitSwap -> requete lancée");
+      logger.i("apiService: fetchRealTokens -> requete lancée avec succes");
 
       final data = json.decode(response.body);
       box.put('cachedRealTokens', json.encode(data));
       box.put('lastFetchTime', now.toIso8601String());
+          // Enregistrer uniquement la dernière date et heure d'exécution
+      box.put('lastExecutionTime_Tokens', now.toIso8601String());
+
       return data;
     } else {
-      throw Exception('apiService: pitSwap -> Failed to fetch RealTokens');
+      throw Exception('apiService: fetchRealTokens -> Failed to fetch RealTokens');
     }
   }
 
@@ -202,7 +221,7 @@ class ApiService {
     return []; // Ne pas exécuter si la liste des wallets est vide
   }
 
-  var box = Hive.box('rentData');
+  var box = Hive.box('realTokens');
   final DateTime now = DateTime.now();
 
   // Vérifier si une réponse 429 a été reçue récemment
@@ -212,11 +231,6 @@ class ApiService {
     // Si on est dans la période d'attente de 3 minutes
     if (now.difference(last429) < Duration(minutes: 3)) {
       logger.i('apiService: ehpst -> 429 reçu, attente avant nouvelle requête.');
-      // Retourner les données en cache si elles sont disponibles
-      final cachedData = box.get('cachedRentData');
-      if (cachedData != null) {
-        return List<Map<String, dynamic>>.from(json.decode(cachedData));
-      }
       return []; // Si pas de cache, on retourne une liste vide
     }
   }
@@ -228,7 +242,8 @@ class ApiService {
     if (now.difference(lastFetch) < ApiService.cacheDuration) {
       final cachedData = box.get('cachedRentData');
       if (cachedData != null) {
-        return List<Map<String, dynamic>>.from(json.decode(cachedData));
+          logger.i("apiService: fetchRentData -> Requete annulée, temps minimum pas atteint");
+          return [];
       }
     }
   }
@@ -251,8 +266,7 @@ class ApiService {
     if (response.statusCode == 200) {
       logger.i("apiService: ehpst -> RentTracker, requete lancée");
 
-      List<Map<String, dynamic>> rentData =
-          List<Map<String, dynamic>>.from(json.decode(response.body));
+      List<Map<String, dynamic>> rentData = List<Map<String, dynamic>>.from(json.decode(response.body));
       for (var rentEntry in rentData) {
         final existingEntry = mergedRentData.firstWhere(
           (entry) => entry['date'] == rentEntry['date'],
@@ -277,14 +291,14 @@ class ApiService {
   mergedRentData.sort((a, b) => a['date'].compareTo(b['date']));
 
   // Mise à jour du cache après la récupération des données
-  box.put('cachedRentData', json.encode(mergedRentData));
   box.put('lastRentFetchTime', now.toIso8601String());
+      box.put('lastExecutionTime_Rents', now.toIso8601String());
 
   return mergedRentData;
 }
 
 
-  Future<Map<String, dynamic>> fetchCurrencies() async {
+  static Future<Map<String, dynamic>> fetchCurrencies() async {
     final prefs = await SharedPreferences.getInstance();
 
     // Vérifier si les devises sont déjà en cache
@@ -295,9 +309,7 @@ class ApiService {
     const cacheDuration = 3600000; // 1 heure en millisecondes
 
     // Si les données sont en cache et n'ont pas expiré
-    if (cachedData != null &&
-        cacheTime != null &&
-        (currentTime - cacheTime) < cacheDuration) {
+    if (cachedData != null && cacheTime != null && (currentTime - cacheTime) < cacheDuration) {
       // Retourner les données du cache
       return jsonDecode(cachedData) as Map<String, dynamic>;
     }
@@ -382,12 +394,12 @@ class ApiService {
     return [];
   }
 
-  static Future<List<Map<String, dynamic>>> fetchRmmBalances(
-      {bool forceFetch = false}) async {
+  static Future<List<Map<String, dynamic>>> fetchRmmBalances({bool forceFetch = false}) async {
     final prefs = await SharedPreferences.getInstance();
     List<String>? evmAddresses = prefs.getStringList('evmAddresses');
 
     if (evmAddresses == null || evmAddresses.isEmpty) {
+      logger.i("apiService: fetchRMMBalances-> wallet non renseigné");
       return [];
     }
 
@@ -444,7 +456,7 @@ static Future<BigInt?> _fetchBalance(String contract, String address, {bool forc
       // Vérifier si le résultat est mis en cache
       final cachedData = box.get(cacheKey);
       if (cachedData != null) {
-        logger.i('apiService: Utilisation des données du cache pour $contract');
+        logger.i("apiService: fetchBallance -> Requete annulée, temps minimum pas atteint");
         return BigInt.tryParse(cachedData);
       }
     }
@@ -479,7 +491,8 @@ static Future<BigInt?> _fetchBalance(String contract, String address, {bool forc
       // Sauvegarder le résultat dans le cache
       await box.put(cacheKey, balance.toString());
       await box.put('lastFetchTime_$cacheKey', now.toIso8601String());
-      
+      box.put('lastExecutionTime_Balances', now.toIso8601String());
+
       return balance;
     } else {
       logger.i("apiService: RPC gnosis -> Invalid response for contract $contract: $result");
@@ -498,6 +511,7 @@ static Future<List<Map<String, dynamic>>> fetchDetailedRentDataForAllWallets({bo
   List<String> evmAddresses = prefs.getStringList('evmAddresses') ?? []; // Récupérer les adresses de tous les wallets
 
   if (evmAddresses.isEmpty) {
+    logger.i("apiService: fetchDetailedRentDataForAllWallets -> wallet non renseigné");
     return []; // Ne pas exécuter si la liste des wallets est vide
   }
 
@@ -578,7 +592,9 @@ static Future<List<Map<String, dynamic>>> fetchDetailedRentDataForAllWallets({bo
       logger.i('Erreur lors de la requête HTTP : $e');
       // Vous pouvez gérer les exceptions ici (timeout ou autres erreurs)
     }
+
   }
+  box.put('lastExecutionTime_Rents', now.toIso8601String());
 
   // Retourner les données brutes pour traitement dans DataManager
   return allRentData;

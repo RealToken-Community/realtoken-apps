@@ -20,18 +20,16 @@ void main() async {
   );
 
   await Hive.initFlutter();
-  await Hive.openBox('dashboardTokens');
   await Hive.openBox('realTokens');
-  await Hive.openBox('rentData');
-  await Hive.openBox('detailedRentDataBox');
 
   // Initialisation de SharedPreferences et DataManager
   final dataManager = DataManager();
   await Future.delayed(Duration(seconds: 1));
   FlutterNativeSplash.remove(); // Supprimer le splash screen natif après l'initialisation
-  await dataManager.loadSelectedCurrency(); // Charger la devise sélectionnée
-  await dataManager.loadUserIdToAddresses(); // Charger les userIds et adresses
-  // await dataManager.fetchAndCalculateData();
+  dataManager.updateGlobalVariables();
+  dataManager.loadSelectedCurrency(); // Charger la devise sélectionnée
+  dataManager.loadUserIdToAddresses(); // Charger les userIds et adresses
+  dataManager.fetchAndCalculateData();
 
   runApp(
     MultiProvider(

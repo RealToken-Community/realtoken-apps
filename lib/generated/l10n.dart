@@ -1549,6 +1549,66 @@ class S {
       args: [],
     );
   }
+
+  /// `Future Rents`
+  String get futureRents {
+    return Intl.message(
+      'Future Rents',
+      name: 'futureRents',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `No future rents`
+  String get noFutureRents {
+    return Intl.message(
+      'No future rents',
+      name: 'noFutureRents',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Next Rondays`
+  String get nextRondays {
+    return Intl.message(
+      'Next Rondays',
+      name: 'nextRondays',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Date not provided`
+  String get noCommunicatedDate {
+    return Intl.message(
+      'Date not provided',
+      name: 'noCommunicatedDate',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Services status`
+  String get serviceStatusPage {
+    return Intl.message(
+      'Services status',
+      name: 'serviceStatusPage',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Last update`
+  String get lastExecution {
+    return Intl.message(
+      'Last update',
+      name: 'lastExecution',
+      desc: '',
+      args: [],
+    );
+  }
 }
 
 class AppLocalizationDelegate extends LocalizationsDelegate<S> {

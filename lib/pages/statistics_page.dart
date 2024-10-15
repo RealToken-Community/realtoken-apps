@@ -1,4 +1,5 @@
 // Import pour Platform
+import 'package:RealToken/utils/utils.dart';
 import 'package:flutter/material.dart';
 import 'package:fl_chart/fl_chart.dart';
 import 'package:provider/provider.dart';
@@ -8,16 +9,6 @@ import '../api/data_manager.dart';
 import '../generated/l10n.dart'; // Import pour les traductions
 import '../app_state.dart'; // Import AppState
 import 'package:logger/logger.dart';
-
-
-String formatCurrency(double value, String symbol) {
-  final NumberFormat formatter = NumberFormat.currency(
-    locale: 'fr_FR',
-    symbol: symbol, // Utilisation du symbole sélectionné
-    decimalDigits: 2,
-  );
-  return formatter.format(value);
-}
 
 class StatisticsPage extends StatefulWidget {
   const StatisticsPage({super.key});
@@ -92,6 +83,7 @@ class _StatisticsPageState extends State<StatisticsPage> {
       try {
         final dataManager = Provider.of<DataManager>(context, listen: false);
         logger.i("Fetching rent data and property data...");
+        dataManager.updateGlobalVariables();
         dataManager.fetchRentData();
         dataManager.fetchPropertyData();
       } catch (e, stacktrace) {
@@ -232,6 +224,9 @@ class _StatisticsPageState extends State<StatisticsPage> {
       };
     }).toList();
 
+    // Trier les données par date croissante
+convertedData.sort((a, b) => a['date'].compareTo(b['date']));
+
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 16.0),
       child: Card(
@@ -281,7 +276,7 @@ class _StatisticsPageState extends State<StatisticsPage> {
                           interval: _calculateLeftInterval(convertedData),
                           getTitlesWidget: (value, meta) {
                             return Text(
-                              formatCurrency(value, dataManager.currencySymbol),
+                              Utils.formatCurrency(value, dataManager.currencySymbol),
                               style: TextStyle( fontSize: 10 + appState.getTextSizeOffset()),
                             );
                           },
@@ -297,8 +292,7 @@ class _StatisticsPageState extends State<StatisticsPage> {
                           showTitles: true,
                           interval: _calculateBottomInterval(convertedData),
                           getTitlesWidget: (value, meta) {
-                            List<String> labels =
-                                _buildDateLabels(convertedData);
+                            List<String> labels = _buildDateLabels(convertedData);
                             if (value.toInt() >= 0 &&
                                 value.toInt() < labels.length) {
                               return Transform.rotate(
@@ -577,10 +571,7 @@ class _StatisticsPageState extends State<StatisticsPage> {
     final appState = Provider.of<AppState>(context);
 
     return dataManager.propertyData.map((data) {
-      final double percentage = (data['count'] /
-              dataManager.propertyData
-                  .fold(0.0, (double sum, item) => sum + item['count'])) *
-          100;
+      final double percentage = (data['count'] / dataManager.propertyData.fold(0.0, (double sum, item) => sum + item['count'])) * 100;
       return PieChartSectionData(
         value: data['count'].toDouble(),
         title: '${percentage.toStringAsFixed(1)}%',

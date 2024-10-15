@@ -1,3 +1,4 @@
+import 'package:RealToken/settings/service_status.dart';
 import 'package:RealToken/utils/utils.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
@@ -14,6 +15,7 @@ class CustomDrawer extends StatelessWidget {
   final Function(bool) onThemeChanged;
 
   const CustomDrawer({required this.onThemeChanged, super.key});
+  
   @override
   Widget build(BuildContext context) {
     return Consumer<AppState>(
@@ -109,7 +111,24 @@ class CustomDrawer extends StatelessWidget {
                   );
                 },
               ),
-              // Nouveau ListTile pour Wiki
+              // Nouveau ListTile pour accéder à la page ServiceStatusPage
+              ListTile(
+                leading: const Icon(Icons.monitor), // Icône pour le statut du service
+                title: Text(
+                  'Service Status', // Texte du menu
+                  style: TextStyle(
+                      fontSize: 15 + appState.getTextSizeOffset()), // Taille ajustée
+                ),
+                onTap: () {
+                  Navigator.pop(context);
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => ServiceStatusPage(), // Ouvre la page ServiceStatusPage
+                    ),
+                  );
+                },
+              ),
               ListTile(
                 leading: const Icon(Icons.book),
                 title: Text(

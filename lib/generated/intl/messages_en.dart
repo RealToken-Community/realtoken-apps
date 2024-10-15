@@ -79,6 +79,7 @@ class MessageLookup extends MessageLookupByLibrary {
         "feedback": MessageLookupByLibrary.simpleMessage("Feedback"),
         "finances": MessageLookupByLibrary.simpleMessage("Finances"),
         "french": MessageLookupByLibrary.simpleMessage("French"),
+        "futureRents": MessageLookupByLibrary.simpleMessage("Future Rents"),
         "gnosisContract":
             MessageLookupByLibrary.simpleMessage("Gnosis contract"),
         "grossRentMonth":
@@ -93,6 +94,7 @@ class MessageLookup extends MessageLookupByLibrary {
         "insights": MessageLookupByLibrary.simpleMessage("Insights"),
         "language": MessageLookupByLibrary.simpleMessage("Language"),
         "languageUpdated": m0,
+        "lastExecution": MessageLookupByLibrary.simpleMessage("Last update"),
         "lastRentReceived": MessageLookupByLibrary.simpleMessage(
             "Your last rent received amounts to "),
         "light": MessageLookupByLibrary.simpleMessage("Light"),
@@ -111,8 +113,13 @@ class MessageLookup extends MessageLookupByLibrary {
         "netRentMonth":
             MessageLookupByLibrary.simpleMessage("Net rent per month"),
         "network": MessageLookupByLibrary.simpleMessage("Network"),
+        "nextRondays": MessageLookupByLibrary.simpleMessage("Next Rondays"),
+        "noCommunicatedDate":
+            MessageLookupByLibrary.simpleMessage("Date not provided"),
         "noDataAvailable": MessageLookupByLibrary.simpleMessage(
             "No data available, please add a new wallet"),
+        "noFutureRents":
+            MessageLookupByLibrary.simpleMessage("No future rents"),
         "noImageAvailable":
             MessageLookupByLibrary.simpleMessage("Image link not available"),
         "noPriceEvolution": MessageLookupByLibrary.simpleMessage(
@@ -167,6 +174,8 @@ class MessageLookup extends MessageLookupByLibrary {
         "searchHint": MessageLookupByLibrary.simpleMessage("Search..."),
         "sendDonations": MessageLookupByLibrary.simpleMessage(
             "Send your donations to the following address:"),
+        "serviceStatusPage":
+            MessageLookupByLibrary.simpleMessage("Services status"),
         "settings": MessageLookupByLibrary.simpleMessage("Settings"),
         "settingsTitle": MessageLookupByLibrary.simpleMessage("Settings"),
         "sfrPortfolio": MessageLookupByLibrary.simpleMessage("SFR Portfolio"),

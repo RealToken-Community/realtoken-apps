@@ -149,5 +149,12 @@
   "noRecentUpdates": "Aucune modification récente disponible.",
   "unknownTokenName": "Nom inconnu",
   "noImageAvailable": "Lien d'image non disponible",
-  "duplicate": "en doublon"
+  "duplicate": "déja comptabilisé",
+  "futureRents": "Loyers futurs",
+  "noFutureRents": "Aucun loyer futur",
+  "nextRondays": "Prochains Rondays",
+  "noCommunicatedDate": "Date non communiquée",
+  "serviceStatusPage": "Statut des services",
+  "lastExecution": "Derniere mise a jour"
+
 }

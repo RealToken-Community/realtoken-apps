@@ -1,3 +1,4 @@
+import 'package:RealToken/utils/utils.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:fl_chart/fl_chart.dart';
@@ -9,16 +10,6 @@ import '/settings/manage_evm_addresses_page.dart'; // Import de la page pour gé
 import 'dashboard_details_page.dart';
 import '../../app_state.dart'; // Import AppState
 
-
-// Fonction de formatage des valeurs monétaires avec des espaces pour les milliers
-String formatCurrency(double value, String symbol) {
-  final NumberFormat formatter = NumberFormat.currency(
-    locale: 'fr_FR',
-    symbol: symbol, // Utilisation du symbole sélectionné
-    decimalDigits: 2,
-  );
-  return formatter.format(value);
-}
 
 class DashboardPage extends StatefulWidget {
   const DashboardPage({super.key});
@@ -41,20 +32,21 @@ class _DashboardPageState extends State<DashboardPage> {
 
     Future<void> _loadData() async {
     final dataManager = Provider.of<DataManager>(context, listen: false);
-    await dataManager.fetchRmmBalances();
-    await dataManager.fetchRentData(); // Charger les données de loyer
-    await dataManager.fetchPropertyData(); // Charger les données de propriété
-    await dataManager.fetchAndCalculateData(); // Charger les données du portefeuille
+    dataManager.updateGlobalVariables();
+    dataManager.updatedDetailRentVariables();
+    dataManager.fetchRmmBalances();
+    dataManager.fetchRentData(); // Charger les données de loyer
+    dataManager.fetchAndCalculateData(); // Charger les données du portefeuille
   }
 
   Future<void> _refreshData() async {
     // Forcer la mise à jour des données en appelant les méthodes de récupération avec forceFetch = true
     final dataManager = Provider.of<DataManager>(context, listen: false);
+    await dataManager.updateGlobalVariables(forceFetch: true);
+    await dataManager.updatedDetailRentVariables(forceFetch: true);
     await dataManager.fetchRentData(forceFetch: true);
-    await dataManager.fetchPropertyData(forceFetch: true);
     await dataManager.fetchRmmBalances();
     await dataManager.fetchAndCalculateData(forceFetch: true);
-
   }
 
   // Méthode pour basculer l'état de visibilité des montants
@@ -78,11 +70,10 @@ class _DashboardPageState extends State<DashboardPage> {
   // Méthode pour formater ou masquer les montants en série de ****
   String _getFormattedAmount(double value, String symbol) {
     if (_showAmounts) {
-      return formatCurrency(
+      return Utils.formatCurrency(
           value, symbol); // Affiche le montant formaté si visible
     } else {
-      String formattedValue =
-          formatCurrency(value, symbol); // Format le montant normalement
+      String formattedValue =Utils.formatCurrency(value, symbol); // Format le montant normalement
       return '*' *
           formattedValue
               .length; // Retourne une série d'astérisques de la même longueur
@@ -90,21 +81,21 @@ class _DashboardPageState extends State<DashboardPage> {
   }
 
   // Récupère la dernière valeur de loyer
-  String _getLastRentReceived(DataManager dataManager) {
-    final rentData = dataManager.rentData;
+String _getLastRentReceived(DataManager dataManager) {
+  final rentData = dataManager.rentData;
 
-    if (rentData.isEmpty) {
-      return S.of(context).noRentReceived;
-    }
-
-    rentData.sort((a, b) =>
-        DateTime.parse(b['date']).compareTo(DateTime.parse(a['date'])));
-    final lastRent = rentData.first['rent'];
-
-    // Convertir et formater avec le symbole de la devise sélectionnée
-    return formatCurrency(
-        dataManager.convert(lastRent), dataManager.currencySymbol);
+  if (rentData.isEmpty) {
+    return S.of(context).noRentReceived;
   }
+
+  rentData.sort((a, b) =>
+      DateTime.parse(b['date']).compareTo(DateTime.parse(a['date'])));
+  final lastRent = rentData.first['rent'];
+
+  // Utiliser _getFormattedAmount pour masquer ou afficher la valeur
+  return _getFormattedAmount(dataManager.convert(lastRent), dataManager.currencySymbol);
+}
+
 
   // Groupement mensuel sur les 12 derniers mois glissants pour la carte Rendement
   List<double> _getLast12MonthsRent(DataManager dataManager) {
@@ -133,7 +124,7 @@ class _DashboardPageState extends State<DashboardPage> {
 
  double _getPortfolioBarGraphData(DataManager dataManager) {
   // Calcul du pourcentage de rentabilité (ROI)
-  return (dataManager.getTotalRentReceived() / dataManager.totalValue * 100); // ROI en %
+  return (dataManager.getTotalRentReceived() / (dataManager.walletValue + dataManager.rmmValue)  * 100); // ROI en %
 }
 
 
@@ -143,84 +134,116 @@ Widget _buildVerticalGauge(double value, BuildContext context) {
   double displayValue = value.isNaN || value < 0 ? 0 : value;
 
   return Padding(
-    padding: const EdgeInsets.only(right: 12.0), // Ajustez ici le décalage à gauche
-    child: Column(
-      mainAxisSize: MainAxisSize.min, // Ajuster la taille de la colonne au contenu
-      children: [
-        Text(
-          "ROI", // Titre de la jauge
-          style: TextStyle(
-            fontSize: 16,
-            fontWeight: FontWeight.bold,
-          ),
-        ),
-        const SizedBox(height: 8), // Espacement entre le titre et la jauge
-        SizedBox(
-          height: 100, // Hauteur totale de la jauge
-          width: 40,   // Largeur de la jauge
-          child: BarChart(
-            BarChartData(
-              alignment: BarChartAlignment.center,
-              maxY: 100, // Échelle sur 100%
-              barTouchData: BarTouchData(enabled: false), // Désactiver les interactions
-              titlesData: FlTitlesData(
-                leftTitles: AxisTitles(
-                  sideTitles: SideTitles(
-                    showTitles: true,
-                    reservedSize: 30,
-                    getTitlesWidget: (value, meta) {
-                      if (value % 25 == 0) {
-                        return Text(
-                          value.toInt().toString(),
-                          style: TextStyle(fontSize: 10), // Définir la taille du texte
-                        );
-                      }
-                      return Container();
-                    },
-                  ),
-                ),
-                rightTitles: AxisTitles(sideTitles: SideTitles(showTitles: false)),
-                topTitles: AxisTitles(sideTitles: SideTitles(showTitles: false)),
-                bottomTitles: AxisTitles(sideTitles: SideTitles(showTitles: false)),
-              ),
-              gridData: FlGridData(show: false),
-              borderData: FlBorderData(show: false),
-              barGroups: [
-                BarChartGroupData(
-                  x: 0,
-                  barRods: [
-                    BarChartRodData(
-                      toY: displayValue, // Utiliser la valeur corrigée
-                      width: 20,  // Largeur de la barre
-                      color: Colors.blue, // Couleur de la barre
-                      borderRadius: BorderRadius.circular(5),
-                      backDrawRodData: BackgroundBarChartRodData(
-                        show: true,
-                        toY: 100, // Fond de la jauge
-                        color: Colors.grey.shade400,
-                      ),
-                      rodStackItems: [
-                        BarChartRodStackItem(0, displayValue, Colors.blue),
-                      ],
-                    ),
-                  ],
-                ),
-              ],
+  padding: const EdgeInsets.only(right: 12.0), // Ajustez ici le décalage à gauche
+  child: Column(
+    mainAxisSize: MainAxisSize.min, // Ajuster la taille de la colonne au contenu
+    children: [
+      Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Text(
+            "ROI", // Titre de la jauge
+            style: TextStyle(
+              fontSize: 16,
+              fontWeight: FontWeight.bold,
             ),
           ),
-        ),
-        const SizedBox(height: 8), // Espacement entre le titre et la jauge
-        Text(
-          "${displayValue.toStringAsFixed(1)}%", // Valeur de la barre affichée en dessous
-          style: TextStyle(
-            fontSize: 12,
-            fontWeight: FontWeight.w500,
-            color: Colors.blue, // Même couleur que la barre
+          const SizedBox(width: 8), // Espacement entre le texte et l'icône
+          GestureDetector(
+            onTap: () {
+              showDialog(
+                context: context,
+                builder: (BuildContext context) {
+                  return AlertDialog(
+                    title: Text(S.of(context).roiPerProperties), // Titre du popup
+                    content: Text(S.of(context).roiAlertInfo), // Texte du popup
+                    actions: <Widget>[
+                      TextButton(
+                        onPressed: () {
+                          Navigator.of(context).pop(); // Fermer le popup
+                        },
+                        child: Text('OK'),
+                      ),
+                    ],
+                  );
+                },
+              );
+            },
+            child: Icon(
+              Icons.info_outline, // Icône à afficher
+              size: 20, // Taille de l'icône
+              color: Colors.grey, // Couleur de l'icône
+            ),
+          ),
+        ],
+      ),
+      const SizedBox(height: 8), // Espacement entre le titre et la jauge
+      SizedBox(
+        height: 100, // Hauteur totale de la jauge
+        width: 40,   // Largeur de la jauge
+        child: BarChart(
+          BarChartData(
+            alignment: BarChartAlignment.center,
+            maxY: 100, // Échelle sur 100%
+            barTouchData: BarTouchData(enabled: false), // Désactiver les interactions
+            titlesData: FlTitlesData(
+              leftTitles: AxisTitles(
+                sideTitles: SideTitles(
+                  showTitles: true,
+                  reservedSize: 30,
+                  getTitlesWidget: (value, meta) {
+                    if (value % 25 == 0) {
+                      return Text(
+                        value.toInt().toString(),
+                        style: TextStyle(fontSize: 10), // Définir la taille du texte
+                      );
+                    }
+                    return Container();
+                  },
+                ),
+              ),
+              rightTitles: AxisTitles(sideTitles: SideTitles(showTitles: false)),
+              topTitles: AxisTitles(sideTitles: SideTitles(showTitles: false)),
+              bottomTitles: AxisTitles(sideTitles: SideTitles(showTitles: false)),
+            ),
+            gridData: FlGridData(show: false),
+            borderData: FlBorderData(show: false),
+            barGroups: [
+              BarChartGroupData(
+                x: 0,
+                barRods: [
+                  BarChartRodData(
+                    toY: displayValue, // Utiliser la valeur corrigée
+                    width: 20,  // Largeur de la barre
+                    color: Colors.blue, // Couleur de la barre
+                    borderRadius: BorderRadius.circular(5),
+                    backDrawRodData: BackgroundBarChartRodData(
+                      show: true,
+                      toY: 100, // Fond de la jauge
+                      color: Colors.grey.shade400,
+                    ),
+                    rodStackItems: [
+                      BarChartRodStackItem(0, displayValue, Colors.blue),
+                    ],
+                  ),
+                ],
+              ),
+            ],
           ),
         ),
-      ],
-    ),
-  );
+      ),
+      const SizedBox(height: 8), // Espacement entre le titre et la jauge
+      Text(
+        "${displayValue.toStringAsFixed(1)}%", // Valeur de la barre affichée en dessous
+        style: TextStyle(
+          fontSize: 12,
+          fontWeight: FontWeight.w500,
+          color: Colors.blue, // Même couleur que la barre
+        ),
+      ),
+    ],
+  ),
+);
 }
 
   // Méthode pour créer un mini graphique pour la carte Rendement
@@ -429,7 +452,7 @@ Widget build(BuildContext context) {
     );
 
     final lastRentReceived = _getLastRentReceived(dataManager);
-    final totalRentReceived = formatCurrency(dataManager.convert(dataManager.getTotalRentReceived()), dataManager.currencySymbol);
+    final totalRentReceived = _getFormattedAmount(dataManager.convert(dataManager.getTotalRentReceived()), dataManager.currencySymbol);
 
     return Scaffold(
       backgroundColor: Theme.of(context).scaffoldBackgroundColor,
@@ -622,6 +645,17 @@ Widget build(BuildContext context) {
                       hasGraph: true,
                       rightWidget: _buildMiniGraphForRendement(_getLast12MonthsRent(dataManager), context),
                     ),
+                    const SizedBox(height: 15),
+                      _buildCard(
+                        S.of(context).nextRondays,
+                        Icons.trending_up,
+                        _buildCumulativeRentList(dataManager),
+                        [], // Pas d'autres enfants pour cette carte
+                        dataManager,
+                        context,
+                      ),
+
+
                     const SizedBox(height: 80),
                   ],
                 ),
@@ -633,6 +667,50 @@ Widget build(BuildContext context) {
     );
   }
 
+Widget _buildCumulativeRentList(DataManager dataManager) {
+  final cumulativeRentEvolution = dataManager.getCumulativeRentEvolution();
+  DateTime today = DateTime.now();
+
+  // Filtrer pour n'afficher que les dates futures
+  final futureRentEvolution = cumulativeRentEvolution.where((entry) {
+    DateTime rentStartDate = entry['rentStartDate'];
+    return rentStartDate.isAfter(today);
+  }).toList();
+
+  // Utiliser un Set pour ne garder que des dates uniques
+  Set<DateTime> displayedDates = <DateTime>{};
+
+  return Column(
+    crossAxisAlignment: CrossAxisAlignment.start,
+    children: futureRentEvolution.map((entry) {
+      DateTime rentStartDate = entry['rentStartDate'];
+
+      // Vérifier si la date est déjà dans le Set
+      if (displayedDates.contains(rentStartDate)) {
+        return SizedBox.shrink(); // Ne rien afficher si la date est déjà affichée
+      } else {
+        // Ajouter la date au Set
+        displayedDates.add(rentStartDate);
+
+        // Vérifier si la date est "3000-01-01" et afficher 'date non connu'
+        String displayDate = rentStartDate == DateTime(3000, 1, 1)
+            ? 'Date non communiquée'
+            : DateFormat('yyyy-MM-dd').format(rentStartDate);
+
+        // Afficher la date et le loyer cumulé
+        return Padding(
+          padding: const EdgeInsets.symmetric(vertical: 4.0),
+          child: Text(
+    '$displayDate: ${_getFormattedAmount(entry['cumulativeRent'], dataManager.currencySymbol)}',
+            style: TextStyle(fontSize: 14),
+          ),
+        );
+      }
+    }).toList(),
+  );
+}
+
+
 
   // Fonction utilitaire pour ajouter un "+" ou "-" et afficher entre parenthèses
   Widget _buildIndentedBalance(String label, double value, String symbol, bool isPositive, BuildContext context) {
@@ -640,8 +718,8 @@ Widget build(BuildContext context) {
     final appState = Provider.of<AppState>(context);
     String formattedAmount = _showAmounts
         ? (isPositive
-            ? "+ ${formatCurrency(value, symbol)}"
-            : "- ${formatCurrency(value, symbol)}")
+            ? "+ ${Utils.formatCurrency(value, symbol)}"
+            : "- ${Utils.formatCurrency(value, symbol)}")
         : (isPositive ? "+ " : "- ") +
             ('*' * 10); // Affiche une série d'astérisques si masqué
 
