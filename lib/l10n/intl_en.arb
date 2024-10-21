@@ -145,13 +145,14 @@
   "groupedRentGraph": "Grouped Rent Graph",
   "cumulativeRentGraph": "Cumulative Rent Graph",
   "roiPerProperties": "Property ROI",
-  "roiAlertInfo": "This ROI feature is in beta and is currently calculated based on the income received from the property and the current token value.",
+  "roiAlertInfo": "This ROI feature is in beta and is currently calculated based on the income received from the property and the initial token value.",
   "recentUpdatesTitle": "last 30 days",
   "noRecentUpdates": "No recent changes available.",
   "unknownTokenName": "Unknown name",
   "noImageAvailable": "Image link not available",
-  "duplicate": "dupicate",
-    "futureRents": "Future Rents",
+  "duplicate_title": "duplicate properties",
+  "duplicate": "properties present in multiple wallets/RMM",
+  "futureRents": "Future Rents",
   "noFutureRents": "No future rents",
   "nextRondays": "Next Rondays",
   "noCommunicatedDate": "Date not provided",
@@ -182,5 +183,9 @@
   "exportSuccess": "Data exported successfully",
   "exportFailed": "Failed to export data",
   "importSuccess": "Data imported successfully",
-  "importFailed": "Failed to import data"
+  "importFailed": "Failed to import data",
+  "importExportData": "Import or export data (zip)",
+  "aboutImportExportTitle": "Import/Export Function",
+  "aboutImportExport": "This function allows you to save and re-import balance history data (wallet and RMM) into a ZIP file.",
+  "walletBalanceHistory": "Wallet Balance History"
 }

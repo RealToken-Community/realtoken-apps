@@ -34,8 +34,6 @@ class _RmmStatsState extends State<RmmStats> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              
-              
               // Carte pour les APY
               Card(
                 elevation: 0,
@@ -46,50 +44,59 @@ class _RmmStatsState extends State<RmmStats> {
                   child: Column(
                     children: [
                       Row(
-                children: [
-                  GestureDetector(
-                    onTap: () {
-                      showDialog(
-                        context: context,
-                        builder: (BuildContext context) {
-                          return AlertDialog(
-                            title: const Text('Explication APY Moyen'), // Titre du popup
-                            content: const Text(
-                              'L’APY moyen est calculé en moyenne sur les variations de balance entre plusieurs paires de données. '
-                              'Les valeurs avec des variations anormales (dépôts ou retraits) sont écartées.',
-                            ), // Texte explicatif
-                            actions: <Widget>[
-                              TextButton(
-                                onPressed: () {
-                                  Navigator.of(context).pop(); // Fermer le popup
+                        children: [
+                          GestureDetector(
+                            onTap: () {
+                              showDialog(
+                                context: context,
+                                builder: (BuildContext context) {
+                                  return AlertDialog(
+                                    title: const Text('Explication APY Moyen'), // Titre du popup
+                                    content: const Text(
+                                      'L’APY moyen est calculé en moyenne sur les variations de balance entre plusieurs paires de données. '
+                                      'Les valeurs avec des variations anormales (dépôts ou retraits) sont écartées.',
+                                    ), // Texte explicatif
+                                    actions: <Widget>[
+                                      TextButton(
+                                        onPressed: () {
+                                          Navigator.of(context).pop(); // Fermer le popup
+                                        },
+                                        child: const Text('OK'),
+                                      ),
+                                    ],
+                                  );
                                 },
-                                child: const Text('OK'),
-                              ),
-                            ],
-                          );
-                        },
-                      );
-                    },
-                    child: Row(
-                      children: [
-                        Text(
-                          'APY Moyen Global: ${apyAverage.toStringAsFixed(2)}%', // Affichage de l'APY moyen
-                          style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-                        ),
-                        const SizedBox(width: 5), // Un petit espace entre le texte et l'icône
-                        const Icon(
-                          Icons.info_outline, // Icône à afficher
-                          size: 20, // Taille de l'icône
-                          color: Colors.blue, // Couleur de l'icône
-                        ),
-                      ],
-                    ),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 20),
+                              );
+                            },
+                            child: Row(
+                              children: [
+                                Text(
+                                  'APY Moyen Global: ${apyAverage.toStringAsFixed(2)}%', // Affichage de l'APY moyen
+                                  style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                                ),
+                                const SizedBox(width: 5), // Un petit espace entre le texte et l'icône
+                                const Icon(
+                                  Icons.info_outline, // Icône à afficher
+                                  size: 20, // Taille de l'icône
+                                  color: Colors.blue, // Couleur de l'icône
+                                ),
+                              ],
+                            ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 20),
                       Table(
-                        border: TableBorder.all(), // Ajoute des bordures pour chaque cellule (facultatif)
+                        border: TableBorder(
+                          horizontalInside: BorderSide(
+                            color: Colors.grey.shade300, // Couleur claire pour les lignes horizontales
+                            width: 1, // Épaisseur des lignes
+                          ),
+                          top: BorderSide.none,
+                          bottom: BorderSide.none,
+                          left: BorderSide.none,
+                          right: BorderSide.none,
+                        ),
                         columnWidths: const {
                           0: FlexColumnWidth(1), // Colonne pour les titres (Deposit/Borrow)
                           1: FlexColumnWidth(1), // Colonne pour les valeurs USDC
@@ -99,17 +106,21 @@ class _RmmStatsState extends State<RmmStats> {
                           // Ligne d'en-tête
                           TableRow(
                             children: [
-                              Padding(
-                                padding: const EdgeInsets.all(8.0),
+                              const Padding(
+                                padding: EdgeInsets.all(8.0),
                                 child: Text(''), // Cellule vide pour l'en-tête des lignes
                               ),
                               Padding(
                                 padding: const EdgeInsets.all(8.0),
-                                child: Text('USDC', style: TextStyle(fontWeight: FontWeight.bold)),
+                                child: Center(
+                                  child: Image.asset('assets/icons/usdc.png', width: 24, height: 24), // Image pour USDC
+                                ),
                               ),
                               Padding(
                                 padding: const EdgeInsets.all(8.0),
-                                child: Text('xDAI', style: TextStyle(fontWeight: FontWeight.bold)),
+                                child: Center(
+                                  child: Image.asset('assets/icons/xdai.png', width: 24, height: 24), // Image pour xDAI
+                                ),
                               ),
                             ],
                           ),
@@ -122,11 +133,15 @@ class _RmmStatsState extends State<RmmStats> {
                               ),
                               Padding(
                                 padding: const EdgeInsets.all(8.0),
-                                child: Text('${usdcDepositApy.toStringAsFixed(2)}%'),
+                                child: Center(
+                                  child: Text('${usdcDepositApy.toStringAsFixed(2)}%'),
+                                ),
                               ),
                               Padding(
                                 padding: const EdgeInsets.all(8.0),
-                                child: Text('${xdaiDepositApy.toStringAsFixed(2)}%'),
+                                child: Center(
+                                  child: Text('${xdaiDepositApy.toStringAsFixed(2)}%'),
+                                ),
                               ),
                             ],
                           ),
@@ -139,11 +154,15 @@ class _RmmStatsState extends State<RmmStats> {
                               ),
                               Padding(
                                 padding: const EdgeInsets.all(8.0),
-                                child: Text('${usdcBorrowApy.toStringAsFixed(2)}%'),
+                                child: Center(
+                                  child: Text('${usdcBorrowApy.toStringAsFixed(2)}%'),
+                                ),
                               ),
                               Padding(
                                 padding: const EdgeInsets.all(8.0),
-                                child: Text('${xdaiBorrowApy.toStringAsFixed(2)}%'),
+                                child: Center(
+                                  child: Text('${xdaiBorrowApy.toStringAsFixed(2)}%'),
+                                ),
                               ),
                             ],
                           ),
@@ -156,6 +175,27 @@ class _RmmStatsState extends State<RmmStats> {
               ),
 
               const SizedBox(height: 20),
+              Row(
+                children: [
+                  Text(
+                    'Période: ',
+                    style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                  ),
+                  DropdownButton<String>(
+                    value: selectedPeriod,
+                    items: const [
+                      DropdownMenuItem(value: 'hour', child: Text('Heures')),
+                      DropdownMenuItem(value: 'day', child: Text('Jours')),
+                      DropdownMenuItem(value: 'week', child: Text('Semaines')),
+                    ],
+                    onChanged: (value) {
+                      setState(() {
+                        selectedPeriod = value!;
+                      });
+                    },
+                  ),
+                ],
+              ),
 
               // Carte pour le graphique des dépôts
               Card(
@@ -234,7 +274,7 @@ class _RmmStatsState extends State<RmmStats> {
                   ),
                 ),
               ),
-               const SizedBox(height: 80),
+              const SizedBox(height: 80),
             ],
           ),
         ),
@@ -242,107 +282,107 @@ class _RmmStatsState extends State<RmmStats> {
     );
   }
 
-// Fonction pour créer le graphique des dépôts (Deposits)
-LineChartData _buildDepositChart(Map<String, List<BalanceRecord>> allHistories) {
-  final maxY = _getMaxY(allHistories, ['usdcDeposit', 'xdaiDeposit']);
-  final maxX = allHistories.values.expand((e) => e).map((e) => e.timestamp.millisecondsSinceEpoch.toDouble()).reduce((a, b) => a > b ? a : b);
-  final minX = allHistories.values.expand((e) => e).map((e) => e.timestamp.millisecondsSinceEpoch.toDouble()).reduce((a, b) => a < b ? a : b);
+  // Fonction pour créer le graphique des dépôts (Deposits)
+  LineChartData _buildDepositChart(Map<String, List<BalanceRecord>> allHistories) {
+    final maxY = _getMaxY(allHistories, ['usdcDeposit', 'xdaiDeposit']);
+    final maxX = allHistories.values.expand((e) => e).map((e) => e.timestamp.millisecondsSinceEpoch.toDouble()).reduce((a, b) => a > b ? a : b);
+    final minX = allHistories.values.expand((e) => e).map((e) => e.timestamp.millisecondsSinceEpoch.toDouble()).reduce((a, b) => a < b ? a : b);
 
-  // Intervalle dynamique pour l'axe X, avec une valeur par défaut si l'intervalle est trop petit
-  final intervalX = (maxX - minX) > 0 ? (maxX - minX) / 6 : 86400000.0; // 1 jour en millisecondes
+    // Intervalle dynamique pour l'axe X, avec une valeur par défaut si l'intervalle est trop petit
+    final intervalX = (maxX - minX) > 0 ? (maxX - minX) / 6 : 86400000.0; // 1 jour en millisecondes
 
-  return LineChartData(
-    gridData: FlGridData(show: true, drawVerticalLine: false),
-    titlesData: FlTitlesData(
-      bottomTitles: AxisTitles(
-        sideTitles: SideTitles(
-          showTitles: true,
-          interval: intervalX, // Utiliser l'intervalle dynamique pour l'axe X
-          getTitlesWidget: (value, meta) {
-            final date = DateTime.fromMillisecondsSinceEpoch(value.toInt());
-            return Text('${date.month}/${date.day}');
-          },
+    return LineChartData(
+      gridData: FlGridData(show: true, drawVerticalLine: false),
+      titlesData: FlTitlesData(
+        bottomTitles: AxisTitles(
+          sideTitles: SideTitles(
+            showTitles: true,
+            interval: intervalX, // Utiliser l'intervalle dynamique pour l'axe X
+            getTitlesWidget: (value, meta) {
+              final date = DateTime.fromMillisecondsSinceEpoch(value.toInt());
+              return Text('${date.month}/${date.day}');
+            },
+          ),
+        ),
+        leftTitles: AxisTitles(
+          sideTitles: SideTitles(
+            showTitles: true,
+            interval: maxY > 0 ? maxY / 5 : 1, // Rétablir l'intervalle correct pour l'axe Y (vertical)
+            reservedSize: 60,
+            getTitlesWidget: (value, meta) {
+              return Text(value.toStringAsFixed(2));
+            },
+          ),
+        ),
+        rightTitles: AxisTitles(
+          sideTitles: SideTitles(showTitles: false),
+        ),
+        topTitles: AxisTitles(
+          sideTitles: SideTitles(showTitles: false),
         ),
       ),
-      leftTitles: AxisTitles(
-        sideTitles: SideTitles(
-          showTitles: true,
-          interval: maxY > 0 ? maxY / 5 : 1, // Rétablir l'intervalle correct pour l'axe Y (vertical)
-          reservedSize: 60,
-          getTitlesWidget: (value, meta) {
-            return Text(value.toStringAsFixed(2));
-          },
+      borderData: FlBorderData(show: true),
+      minX: minX,
+      maxX: maxX,
+      minY: 0, // Laisser un peu d'espace en bas
+      maxY: maxY, // Ajouter une marge en haut
+      lineBarsData: [
+        _buildLineBarData(allHistories['usdcDeposit']!, Colors.blue, "USDC Deposit"),
+        _buildLineBarData(allHistories['xdaiDeposit']!, Colors.green, "xDai Deposit"),
+      ],
+    );
+  }
+
+  // Fonction pour créer le graphique des emprunts (Borrows)
+  LineChartData _buildBorrowChart(Map<String, List<BalanceRecord>> allHistories) {
+    final maxY = _getMaxY(allHistories, ['usdcBorrow', 'xdaiBorrow']);
+    final maxX = allHistories.values.expand((e) => e).map((e) => e.timestamp.millisecondsSinceEpoch.toDouble()).reduce((a, b) => a > b ? a : b);
+    final minX = allHistories.values.expand((e) => e).map((e) => e.timestamp.millisecondsSinceEpoch.toDouble()).reduce((a, b) => a < b ? a : b);
+
+    // Intervalle dynamique pour l'axe X, avec une valeur par défaut si l'intervalle est trop petit
+    final intervalX = (maxX - minX) > 0 ? (maxX - minX) / 6 : 86400000.0; // 1 jour en millisecondes
+
+    return LineChartData(
+      gridData: FlGridData(show: true, drawVerticalLine: false),
+      titlesData: FlTitlesData(
+        bottomTitles: AxisTitles(
+          sideTitles: SideTitles(
+            showTitles: true,
+            interval: intervalX, // Utiliser l'intervalle dynamique pour l'axe X
+            getTitlesWidget: (value, meta) {
+              final date = DateTime.fromMillisecondsSinceEpoch(value.toInt());
+              return Text('${date.month}/${date.day}');
+            },
+          ),
+        ),
+        leftTitles: AxisTitles(
+          sideTitles: SideTitles(
+            showTitles: true,
+            interval: maxY > 0 ? maxY / 5 : 1, // Rétablir l'intervalle correct pour l'axe Y (vertical)
+            reservedSize: 60,
+            getTitlesWidget: (value, meta) {
+              return Text(value.toStringAsFixed(2));
+            },
+          ),
+        ),
+        rightTitles: AxisTitles(
+          sideTitles: SideTitles(showTitles: false),
+        ),
+        topTitles: AxisTitles(
+          sideTitles: SideTitles(showTitles: false),
         ),
       ),
-      rightTitles: AxisTitles(
-        sideTitles: SideTitles(showTitles: false),
-      ),
-      topTitles: AxisTitles(
-        sideTitles: SideTitles(showTitles: false),
-      ),
-    ),
-    borderData: FlBorderData(show: true),
-    minX: minX,
-    maxX: maxX,
-    minY: 0, // Laisser un peu d'espace en bas
-    maxY: maxY, // Ajouter une marge en haut
-    lineBarsData: [
-      _buildLineBarData(allHistories['usdcDeposit']!, Colors.blue, "USDC Deposit"),
-      _buildLineBarData(allHistories['xdaiDeposit']!, Colors.green, "xDai Deposit"),
-    ],
-  );
-}
-
-// Fonction pour créer le graphique des emprunts (Borrows)
-LineChartData _buildBorrowChart(Map<String, List<BalanceRecord>> allHistories) {
-  final maxY = _getMaxY(allHistories, ['usdcBorrow', 'xdaiBorrow']);
-  final maxX = allHistories.values.expand((e) => e).map((e) => e.timestamp.millisecondsSinceEpoch.toDouble()).reduce((a, b) => a > b ? a : b);
-  final minX = allHistories.values.expand((e) => e).map((e) => e.timestamp.millisecondsSinceEpoch.toDouble()).reduce((a, b) => a < b ? a : b);
-
-  // Intervalle dynamique pour l'axe X, avec une valeur par défaut si l'intervalle est trop petit
-  final intervalX = (maxX - minX) > 0 ? (maxX - minX) / 6 : 86400000.0; // 1 jour en millisecondes
-
-  return LineChartData(
-    gridData: FlGridData(show: true, drawVerticalLine: false),
-    titlesData: FlTitlesData(
-      bottomTitles: AxisTitles(
-        sideTitles: SideTitles(
-          showTitles: true,
-          interval: intervalX, // Utiliser l'intervalle dynamique pour l'axe X
-          getTitlesWidget: (value, meta) {
-            final date = DateTime.fromMillisecondsSinceEpoch(value.toInt());
-            return Text('${date.month}/${date.day}');
-          },
-        ),
-      ),
-      leftTitles: AxisTitles(
-        sideTitles: SideTitles(
-          showTitles: true,
-          interval: maxY > 0 ? maxY / 5 : 1, // Rétablir l'intervalle correct pour l'axe Y (vertical)
-          reservedSize: 60,
-          getTitlesWidget: (value, meta) {
-            return Text(value.toStringAsFixed(2));
-          },
-        ),
-      ),
-      rightTitles: AxisTitles(
-        sideTitles: SideTitles(showTitles: false),
-      ),
-      topTitles: AxisTitles(
-        sideTitles: SideTitles(showTitles: false),
-      ),
-    ),
-    borderData: FlBorderData(show: true),
-    minX: minX,
-    maxX: maxX,
-    minY: 0, // Laisser un peu d'espace en bas
-    maxY: maxY, // Ajouter une marge en haut
-    lineBarsData: [
-      _buildLineBarData(allHistories['usdcBorrow']!, Colors.orange, "USDC Borrow"),
-      _buildLineBarData(allHistories['xdaiBorrow']!, Colors.red, "xDai Borrow"),
-    ],
-  );
-}
+      borderData: FlBorderData(show: true),
+      minX: minX,
+      maxX: maxX,
+      minY: 0, // Laisser un peu d'espace en bas
+      maxY: maxY, // Ajouter une marge en haut
+      lineBarsData: [
+        _buildLineBarData(allHistories['usdcBorrow']!, Colors.orange, "USDC Borrow"),
+        _buildLineBarData(allHistories['xdaiBorrow']!, Colors.red, "xDai Borrow"),
+      ],
+    );
+  }
 
   // Fonction pour calculer un intervalle adapté à l'axe vertical gauche
   double _getMaxY(Map<String, List<BalanceRecord>> allHistories, List<String> types) {
@@ -387,7 +427,7 @@ LineChartData _buildBorrowChart(Map<String, List<BalanceRecord>> allHistories) {
     return allHistories;
   }
 
-  // Fonction pour regrouper les données par période (minute, heure, jour) et calculer la moyenne
+  // Fonction pour regrouper les données par période (heure, jour, semaine) et calculer la moyenne
   Future<List<BalanceRecord>> _aggregateByPeriod(List<BalanceRecord> records, String period) async {
     Map<DateTime, List<double>> groupedByPeriod = {};
 
@@ -395,15 +435,6 @@ LineChartData _buildBorrowChart(Map<String, List<BalanceRecord>> allHistories) {
       DateTime truncatedToPeriod;
 
       switch (period) {
-        case 'minute':
-          truncatedToPeriod = DateTime(
-            record.timestamp.year,
-            record.timestamp.month,
-            record.timestamp.day,
-            record.timestamp.hour,
-            record.timestamp.minute,
-          );
-          break;
         case 'hour':
           truncatedToPeriod = DateTime(
             record.timestamp.year,
@@ -417,6 +448,15 @@ LineChartData _buildBorrowChart(Map<String, List<BalanceRecord>> allHistories) {
             record.timestamp.year,
             record.timestamp.month,
             record.timestamp.day,
+          );
+          break;
+        case 'week':
+          final date = record.timestamp;
+          final startOfWeek = date.subtract(Duration(days: date.weekday - 1));
+          truncatedToPeriod = DateTime(
+            startOfWeek.year,
+            startOfWeek.month,
+            startOfWeek.day,
           );
           break;
         default:

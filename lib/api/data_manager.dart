@@ -34,7 +34,7 @@ class BalanceRecord {
 class DataManager extends ChangeNotifier {
   static final logger = Logger();  // Initialiser une instance de logger
 
-  double totalValue = 0;
+  double totalWalletValue = 0;
   double walletValue = 0;
   double rmmValue = 0;
   double rwaHoldingsValue = 0;
@@ -91,10 +91,11 @@ class DataManager extends ChangeNotifier {
   List<Map<String, dynamic>> realTokens = [];
   List<Map<String, dynamic>> tempRentData = [];
   List<BalanceRecord> balanceHistory = [];
+  List<BalanceRecord> walletBalanceHistory = [];
 
   final String rwaTokenAddress = '0x0675e8f4a52ea6c845cb6427af03616a2af42170';
 
-
+DateTime? lastArchiveTime; // Variable pour stocker le dernier archivage
 
 
   Future<void> updateGlobalVariables({bool forceFetch = false}) async {
@@ -154,7 +155,7 @@ class DataManager extends ChangeNotifier {
         box.put('rmmBalances', json.encode(rmmBalancesData));
         rmmBalances = rmmBalancesData.cast<Map<String, dynamic>>();
         logger.w(rmmBalances);
-        RmmBalances();
+        fetchRmmBalances();
         notifyListeners(); // Notifier les listeners après la mise à jour
       } else {
         logger.d("Les RMM Balances sont vides, pas de mise à jour.");
@@ -176,6 +177,32 @@ class DataManager extends ChangeNotifier {
   } catch (error) {
     logger.w("Erreur lors de la récupération des données: $error");
   }
+
+  loadWalletBalanceHistory();
+
+}
+
+Future<void> loadWalletBalanceHistory() async {
+  try {
+    var box = Hive.box('walletValueArchive'); // Ouvrir la boîte Hive
+    List<dynamic>? balanceHistoryJson = box.get('balanceHistory_totalWalletValue'); // Récupérer les données sauvegardées
+
+    if (balanceHistoryJson != null) {
+      // Convertir chaque élément JSON en objet BalanceRecord et l'ajouter à walletBalanceHistory
+      walletBalanceHistory = balanceHistoryJson.map((recordJson) {
+        return BalanceRecord.fromJson(Map<String, dynamic>.from(recordJson));
+      }).toList();
+
+      notifyListeners(); // Notifier les listeners après la mise à jour
+
+      print('Données de l\'historique du portefeuille chargées avec succès.');
+    } else {
+      print('Aucune donnée d\'historique trouvée.');
+    }
+  } catch (e) {
+    print('Erreur lors du chargement des données de l\'historique du portefeuille : $e');
+  }
+
 }
 
  Future<void> updatedDetailRentVariables({bool forceFetch = false}) async {
@@ -199,8 +226,6 @@ class DataManager extends ChangeNotifier {
     logger.w("Erreur lors de la récupération des données: $error");
   }
 }
-
-
 
 
 // Méthode pour ajouter des adresses à un userId
@@ -392,14 +417,12 @@ Future<void> fetchAndStoreAllTokens() async {
   notifyListeners();
 }
 
-
-
   // Méthode pour récupérer et calculer les données pour le Dashboard et Portfolio
   Future<void> fetchAndCalculateData({bool forceFetch = false}) async {
    logger.i("Début de la récupération des données de tokens...");
 
   var box = Hive.box('realTokens');
-initialTotalValue = 0.0;
+  initialTotalValue = 0.0;
   // Charger les données en cache si disponibles
   final cachedGnosisTokens = box.get('cachedTokenData_gnosis');
   if (cachedGnosisTokens != null) {
@@ -458,6 +481,8 @@ initialTotalValue = 0.0;
     } else {
       logger.i("Nombre de RealTokens récupérés: ${realTokens.length}");
     }
+
+
 
     // Variables temporaires pour calculer les valeurs
     double walletValueSum = 0;
@@ -719,13 +744,15 @@ initialTotalValue = 0.0;
     }
 
     // Mise à jour des variables pour le Dashboard
-    totalValue = walletValueSum +
+    totalWalletValue = walletValueSum +
         rmmValueSum +
         rwaValue +
         totalUsdcDepositBalance +
         totalXdaiDepositBalance -
         totalUsdcBorrowBalance -
         totalXdaiBorrowBalance;
+    archiveTotalWalletValue(totalWalletValue);
+
     walletValue = walletValueSum;
     rmmValue = rmmValueSum;
     rwaHoldingsValue = rwaValue;
@@ -976,7 +1003,7 @@ Future<void> fetchRentData({bool forceFetch = false}) async {
 // Méthode pour réinitialiser toutes les données
 Future<void> resetData() async {
   // Remettre toutes les variables à leurs valeurs initiales
-  totalValue = 0;
+  totalWalletValue = 0;
   walletValue = 0;
   rmmValue = 0;
   rwaHoldingsValue = 0;
@@ -1086,50 +1113,55 @@ Future<void> updateConversionRate(
     return valueInUsd * conversionRate;
   }
 
-// Nouvelle méthode pour récupérer les balances RMM
-DateTime? lastArchiveTime; // Variable pour stocker le dernier archivage
-
-Future<void> RmmBalances() async {
+Future<void> fetchRmmBalances() async {
   try {
     double usdcDepositSum = 0;
     double usdcBorrowSum = 0;
     double xdaiDepositSum = 0;
     double xdaiBorrowSum = 0;
-    String timestamp = "";
+    String? timestamp;
 
+    // Cumuler les balances de tous les wallets pour chaque type de token
     for (var balance in rmmBalances) {
-      // Cumuler les balances de tous les wallets pour chaque type de token
       usdcDepositSum += balance['usdcDepositBalance'];
       usdcBorrowSum += balance['usdcBorrowBalance'];
       xdaiDepositSum += balance['xdaiDepositBalance'];
       xdaiBorrowSum += balance['xdaiBorrowBalance'];
-      timestamp = balance['timestamp'];
+      timestamp = balance['timestamp']; // Dernier timestamp
     }
 
-    // Vérifier si une minute s'est écoulée depuis le dernier archivage
-    if (lastArchiveTime == null || DateTime.now().difference(lastArchiveTime!).inHours >= 1) {
-      // Archiver les balances cumulées pour chaque type de token
-      archiveBalance('usdcDeposit', usdcDepositSum, timestamp);
-      archiveBalance('usdcBorrow', usdcBorrowSum, timestamp);
-      archiveBalance('xdaiDeposit', xdaiDepositSum, timestamp);
-      archiveBalance('xdaiBorrow', xdaiBorrowSum, timestamp);
-      
-      // Mettre à jour le temps du dernier archivage
-      lastArchiveTime = DateTime.now();
+    // Essayer de calculer l'APY, mais ne pas bloquer le reste du code si une erreur survient
+    try {
+      usdcDepositApy = await calculateAPY('usdcDeposit');
+      usdcBorrowApy = await calculateAPY('usdcBorrow');
+      xdaiDepositApy = await calculateAPY('xdaiDeposit');
+      xdaiBorrowApy = await calculateAPY('xdaiBorrow');
+    } catch (e) {
+      logger.i('Error calculating APY: $e');
+      // Si le calcul échoue, vous pouvez choisir d'ignorer cette partie ou de mettre à jour avec des valeurs par défaut.
+    }
 
-    // Calculer l'APY après avoir archivé les balances
-    usdcDepositApy = await calculateAPY('usdcDeposit');
-    usdcBorrowApy = await calculateAPY('usdcBorrow');
-    xdaiDepositApy = await calculateAPY('xdaiDeposit');
-    xdaiBorrowApy = await calculateAPY('xdaiBorrow');
-
-    // Stocker les balances agrégées dans les variables
+    // Mise à jour des variables avec les balances cumulées
     totalUsdcDepositBalance = usdcDepositSum;
     totalUsdcBorrowBalance = usdcBorrowSum;
     totalXdaiDepositBalance = xdaiDepositSum;
     totalXdaiBorrowBalance = xdaiBorrowSum;
- }
+
     notifyListeners(); // Notifier l'interface que les données ont été mises à jour
+
+    // Vérifier si une heure s'est écoulée depuis le dernier archivage
+    if (lastArchiveTime == null || DateTime.now().difference(lastArchiveTime!).inHours >= 1) {
+      if (timestamp != null) {
+        // Archiver les balances cumulées pour chaque type de token
+        archiveBalance('usdcDeposit', usdcDepositSum, timestamp);
+        archiveBalance('usdcBorrow', usdcBorrowSum, timestamp);
+        archiveBalance('xdaiDeposit', xdaiDepositSum, timestamp);
+        archiveBalance('xdaiBorrow', xdaiBorrowSum, timestamp);
+
+        // Mettre à jour le temps du dernier archivage
+        lastArchiveTime = DateTime.now();
+      }
+    }
   } catch (e) {
     logger.i('Error fetching RMM balances: $e');
   }
@@ -1151,6 +1183,40 @@ Future<List<BalanceRecord>> getBalanceHistory(String tokenType) async {
   return []; // Retourne une liste vide si aucun historique n'est trouvé
 }
 
+Future<void> archiveTotalWalletValue(double totalWalletValue) async {
+  var box = Hive.box('walletValueArchive'); // Ouvrir une nouvelle boîte dédiée
+
+  // Charger l'historique existant depuis Hive
+  List<dynamic>? balanceHistoryJson = box.get('balanceHistory_totalWalletValue');
+  List<BalanceRecord> balanceHistory = balanceHistoryJson != null
+      ? balanceHistoryJson.map((recordJson) => BalanceRecord.fromJson(Map<String, dynamic>.from(recordJson))).toList()
+      : [];
+
+  // Vérifier le dernier enregistrement
+  if (balanceHistory.isNotEmpty) {
+    BalanceRecord lastRecord = balanceHistory.last;
+    DateTime lastTimestamp = lastRecord.timestamp;
+
+    // Vérifier si la différence est inférieure à 1 heure
+    logger.w(DateTime.now().difference(lastTimestamp).inHours);
+    if (DateTime.now().difference(lastTimestamp).inMinutes < 1) {
+      // Si moins d'une heure, ne rien faire
+      return; // Sortir de la fonction sans ajouter d'enregistrement
+    }
+  }
+
+  // Ajouter le nouvel enregistrement à l'historique
+  BalanceRecord newRecord = BalanceRecord(
+    tokenType: 'totalWalletValue',
+    balance: totalWalletValue,
+    timestamp: DateTime.now(),
+  );
+  balanceHistory.add(newRecord);
+
+  // Sauvegarder la liste mise à jour dans Hive
+  List<Map<String, dynamic>> balanceHistoryJsonToSave = balanceHistory.map((record) => record.toJson()).toList();
+  await box.put('balanceHistory_totalWalletValue', balanceHistoryJsonToSave); // Stocker dans la nouvelle boîte
+}
 
 void archiveBalance(String tokenType, double balance, String timestamp) async {
   var box = Hive.box('balanceHistory'); // Boîte Hive pour stocker les balances

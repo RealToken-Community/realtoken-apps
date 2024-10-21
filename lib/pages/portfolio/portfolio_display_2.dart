@@ -1,9 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:cached_network_image/cached_network_image.dart';
-import 'package:intl/intl.dart'; // Import de la bibliothèque intl
 import '../token_bottom_sheet.dart'; // Import de la bibliothèque url_launcher
 import 'package:provider/provider.dart'; // Pour accéder à DataManager
-import '../../api/data_manager.dart'; // Import de DataManager
 import '../../generated/l10n.dart'; // Import des traductions
 import '../../settings/manage_evm_addresses_page.dart'; // Import de la page de gestion des adresses EVM
 import '../../app_state.dart'; // Import de AppState
@@ -26,46 +24,17 @@ class PortfolioDisplay2 extends StatefulWidget {
 }
 
 class _PortfolioDisplay2State extends State<PortfolioDisplay2> {
-  String selectedPeriod = 'day'; // Par défaut, on affiche par jour
 
   @override
   Widget build(BuildContext context) {
     final appState = Provider.of<AppState>(context); // Accéder à AppState
-    final filteredPortfolio = _filterPortfolioByPeriod(widget.portfolio, selectedPeriod);
+    final filteredPortfolio = widget.portfolio;
 
     return Scaffold(
       backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       body: Column(
         children: [
-          // Sélecteur de période (heures/jours/semaines)
-          Padding(
-            padding: const EdgeInsets.all(16.0),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Text('period',
-                    style: TextStyle(
-                      fontSize: 16 + appState.getTextSizeOffset(),
-                      fontWeight: FontWeight.bold,
-                    )),
-                const SizedBox(width: 10),
-                DropdownButton<String>(
-                  value: selectedPeriod,
-                  items: const [
-                    DropdownMenuItem(value: 'hour', child: Text('Heures')),
-                    DropdownMenuItem(value: 'day', child: Text('Jours')),
-                    DropdownMenuItem(value: 'week', child: Text('Semaines')),
-                  ],
-                  onChanged: (value) {
-                    setState(() {
-                      selectedPeriod = value!;
-                    });
-                  },
-                ),
-              ],
-            ),
-          ),
-          // Affichage de la liste des tokens en fonction de la période sélectionnée
+          // Affichage de la liste des tokens
           filteredPortfolio.isEmpty
               ? Expanded(
                   child: Center(
@@ -338,27 +307,5 @@ class _PortfolioDisplay2State extends State<PortfolioDisplay2> {
         ],
       ),
     );
-  }
-
-  // Méthode pour filtrer le portfolio en fonction de la période sélectionnée
-  List<Map<String, dynamic>> _filterPortfolioByPeriod(List<Map<String, dynamic>> portfolio, String period) {
-    if (period == 'hour') {
-      return portfolio.where((token) {
-        final rentStartDate = DateTime.tryParse(token['rentStartDate'] ?? '');
-        return rentStartDate != null && rentStartDate.isAfter(DateTime.now().subtract(Duration(hours: 1)));
-      }).toList();
-    } else if (period == 'day') {
-      return portfolio.where((token) {
-        final rentStartDate = DateTime.tryParse(token['rentStartDate'] ?? '');
-        return rentStartDate != null && rentStartDate.isAfter(DateTime.now().subtract(Duration(days: 1)));
-      }).toList();
-    } else if (period == 'week') {
-      return portfolio.where((token) {
-        final rentStartDate = DateTime.tryParse(token['rentStartDate'] ?? '');
-        return rentStartDate != null && rentStartDate.isAfter(DateTime.now().subtract(Duration(days: 7)));
-      }).toList();
-    } else {
-      return portfolio;
-    }
   }
 }

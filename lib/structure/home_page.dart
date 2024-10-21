@@ -51,7 +51,7 @@ class _MyHomePageState extends State<MyHomePage> {
               child: BackdropFilter(
                 filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
                 child: Container(
-                  height: kToolbarHeight + 40,
+                  height: kToolbarHeight + 20,
                   color: Theme.of(context).brightness == Brightness.dark
                       ? Colors.black.withOpacity(0.3)
                       : Colors.white.withOpacity(0.3),
@@ -73,7 +73,7 @@ class _MyHomePageState extends State<MyHomePage> {
               child: BackdropFilter(
                 filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
                 child: Container(
-                  height: 80, // Adjust height for blur
+                  height: 60, // Adjust height for blur
                   color: Theme.of(context).brightness == Brightness.dark
                       ? Colors.black.withOpacity(0.3)
                       : Colors.white.withOpacity(0.3),

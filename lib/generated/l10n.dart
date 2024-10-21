@@ -1540,10 +1540,20 @@ class S {
     );
   }
 
-  /// `dupicate`
+  /// `duplicate properties`
+  String get duplicate_title {
+    return Intl.message(
+      'duplicate properties',
+      name: 'duplicate_title',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `properties present in multiple wallets/RMM`
   String get duplicate {
     return Intl.message(
-      'dupicate',
+      'properties present in multiple wallets/RMM',
       name: 'duplicate',
       desc: '',
       args: [],
@@ -1795,6 +1805,46 @@ class S {
     return Intl.message(
       'Failed to import data',
       name: 'importFailed',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Import or export data (zip)`
+  String get importExportData {
+    return Intl.message(
+      'Import or export data (zip)',
+      name: 'importExportData',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Import/Export Function`
+  String get aboutImportExportTitle {
+    return Intl.message(
+      'Import/Export Function',
+      name: 'aboutImportExportTitle',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `This function allows you to save and re-import balance history data (wallet and RMM) into a ZIP file.`
+  String get aboutImportExport {
+    return Intl.message(
+      'This function allows you to save and re-import balance history data (wallet and RMM) into a ZIP file.',
+      name: 'aboutImportExport',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Wallet Balance History`
+  String get walletBalanceHistory {
+    return Intl.message(
+      'Wallet Balance History',
+      name: 'walletBalanceHistory',
       desc: '',
       args: [],
     );

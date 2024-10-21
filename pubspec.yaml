@@ -55,6 +55,9 @@ flutter:
   assets:
     - assets/logo.png
     - assets/RealT_Logo.png
+    - assets/icons/xdai.png
+    - assets/icons/usdc.png
+
 
   uses-material-design: true
 

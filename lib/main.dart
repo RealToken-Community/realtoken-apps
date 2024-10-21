@@ -22,6 +22,7 @@ void main() async {
   await Hive.initFlutter();
   await Hive.openBox('realTokens');
   await Hive.openBox('balanceHistory');
+  await Hive.openBox('walletValueArchive');
 
 
   // Initialisation de SharedPreferences et DataManager

@@ -95,53 +95,89 @@ Future<void> _clearCacheAndData() async {
     );
   }
 
-
 Future<void> shareZippedHiveData() async {
   try {
-    // Ouvrir la boîte Hive (par exemple 'realTokens')
-    var box = await Hive.openBox('balanceHistory');
+    // Ouvrir les deux boîtes Hive
+    var balanceHistoryBox = await Hive.openBox('balanceHistory');
+    var walletValueArchiveBox = await Hive.openBox('walletValueArchive');
 
-    // Récupérer les données de Hive
-    Map hiveData = box.toMap();
+    // Récupérer les données de chaque boîte Hive
+    Map balanceHistoryData = balanceHistoryBox.toMap();
+    Map walletValueArchiveData = walletValueArchiveBox.toMap();
 
     // Convertir les données en JSON
-    String jsonData = jsonEncode(hiveData);
+    String balanceHistoryJson = jsonEncode(balanceHistoryData);
+    String walletValueArchiveJson = jsonEncode(walletValueArchiveData);
+
+    // Obtenir les données des SharedPreferences
+    final prefs = await SharedPreferences.getInstance();
+    List<String> ethAddresses = prefs.getStringList('evmAddresses') ?? [];
+    String? userIdToAddresses = prefs.getString('userIdToAddresses');
+    String? selectedCurrency = prefs.getString('selectedCurrency');
+    bool convertToSquareMeters = prefs.getBool('convertToSquareMeters') ?? false;
+
+    // Créer un Map pour les préférences
+    Map<String, dynamic> preferencesData = {
+      'ethAddresses': ethAddresses,
+      'userIdToAddresses': userIdToAddresses,
+      'selectedCurrency': selectedCurrency,
+      'convertToSquareMeters': convertToSquareMeters
+    };
+
+    // Convertir les préférences en JSON
+    String preferencesJson = jsonEncode(preferencesData);
 
     // Obtenir le répertoire des documents de l'application
     Directory directory = await getApplicationDocumentsDirectory();
 
-    // Créer un fichier JSON dans ce répertoire
-    String jsonFilePath = path.join(directory.path, 'hiveDataBackup.json');
-    File jsonFile = File(jsonFilePath);
+    // Créer des fichiers JSON dans ce répertoire pour chaque boîte et les préférences
+    String balanceHistoryFilePath = path.join(directory.path, 'balanceHistoryBackup.json');
+    String walletValueArchiveFilePath = path.join(directory.path, 'walletValueArchiveBackup.json');
+    String preferencesFilePath = path.join(directory.path, 'preferencesBackup.json');
 
-    // Écrire les données JSON dans le fichier
-    await jsonFile.writeAsString(jsonData);
+    File balanceHistoryFile = File(balanceHistoryFilePath);
+    File walletValueArchiveFile = File(walletValueArchiveFilePath);
+    File preferencesFile = File(preferencesFilePath);
+
+    // Écrire les données JSON dans les fichiers
+    await balanceHistoryFile.writeAsString(balanceHistoryJson);
+    await walletValueArchiveFile.writeAsString(walletValueArchiveJson);
+    await preferencesFile.writeAsString(preferencesJson);
 
     // Créer un fichier ZIP dans le même répertoire
-    String zipFilePath = path.join(directory.path, 'hiveDataBackup.zip');
+    String zipFilePath = path.join(directory.path, 'realToken_Backup.zip');
     final zipFile = File(zipFilePath);
 
-    // Utiliser archive pour compresser le fichier JSON dans un fichier zip
+    // Utiliser archive pour compresser les fichiers JSON dans un fichier zip
     final archive = Archive();
-    List<int> jsonBytes = jsonFile.readAsBytesSync();
-    archive.addFile(ArchiveFile('hiveDataBackup.json', jsonBytes.length, jsonBytes));
+
+    // Ajouter chaque fichier JSON à l'archive
+    archive.addFile(ArchiveFile('balanceHistoryBackup.json', balanceHistoryFile.lengthSync(), balanceHistoryFile.readAsBytesSync()));
+    archive.addFile(ArchiveFile('walletValueArchiveBackup.json', walletValueArchiveFile.lengthSync(), walletValueArchiveFile.readAsBytesSync()));
+    archive.addFile(ArchiveFile('preferencesBackup.json', preferencesFile.lengthSync(), preferencesFile.readAsBytesSync()));
 
     // Écrire le fichier zip
     final zipEncoder = ZipFileEncoder();
     zipEncoder.create(zipFilePath);
-    zipEncoder.addFile(jsonFile);
+    for (var file in [balanceHistoryFile, walletValueArchiveFile, preferencesFile]) {
+      zipEncoder.addFile(file);
+    }
     zipEncoder.close();
 
     // Partager le fichier ZIP
     XFile xfile = XFile(zipFilePath);
-    await Share.shareXFiles([xfile], text: 'Voici les données Hive sauvegardées sous forme de fichier zip.');
-
+    await Share.shareXFiles([xfile], text: 'Voici les données Hive et préférences sauvegardées sous forme de fichier zip.');
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(content: Text('All data successfully exported')),
+    );
   } catch (e) {
     print('Erreur lors du partage des données Hive : $e');
   }
 }
 
 Future<void> importZippedHiveData() async {
+        final dataManager = Provider.of<DataManager>(context, listen: false);
+
   try {
     // Utiliser file_picker pour permettre à l'utilisateur de sélectionner un fichier ZIP
     FilePickerResult? result = await FilePicker.platform.pickFiles(
@@ -157,29 +193,55 @@ Future<void> importZippedHiveData() async {
       List<int> bytes = zipFile.readAsBytesSync();
       Archive archive = ZipDecoder().decodeBytes(bytes);
 
-      // Extraire le fichier JSON du ZIP
+      // Parcourir les fichiers dans l'archive ZIP
       for (ArchiveFile file in archive) {
-        if (file.name == 'hiveDataBackup.json') {
-          List<int> jsonBytes = file.content as List<int>;
-          String jsonContent = utf8.decode(jsonBytes);
+        List<int> jsonBytes = file.content as List<int>;
+        String jsonContent = utf8.decode(jsonBytes);
 
-          // Décoder les données JSON
-          Map<String, dynamic> importedData = jsonDecode(jsonContent);
+        if (file.name == 'balanceHistoryBackup.json') {
+          // Décoder et insérer les données dans la boîte 'balanceHistory'
+          Map<String, dynamic> balanceHistoryData = jsonDecode(jsonContent);
+          var balanceHistoryBox = await Hive.openBox('balanceHistory');
+          await balanceHistoryBox.putAll(balanceHistoryData);
+        } else if (file.name == 'walletValueArchiveBackup.json') {
+          // Décoder et insérer les données dans la boîte 'walletValueArchive'
+          Map<String, dynamic> walletValueArchiveData = jsonDecode(jsonContent);
+          var walletValueArchiveBox = await Hive.openBox('walletValueArchive');
+          await walletValueArchiveBox.putAll(walletValueArchiveData);
+        } else if (file.name == 'preferencesBackup.json') {
+          // Décoder et insérer les préférences dans SharedPreferences
+          Map<String, dynamic> preferencesData = jsonDecode(jsonContent);
+          final prefs = await SharedPreferences.getInstance();
 
-          // Ouvrir la boîte Hive et insérer les données
-          var box = await Hive.openBox('balanceHistory');
-          await box.putAll(importedData);
+          // Restaurer les préférences sauvegardées
+          List<String> ethAddresses = List<String>.from(preferencesData['ethAddresses'] ?? []);
+          String? userIdToAddresses = preferencesData['userIdToAddresses'];
+          String? selectedCurrency = preferencesData['selectedCurrency'];
+          bool convertToSquareMeters = preferencesData['convertToSquareMeters'] ?? false;
 
-          print('Données importées avec succès depuis le fichier ZIP.');
-          break;
+          // Sauvegarder les préférences restaurées
+          await prefs.setStringList('evmAddresses', ethAddresses);
+          if (userIdToAddresses != null) await prefs.setString('userIdToAddresses', userIdToAddresses);
+          if (selectedCurrency != null) await prefs.setString('selectedCurrency', selectedCurrency);
+          await prefs.setBool('convertToSquareMeters', convertToSquareMeters);
         }
       }
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('All data successfully imported')),
+      );
+      print('Données importées avec succès depuis le fichier ZIP.');
     } else {
       print('Importation annulée par l\'utilisateur.');
     }
   } catch (e) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(content: Text('Error during importation')),
+    );
     print('Erreur lors de l\'importation des données Hive depuis le fichier ZIP : $e');
   }
+        await dataManager.updateGlobalVariables(forceFetch: true);
+      dataManager.fetchRentData(forceFetch: true); // Forcer le fetch des données de loyer
+      dataManager.fetchAndCalculateData(forceFetch: true); // Forcer le fetch
 }
 
   @override
@@ -338,35 +400,78 @@ Future<void> importZippedHiveData() async {
               ),
 
             ),
-            Center(
-  child: ElevatedButton(
-    onPressed: () {
-      shareZippedHiveData(); // Appelle la fonction d'export en zip
-    },
-    style: ElevatedButton.styleFrom(
-      backgroundColor: Colors.blue,
-    ),
-    child: Text(
-      'Exporter les données (ZIP)',
-      style: const TextStyle(color: Colors.white),
-    ),
-  ),
-),
+            const Divider(),
+            Row(
+              children: [
+                // Le texte
+                Text(
+                  S.of(context).importExportData,
+                  style: TextStyle(
+                    fontSize: Platform.isAndroid ? 15.0 : 16.0 + appState.getTextSizeOffset(),
+                  ),
+                ),
+                
+                // Un espace entre le texte et l'icône
+                SizedBox(width: 8.0),
+                
+                // L'icône cliquable
+                IconButton(
+                  icon: Icon(Icons.info_outline), // Icône d'information
+                  onPressed: () {
+                    // Afficher un modal lors du clic
+                    showDialog(
+                      context: context,
+                      builder: (BuildContext context) {
+                        return AlertDialog(
+                          title: Text(S.of(context).aboutImportExportTitle),
+                          content: Text(S.of(context).aboutImportExport),
+                          actions: [
+                            TextButton(
+                              onPressed: () {
+                                Navigator.of(context).pop(); // Ferme le modal
+                              },
+                              child: Text('OK'),
+                            ),
+                          ],
+                        );
+                      },
+                    );
+                  },
+                ),
+              ],
+            ),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.center, // Aligne les boutons au centre
+              children: [
+                ElevatedButton(
+                  onPressed: () {
+                    shareZippedHiveData(); // Appelle la fonction d'export en zip
+                  },
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.blue,
+                  ),
+                  child: Text(
+                    'Exporter',
+                    style: const TextStyle(color: Colors.white),
+                  ),
+                ),
+                SizedBox(width: 16), // Espace horizontal entre les deux boutons
+                ElevatedButton(
+                  onPressed: () {
+                    importZippedHiveData(); // Appelle la fonction d'import en zip
+                  },
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.green,
+                  ),
+                  child: Text(
+                    'Importer',
+                    style: const TextStyle(color: Colors.white),
+                  ),
+                ),
+              ],
+            ),
+            const Divider(),
 
-Center(
-  child: ElevatedButton(
-    onPressed: () {
-      importZippedHiveData(); // Appelle la fonction d'import en zip
-    },
-    style: ElevatedButton.styleFrom(
-      backgroundColor: Colors.green,
-    ),
-    child: Text(
-      'Importer les données (ZIP)',
-      style: const TextStyle(color: Colors.white),
-    ),
-  ),
-),
 
 
 

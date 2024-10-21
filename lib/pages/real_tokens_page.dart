@@ -200,10 +200,7 @@ class _RealTokensPageState extends State<RealTokensPage> {
                                       imageUrl: token['imageLink'][0] ?? '',
                                       width: 150,
                                       fit: BoxFit.cover,
-                                      placeholder: (context, url) =>
-                                          const CircularProgressIndicator(),
-                                      errorWidget: (context, url, error) =>
-                                          const Icon(Icons.error),
+                                      errorWidget: (context, url, error) => const Icon(Icons.error),
                                     ),
                                   ),
                                   Expanded(

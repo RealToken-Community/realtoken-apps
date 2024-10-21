@@ -27,6 +27,10 @@ class MessageLookup extends MessageLookupByLibrary {
   final messages = _notInlinedMessages(_notInlinedMessages);
   static Map<String, Function> _notInlinedMessages(_) => <String, Function>{
         "about": MessageLookupByLibrary.simpleMessage("À propos"),
+        "aboutImportExport": MessageLookupByLibrary.simpleMessage(
+            "Cette fonction permet de sauvegarder et ré-importer les données des historiques de balances (wallet et RMM) dans un fichier ZIP"),
+        "aboutImportExportTitle":
+            MessageLookupByLibrary.simpleMessage("Fonction import/export"),
         "addressCopied": MessageLookupByLibrary.simpleMessage(
             "Adresse copiée dans le presse-papier"),
         "allCities": MessageLookupByLibrary.simpleMessage("Toutes les villes"),
@@ -82,7 +86,10 @@ class MessageLookup extends MessageLookupByLibrary {
         "donationMessage": MessageLookupByLibrary.simpleMessage(
             "Si vous aimez cette application et souhaitez soutenir son développement, vous pouvez faire un don."),
         "duplex": MessageLookupByLibrary.simpleMessage("Duplex"),
-        "duplicate": MessageLookupByLibrary.simpleMessage("déja comptabilisé"),
+        "duplicate": MessageLookupByLibrary.simpleMessage(
+            "propriétés présentes sur plusieurs portfeuilles/RMM"),
+        "duplicate_title":
+            MessageLookupByLibrary.simpleMessage("propriétés en doublons"),
         "english": MessageLookupByLibrary.simpleMessage("Anglais"),
         "ethereumContract":
             MessageLookupByLibrary.simpleMessage("Contract ethereum"),
@@ -106,6 +113,8 @@ class MessageLookup extends MessageLookupByLibrary {
         "hello": MessageLookupByLibrary.simpleMessage("Bonjour"),
         "importData":
             MessageLookupByLibrary.simpleMessage("Importer les données"),
+        "importExportData": MessageLookupByLibrary.simpleMessage(
+            "Importer ou exporter les données (zip)"),
         "importFailed": MessageLookupByLibrary.simpleMessage(
             "Échec de l\'importation des données"),
         "importSuccess": MessageLookupByLibrary.simpleMessage(
@@ -274,6 +283,8 @@ class MessageLookup extends MessageLookupByLibrary {
         "viewOnMap": MessageLookupByLibrary.simpleMessage("voir sur la carte"),
         "viewOnRealT": MessageLookupByLibrary.simpleMessage("Voir sur RealT"),
         "wallet": MessageLookupByLibrary.simpleMessage("Portefeuille"),
+        "walletBalanceHistory":
+            MessageLookupByLibrary.simpleMessage("Evolution du portfeuille"),
         "week": MessageLookupByLibrary.simpleMessage("Semaine"),
         "weekly": MessageLookupByLibrary.simpleMessage("Hebdomadaire"),
         "xdaiBorrowBalance":

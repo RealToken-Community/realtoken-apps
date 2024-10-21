@@ -70,7 +70,7 @@ class _ManageEthAddressesPageState extends State<ManageEvmAddressesPage> {
 
         await prefs.setStringList('evmAddresses', ethAddresses);
       }
-      await dataManager.updateGlobalVariables();
+      await dataManager.updateGlobalVariables(forceFetch: true);
       dataManager.fetchRentData(forceFetch: true); // Forcer le fetch des données de loyer
       dataManager.fetchAndCalculateData(forceFetch: true); // Forcer le fetch
     }

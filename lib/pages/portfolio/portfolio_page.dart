@@ -27,7 +27,7 @@ void initState() {
   WidgetsBinding.instance.addPostFrameCallback((_) {
     final dataManager = Provider.of<DataManager>(context, listen: false);
     dataManager.updateGlobalVariables();
-    dataManager.updatedDetailRentVariables();
+    //dataManager.updatedDetailRentVariables();
     dataManager.fetchAndCalculateData();
     
     _loadDisplayPreference();
@@ -234,137 +234,150 @@ List<Map<String, dynamic>> _groupAndSumPortfolio(List<Map<String, dynamic>> port
           final uniqueCities = _getUniqueCities(dataManager.portfolio);
 
           return Padding(
-            padding: const EdgeInsets.only(top: kToolbarHeight + 40),
+            padding: const EdgeInsets.only(top: 0),
             child: NestedScrollView(
               headerSliverBuilder: (BuildContext context, bool innerBoxIsScrolled) {
                 return <Widget>[
-                  SliverAppBar(
-                    primary: false,
-                    floating: true,
-                    snap: true,
-                    title: Row(
+              SliverAppBar(
+                floating: true,
+                snap: true,
+                expandedHeight: kToolbarHeight + 35, // Hauteur étendue
+                flexibleSpace: FlexibleSpaceBar(
+                  background: Container(
+                    color: Theme.of(context).cardColor,
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.end, // Aligne les éléments vers le bas
+                      crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Expanded(
-                          flex: 3,
-                          child: TextField(
-                            onChanged: (value) {
-                              _updateSearchQuery(value);
-                            },
-                            decoration: InputDecoration(
-                              hintText: S.of(context).searchHint, // "Search..."
-                              prefixIcon: const Icon(Icons.search),
-                              border: OutlineInputBorder(
-                                borderRadius: BorderRadius.circular(30.0),
-                                borderSide: BorderSide.none,
+                        Padding(
+                          padding: const EdgeInsets.all(0.0), // Ajustez les marges si nécessaire
+                          child: Row(
+                            children: [
+                              Expanded(
+                                flex: 3,
+                                child: TextField(
+                                  onChanged: (value) {
+                                    _updateSearchQuery(value);
+                                  },
+                                  decoration: InputDecoration(
+                                    hintText: S.of(context).searchHint, // "Search..."
+                                    prefixIcon: const Icon(Icons.search),
+                                    border: OutlineInputBorder(
+                                      borderRadius: BorderRadius.circular(30.0),
+                                      borderSide: BorderSide.none,
+                                    ),
+                                  ),
+                                ),
                               ),
-                            ),
+                              const SizedBox(width: 8.0),
+                              IconButton(
+                                icon: Icon(_isDisplay1 ? Icons.view_module : Icons.view_list),
+                                onPressed: _toggleDisplay,
+                              ),
+                              const SizedBox(width: 8.0),
+                              PopupMenuButton<String>(
+                                icon: const Icon(Icons.location_city),
+                                onSelected: (String value) {
+                                  _updateCityFilter(value == S.of(context).allCities ? null : value);
+                                },
+                                itemBuilder: (BuildContext context) {
+                                  return [
+                                    PopupMenuItem(
+                                      value: S.of(context).allCities,
+                                      child: Text(S.of(context).allCities),
+                                    ),
+                                    ...uniqueCities.map((city) => PopupMenuItem(
+                                          value: city,
+                                          child: Text(city),
+                                        )),
+                                  ];
+                                },
+                              ),
+                              const SizedBox(width: 8.0),
+                              PopupMenuButton<String>(
+                                icon: const Icon(Icons.filter_alt),
+                                onSelected: (String value) {
+                                  _updateRentalStatusFilter(value);
+                                },
+                                itemBuilder: (BuildContext context) {
+                                  return [
+                                    PopupMenuItem(
+                                      value: S.of(context).rentalStatusAll,
+                                      child: Text(S.of(context).rentalStatusAll),
+                                    ),
+                                    PopupMenuItem(
+                                      value: S.of(context).rentalStatusRented,
+                                      child: Text(S.of(context).rentalStatusRented),
+                                    ),
+                                    PopupMenuItem(
+                                      value: S.of(context).rentalStatusPartiallyRented,
+                                      child: Text(S.of(context).rentalStatusPartiallyRented),
+                                    ),
+                                    PopupMenuItem(
+                                      value: S.of(context).rentalStatusNotRented,
+                                      child: Text(S.of(context).rentalStatusNotRented),
+                                    ),
+                                  ];
+                                },
+                              ),
+                              const SizedBox(width: 8.0),
+                              PopupMenuButton<String>(
+                                icon: const Icon(Icons.sort),
+                                onSelected: (String value) {
+                                  if (value == 'asc' || value == 'desc') {
+                                    setState(() {
+                                      _isAscending = (value == 'asc');
+                                    });
+                                    _saveFilterPreferences(); // Sauvegarder après la modification
+                                  } else {
+                                    _updateSortOption(value);
+                                  }
+                                },
+                                itemBuilder: (BuildContext context) {
+                                  return [
+                                    CheckedPopupMenuItem(
+                                      value: S.of(context).sortByName,
+                                      checked: _sortOption == S.of(context).sortByName,
+                                      child: Text(S.of(context).sortByName),
+                                    ),
+                                    CheckedPopupMenuItem(
+                                      value: S.of(context).sortByValue,
+                                      checked: _sortOption == S.of(context).sortByValue,
+                                      child: Text(S.of(context).sortByValue),
+                                    ),
+                                    CheckedPopupMenuItem(
+                                      value: S.of(context).sortByAPY,
+                                      checked: _sortOption == S.of(context).sortByAPY,
+                                      child: Text(S.of(context).sortByAPY),
+                                    ),
+                                    CheckedPopupMenuItem(
+                                      value: S.of(context).sortByInitialLaunchDate,
+                                      checked: _sortOption == S.of(context).sortByInitialLaunchDate,
+                                      child: Text(S.of(context).sortByInitialLaunchDate),
+                                    ),
+                                    const PopupMenuDivider(),
+                                    CheckedPopupMenuItem(
+                                      value: 'asc',
+                                      checked: _isAscending,
+                                      child: Text(S.of(context).ascending),
+                                    ),
+                                    CheckedPopupMenuItem(
+                                      value: 'desc',
+                                      checked: !_isAscending,
+                                      child: Text(S.of(context).descending),
+                                    ),
+                                  ];
+                                },
+                              ),
+                            ],
                           ),
                         ),
-                        const SizedBox(width: 8.0),
-                        IconButton(
-                          icon: Icon(_isDisplay1 ? Icons.view_module : Icons.view_list),
-                          onPressed: _toggleDisplay,
-                        ),
-                        const SizedBox(width: 8.0),
-                        PopupMenuButton<String>(
-                          icon: const Icon(Icons.location_city),
-                          onSelected: (String value) {
-                            _updateCityFilter(value == S.of(context).allCities ? null : value);
-                          },
-                          itemBuilder: (BuildContext context) {
-                            return [
-                              PopupMenuItem(
-                                value: S.of(context).allCities,
-                                child: Text(S.of(context).allCities),
-                              ),
-                              ...uniqueCities.map((city) => PopupMenuItem(
-                                    value: city,
-                                    child: Text(city),
-                                  )),
-                            ];
-                          },
-                        ),
-                        const SizedBox(width: 8.0),
-                        // Nouveau PopupMenuButton pour le filtre sur le statut de location
-                        PopupMenuButton<String>(
-                          icon: const Icon(Icons.filter_alt),
-                          onSelected: (String value) {
-                            _updateRentalStatusFilter(value);
-                          },
-                          itemBuilder: (BuildContext context) {
-                            return [
-                              PopupMenuItem(
-                                value: S.of(context).rentalStatusAll,
-                                child: Text(S.of(context).rentalStatusAll),
-                              ),
-                              PopupMenuItem(
-                                value: S.of(context).rentalStatusRented,
-                                child: Text(S.of(context).rentalStatusRented),
-                              ),
-                              PopupMenuItem(
-                                value: S.of(context).rentalStatusPartiallyRented,
-                                child: Text(S.of(context).rentalStatusPartiallyRented),
-                              ),
-                              PopupMenuItem(
-                                value: S.of(context).rentalStatusNotRented,
-                                child: Text(S.of(context).rentalStatusNotRented),
-                              ),
-                            ];
-                          },
-                        ),
-                        const SizedBox(width: 8.0),
-                       PopupMenuButton<String>(
-  icon: const Icon(Icons.sort),
-  onSelected: (String value) {
-    if (value == 'asc' || value == 'desc') {
-      setState(() {
-        _isAscending = (value == 'asc');
-      });
-      _saveFilterPreferences();  // Sauvegarder après la modification
-    } else {
-      _updateSortOption(value);
-    }
-  },
-  itemBuilder: (BuildContext context) {
-    return [
-      CheckedPopupMenuItem(
-        value: S.of(context).sortByName,
-        checked: _sortOption == S.of(context).sortByName,
-        child: Text(S.of(context).sortByName),
-      ),
-      CheckedPopupMenuItem(
-        value: S.of(context).sortByValue,
-        checked: _sortOption == S.of(context).sortByValue,
-        child: Text(S.of(context).sortByValue),
-      ),
-      CheckedPopupMenuItem(
-        value: S.of(context).sortByAPY,
-        checked: _sortOption == S.of(context).sortByAPY,
-        child: Text(S.of(context).sortByAPY),
-      ),
-      CheckedPopupMenuItem(
-        value: S.of(context).sortByInitialLaunchDate,
-        checked: _sortOption == S.of(context).sortByInitialLaunchDate,
-        child: Text(S.of(context).sortByInitialLaunchDate),
-      ),
-      const PopupMenuDivider(),
-      CheckedPopupMenuItem(
-        value: 'asc',
-        checked: _isAscending,
-        child: Text(S.of(context).ascending),
-      ),
-      CheckedPopupMenuItem(
-        value: 'desc',
-        checked: !_isAscending,
-        child: Text(S.of(context).descending),
-      ),
-    ];
-  },
-),
-],
+                      ],
                     ),
                   ),
-                ];
+                ),
+              )
+              ];
               },
               body: _isDisplay1
                   ? PortfolioDisplay1(portfolio: sortedFilteredPortfolio)

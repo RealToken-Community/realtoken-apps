@@ -146,6 +146,7 @@ return Scaffold(
             initialCenter: LatLng(42.367476, -83.130921),
             initialZoom: 10.0,
             onTap: (_, __) => _popupController.hideAllPopups(),
+            interactionOptions: const InteractionOptions(flags: InteractiveFlag.pinchZoom | InteractiveFlag.drag),
           ),
           children: [
               TileLayer(

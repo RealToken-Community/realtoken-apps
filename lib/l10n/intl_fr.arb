@@ -144,12 +144,13 @@
   "groupedRentGraph": "Loyers groupés",
   "cumulativeRentGraph": "Cumul des loyers",
   "roiPerProperties":"ROI de la propriété",
-  "roiAlertInfo":"Cette fonction ROI est en beta, elle est pour le moment calculé en fonction des revenus recus de la propriété et la valeur actuelle du token.",
+  "roiAlertInfo":"Cette fonction ROI est en beta, elle est pour le moment calculé en fonction des revenus recus de la propriété et la valeur initiale du token.",
   "recentUpdatesTitle": "30 derniers jours",
   "noRecentUpdates": "Aucune modification récente disponible.",
   "unknownTokenName": "Nom inconnu",
   "noImageAvailable": "Lien d'image non disponible",
-  "duplicate": "déja comptabilisé",
+  "duplicate_title":"propriétés en doublons",
+  "duplicate": "propriétés présentes sur plusieurs portfeuilles/RMM",
   "futureRents": "Loyers futurs",
   "noFutureRents": "Aucun loyer futur",
   "nextRondays": "Prochains Rondays",
@@ -181,5 +182,9 @@
   "exportSuccess": "Données exportées avec succès",
   "exportFailed": "Échec de l'exportation des données",
   "importSuccess": "Données importées avec succès",
-  "importFailed": "Échec de l'importation des données"
+  "importFailed": "Échec de l'importation des données",
+  "importExportData":"Importer ou exporter les données (zip)",
+  "aboutImportExportTitle":"Fonction import/export",
+  "aboutImportExport":"Cette fonction permet de sauvegarder et ré-importer les données des historiques de balances (wallet et RMM) dans un fichier ZIP",
+  "walletBalanceHistory":"Evolution du portfeuille"
 }

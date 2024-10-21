@@ -43,18 +43,19 @@ class _DashboardPageState extends State<DashboardPage> {
     Future<void> _loadData() async {
     final dataManager = Provider.of<DataManager>(context, listen: false);
     dataManager.updateGlobalVariables();
-    dataManager.updatedDetailRentVariables();
-    dataManager.fetchRentData(); // Charger les données de loyer
+    dataManager.fetchRentData(); //f Charger les données de loyer
     dataManager.fetchAndCalculateData(); // Charger les données du portefeuille
+    //dataManager.updatedDetailRentVariables();
   }
 
   Future<void> _refreshData() async {
     // Forcer la mise à jour des données en appelant les méthodes de récupération avec forceFetch = true
     final dataManager = Provider.of<DataManager>(context, listen: false);
     await dataManager.updateGlobalVariables(forceFetch: true);
-    await dataManager.updatedDetailRentVariables(forceFetch: true);
     await dataManager.fetchRentData(forceFetch: true);
     await dataManager.fetchAndCalculateData(forceFetch: true);
+    //await dataManager.updatedDetailRentVariables(forceFetch: true);
+
   }
 
   // Méthode pour basculer l'état de visibilité des montants
@@ -150,7 +151,7 @@ Widget _buildPieChart(double rentedPercentage, BuildContext context) {
             value: rentedPercentage,
             color: Colors.green, // Couleur pour les unités louées
             title: '',
-            radius: 25,  // Taille de la section louée
+            radius: 23,  // Taille de la section louée
             titleStyle: TextStyle(
               fontSize: 12,
               fontWeight: FontWeight.bold,
@@ -166,7 +167,7 @@ Widget _buildPieChart(double rentedPercentage, BuildContext context) {
             value: 100 - rentedPercentage,
             color: Colors.blue, // Couleur pour les unités non louées
             title: '',
-            radius: 20,  // Taille de la section non louée
+            radius: 17,  // Taille de la section non louée
             gradient: LinearGradient(
               colors: [Colors.blue.shade300, Colors.blue.shade700],
               begin: Alignment.topLeft,
@@ -176,7 +177,7 @@ Widget _buildPieChart(double rentedPercentage, BuildContext context) {
         ],
         borderData: FlBorderData(show: false),
         sectionsSpace: 2,  // Un léger espace entre les sections pour les démarquer
-        centerSpaceRadius: 25,  // Taille de l'espace central
+        centerSpaceRadius: 23,  // Taille de l'espace central
       ),
       swapAnimationDuration: const Duration(milliseconds: 800), // Durée de l'animation
       swapAnimationCurve: Curves.easeInOut,  // Courbe pour rendre l'animation fluide
@@ -540,11 +541,11 @@ Widget build(BuildContext context) {
         children: [
           RefreshIndicator(
             onRefresh: _refreshData,
-            displacement: 110,
+            displacement: 100,
             child: SingleChildScrollView(
               physics: const AlwaysScrollableScrollPhysics(),
               child: Padding(
-                padding: const EdgeInsets.only(top: 110.0, left: 12.0, right: 12.0),
+                padding: const EdgeInsets.only(top: 100.0, left: 12.0, right: 12.0),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
@@ -604,7 +605,7 @@ Widget build(BuildContext context) {
                       S.of(context).portfolio,
                       Icons.dashboard,
                       _buildValueBeforeText(
-                        _getFormattedAmount(dataManager.convert(dataManager.totalValue), dataManager.currencySymbol),
+                        _getFormattedAmount(dataManager.convert(dataManager.totalWalletValue), dataManager.currencySymbol),
                         S.of(context).totalPortfolio,
                       ),
                       [
@@ -667,10 +668,41 @@ Widget build(BuildContext context) {
                           '   ${S.of(context).wallet}: ${dataManager.walletTokenCount}',
                           style: TextStyle(fontSize: 13 + appState.getTextSizeOffset()),
                         ),
-                        Text(
-                          '   ${S.of(context).rmm}: ${dataManager.rmmTokenCount.toInt()} (${dataManager.duplicateTokenCount.toInt()} ${S.of(context).duplicate})',
-                          style: TextStyle(fontSize: 13 + appState.getTextSizeOffset()),
+                        Row(
+                          children: [
+                            Text(
+                              '   ${S.of(context).rmm}: ${dataManager.rmmTokenCount.toInt()}',
+                              style: TextStyle(fontSize: 13 + appState.getTextSizeOffset()),
+                            ),
+                            SizedBox(width: 4),
+                            GestureDetector(
+                              onTap: () {
+                                showDialog(
+                                  context: context,
+                                  builder: (BuildContext context) {
+                                    return AlertDialog(
+                                      title: Text(S.of(context).duplicate_title), // Titre de la popup
+                                      content: Text(
+                                        '${dataManager.duplicateTokenCount.toInt()} ${S.of(context).duplicate}', // Contenu de la popup
+                                        style: TextStyle(fontSize: 13 + appState.getTextSizeOffset()),
+                                      ),
+                                      actions: [
+                                        TextButton(
+                                          onPressed: () {
+                                            Navigator.of(context).pop(); // Fermer la popup
+                                          },
+                                          child: Text(S.of(context).close), // Bouton de fermeture
+                                        ),
+                                      ],
+                                    );
+                                  },
+                                );
+                              },
+                              child: Icon(Icons.info_outline, size: 16), // Icône sans padding implicite
+                            ),
+                          ],
                         ),
+
                         Text(
                           '${S.of(context).rentedUnits}: ${dataManager.rentedUnits} / ${dataManager.totalUnits}',
                           style: TextStyle(fontSize: 13 + appState.getTextSizeOffset()),
