@@ -11,7 +11,7 @@ class ApiService {
   static const String gnosisUrl = 'https://gateway-arbitrum.network.thegraph.com/api/$theGraphApiKey/subgraphs/id/FPPoFB7S2dcCNrRyjM5QbaMwKqRZPdbTg8ysBrwXd4SP';
   static const String etherumUrl = 'https://gateway-arbitrum.network.thegraph.com/api/$theGraphApiKey/subgraphs/id/EVjGN4mMd9h9JfGR7yLC6T2xrJf9syhjQNboFb7GzxVW';
   static const String rmmUrl = 'https://gateway-arbitrum.network.thegraph.com/api/$theGraphApiKey/subgraphs/id/2dMMk7DbQYPX6Gi5siJm6EZ2gDQBF8nJcgKtpiPnPBsK';
-  static const String realTokensUrl = 'https://pitswap-api.herokuapp.com/api/realTokens_mobileapps/';
+  static const String realTokensUrl = 'https://pitswap-api.herokuapp.com/api';
   static const String rentTrackerUrl = 'https://ehpst.duckdns.org/realt_rent_tracker/api/rent_holder/';
   static const Duration cacheDuration = Duration(hours: 1);
 
@@ -82,14 +82,12 @@ class ApiService {
   }
 
   // Fetch depuis Gnosis
-  static Future<List<dynamic>> fetchTokensFromGnosis(
-      {bool forceFetch = false}) {
+  static Future<List<dynamic>> fetchTokensFromGnosis({bool forceFetch = false}) {
     return fetchTokensFromUrl(gnosisUrl, 'gnosis', forceFetch: forceFetch);
   }
 
   // Fetch depuis Etherum
-  static Future<List<dynamic>> fetchTokensFromEtherum(
-      {bool forceFetch = false}) {
+  static Future<List<dynamic>> fetchTokensFromEtherum({bool forceFetch = false}) {
     return fetchTokensFromUrl(etherumUrl, 'etherum', forceFetch: forceFetch);
   }
 
@@ -178,37 +176,59 @@ class ApiService {
 
   // Récupérer la liste complète des RealTokens depuis l'API pitswap
   static Future<List<dynamic>> fetchRealTokens({bool forceFetch = false}) async {
-    logger.i("apiService: fetchRealTokens -> Lancement de la requete");
+    logger.i("apiService: fetchRealTokens -> Lancement de la requête");
 
     var box = Hive.box('realTokens');
     final lastFetchTime = box.get('lastFetchTime');
+    final lastUpdateTime = box.get('lastUpdateTime_RealTokens');
+    final cachedData = box.get('cachedRealTokens');
     final DateTime now = DateTime.now();
 
+    // Si lastFetchTime est déjà défini et que le temps minimum n'est pas atteint, on vérifie d'abord la validité du cache
     if (!forceFetch && lastFetchTime != null) {
       final DateTime lastFetch = DateTime.parse(lastFetchTime);
       if (now.difference(lastFetch) < cacheDuration) {
-        final cachedData = box.get('cachedRealTokens');
         if (cachedData != null) {
-          logger.i("apiService: fetchRealTokens -> Requete annulée, temps minimum pas atteint");
+          logger.i("apiService: fetchRealTokens -> Requête annulée, temps minimum pas atteint");
           return [];
         }
       }
     }
 
-    final response = await http.get(Uri.parse(realTokensUrl));
+    // Vérification de la dernière mise à jour sur le serveur
+    final lastUpdateResponse = await http.get(Uri.parse('$realTokensUrl/last_get_realTokens'));
 
-    if (response.statusCode == 200) {
-      logger.i("apiService: fetchRealTokens -> requete lancée avec succes");
+    if (lastUpdateResponse.statusCode == 200) {
+      final String lastUpdateDateString = json.decode(lastUpdateResponse.body);
+      final DateTime lastUpdateDate = DateTime.parse(lastUpdateDateString);
 
-      final data = json.decode(response.body);
-      box.put('cachedRealTokens', json.encode(data));
-      box.put('lastFetchTime', now.toIso8601String());
-          // Enregistrer uniquement la dernière date et heure d'exécution
-      box.put('lastExecutionTime_Tokens', now.toIso8601String());
+      // Comparaison entre la date de la dernière mise à jour et la date stockée localement
+      if (lastUpdateTime != null && cachedData != null ) {
+        final DateTime lastExecutionDate = DateTime.parse(lastUpdateTime);
+        if (lastExecutionDate.isAtSameMomentAs(lastUpdateDate)) {
+          logger.i("apiService: fetchRealTokens -> Requête annulée, données déjà à jour");
+          return [];
+        }
+      }
 
-      return data;
+      // Si les dates sont différentes ou pas de cache, on continue avec la requête réseau
+      final response = await http.get(Uri.parse('$realTokensUrl/realTokens_mobileapps'));
+
+      if (response.statusCode == 200) {
+        logger.i("apiService: fetchRealTokens -> Requête lancée avec succès");
+
+        final data = json.decode(response.body);
+        box.put('cachedRealTokens', json.encode(data));
+        box.put('lastFetchTime', now.toIso8601String());
+        // Enregistrer la nouvelle date de mise à jour renvoyée par l'API
+        box.put('lastUpdateTime_RealTokens', lastUpdateDateString);
+
+        return data;
+      } else {
+        throw Exception('apiService: fetchRealTokens -> Failed to fetch RealTokens');
+      }
     } else {
-      throw Exception('apiService: fetchRealTokens -> Failed to fetch RealTokens');
+      throw Exception('apiService: fetchRealTokens -> Failed to fetch last update date');
     }
   }
 
@@ -296,7 +316,6 @@ class ApiService {
 
   return mergedRentData;
 }
-
 
   static Future<Map<String, dynamic>> fetchCurrencies() async {
     final prefs = await SharedPreferences.getInstance();
@@ -394,51 +413,60 @@ class ApiService {
     return [];
   }
 
-  static Future<List<Map<String, dynamic>>> fetchRmmBalances({bool forceFetch = false}) async {
-    final prefs = await SharedPreferences.getInstance();
-    List<String>? evmAddresses = prefs.getStringList('evmAddresses');
+static Future<List<Map<String, dynamic>>> fetchRmmBalances({bool forceFetch = false}) async {
+  final prefs = await SharedPreferences.getInstance();
+  List<String>? evmAddresses = prefs.getStringList('evmAddresses');
 
-    if (evmAddresses == null || evmAddresses.isEmpty) {
-      logger.i("apiService: fetchRMMBalances-> wallet non renseigné");
-      return [];
-    }
-
-    // Contrats pour USDC & XDAI
-    const String usdcDepositContract = '0xed56f76e9cbc6a64b821e9c016eafbd3db5436d1'; // Dépôt USDC
-    const String usdcBorrowContract = '0x69c731ae5f5356a779f44c355abb685d84e5e9e6'; // Emprunt USDC
-    const String xdaiDepositContract = '0x0ca4f5554dd9da6217d62d8df2816c82bba4157b'; // Dépôt XDAI
-    const String xdaiBorrowContract = '0x9908801df7902675c3fedd6fea0294d18d5d5d34'; // Emprunt XDAI
-
-    List<Map<String, dynamic>> allBalances = [];
-
-    for (var address in evmAddresses) {
-      // Requête pour le dépôt et l'emprunt de USDC
-      final usdcDepositResponse = await _fetchBalance(usdcDepositContract, address);
-      final usdcBorrowResponse = await _fetchBalance(usdcBorrowContract, address);
-
-      // Requête pour le dépôt et l'emprunt de XDAI
-      final xdaiDepositResponse = await _fetchBalance(xdaiDepositContract, address);
-      final xdaiBorrowResponse = await _fetchBalance(xdaiBorrowContract, address);
-
-      // Traitement des réponses
-      if (usdcDepositResponse != null &&
-          usdcBorrowResponse != null &&
-          xdaiDepositResponse != null &&
-          xdaiBorrowResponse != null) {
-        allBalances.add({
-          'address': address,
-          'usdcDepositBalance': usdcDepositResponse.toString(),
-          'usdcBorrowBalance': usdcBorrowResponse.toString(),
-          'xdaiDepositBalance': xdaiDepositResponse.toString(),
-          'xdaiBorrowBalance': xdaiBorrowResponse.toString(),
-        });
-      } else {
-        throw Exception('Failed to fetch balances for address: $address');
-      }
-    }
-
-    return allBalances;
+  if (evmAddresses == null || evmAddresses.isEmpty) {
+    logger.i("apiService: fetchRMMBalances-> wallet non renseigné");
+    return [];
   }
+
+  // Contrats pour USDC & XDAI
+  const String usdcDepositContract = '0xed56f76e9cbc6a64b821e9c016eafbd3db5436d1'; // Dépôt USDC
+  const String usdcBorrowContract = '0x69c731ae5f5356a779f44c355abb685d84e5e9e6'; // Emprunt USDC
+  const String xdaiDepositContract = '0x0ca4f5554dd9da6217d62d8df2816c82bba4157b'; // Dépôt XDAI
+  const String xdaiBorrowContract = '0x9908801df7902675c3fedd6fea0294d18d5d5d34'; // Emprunt XDAI
+
+  List<Map<String, dynamic>> allBalances = [];
+
+  for (var address in evmAddresses) {
+    // Requête pour le dépôt et l'emprunt de USDC
+    final usdcDepositResponse = await _fetchBalance(usdcDepositContract, address, forceFetch: forceFetch);
+    final usdcBorrowResponse = await _fetchBalance(usdcBorrowContract, address, forceFetch: forceFetch);
+
+    // Requête pour le dépôt et l'emprunt de XDAI
+    final xdaiDepositResponse = await _fetchBalance(xdaiDepositContract, address, forceFetch: forceFetch);
+    final xdaiBorrowResponse = await _fetchBalance(xdaiBorrowContract, address, );
+
+    // Traitement des réponses
+    if (usdcDepositResponse != null &&
+        usdcBorrowResponse != null &&
+        xdaiDepositResponse != null &&
+        xdaiBorrowResponse != null) {
+      final timestamp = DateTime.now().toIso8601String();
+
+      // Conversion des balances en int après division par 1e6 pour USDC et 1e18 pour xDAI
+      double usdcDepositBalance = (usdcDepositResponse / BigInt.from(1e6));
+      double usdcBorrowBalance = (usdcBorrowResponse / BigInt.from(1e6));
+      double xdaiDepositBalance = (xdaiDepositResponse / BigInt.from(1e18));
+      double xdaiBorrowBalance = (xdaiBorrowResponse / BigInt.from(1e18));
+
+      // Ajout des balances et du timestamp pour calculer l'APY
+      allBalances.add({
+        'address': address,
+        'usdcDepositBalance': usdcDepositBalance,
+        'usdcBorrowBalance': usdcBorrowBalance,
+        'xdaiDepositBalance': xdaiDepositBalance,
+        'xdaiBorrowBalance': xdaiBorrowBalance,
+        'timestamp': timestamp,
+      });
+    } else {
+      throw Exception('Failed to fetch balances for address: $address');
+    }
+  }
+  return allBalances; 
+}
 
 // Méthode pour simplifier la récupération des balances
 static Future<BigInt?> _fetchBalance(String contract, String address, {bool forceFetch = false}) async {
@@ -503,7 +531,6 @@ static Future<BigInt?> _fetchBalance(String contract, String address, {bool forc
 
   return null;
 }
-
 
   // Nouvelle méthode pour récupérer les détails des loyers
 static Future<List<Map<String, dynamic>>> fetchDetailedRentDataForAllWallets({bool forceFetch = false}) async {

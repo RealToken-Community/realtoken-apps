@@ -5,16 +5,42 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'api_service.dart';
 import 'package:logger/logger.dart';
 
+class BalanceRecord {
+  final String tokenType;
+  final double balance;
+  final DateTime timestamp;
+
+  BalanceRecord({
+    required this.tokenType,
+    required this.balance,
+    required this.timestamp,
+  });
+
+  Map<String, dynamic> toJson() => {
+        'tokenType': tokenType,
+        'balance': balance,
+        'timestamp': timestamp.toIso8601String(),
+      };
+
+  static BalanceRecord fromJson(Map<String, dynamic> json) {
+    return BalanceRecord(
+      tokenType: json['tokenType'],
+      balance: json['balance'],
+      timestamp: DateTime.parse(json['timestamp']),
+    );
+  }
+}
+
 class DataManager extends ChangeNotifier {
   static final logger = Logger();  // Initialiser une instance de logger
 
-  // Variables partagées pour le Dashboard et Portfolio
   double totalValue = 0;
   double walletValue = 0;
   double rmmValue = 0;
   double rwaHoldingsValue = 0;
   int rentedUnits = 0;
   int totalUnits = 0;
+  double initialTotalValue = 0.0;
   double totalTokens = 0.0;
   double walletTokensSums  = 0.0;
   double rmmTokensSums = 0.0;
@@ -31,39 +57,43 @@ class DataManager extends ChangeNotifier {
   double totalUsdcBorrowBalance = 0;
   double totalXdaiDepositBalance = 0;
   double totalXdaiBorrowBalance = 0;
-  List<Map<String, dynamic>> rentData = [];
-  List<Map<String, dynamic>> detailedRentData = [];
-  List<Map<String, dynamic>> propertyData = [];
-  List<Map<String, dynamic>> rmmBalances = [];
-
-  // Ajout des variables pour compter les tokens dans le wallet et RMM
+  int totalRealtTokens = 0;
+  double totalRealtInvestment = 0.0;
+  double netRealtRentYear = 0.0;
+  double realtInitialPrice = 0.0;
+  double realtActualPrice = 0.0;
+  int totalRealtUnits = 0;
+  int rentedRealtUnits = 0;
+  double averageRealtAnnualYield = 0.0;
+  double usdcDepositApy = 0.0;
+  double usdcBorrowApy = 0.0;
+  double xdaiDepositApy = 0.0;
+  double xdaiBorrowApy = 0.0;
+  double apyAverage = 0.0;
   int walletTokenCount = 0;
   int rmmTokenCount = 0;
   int totalTokenCount = 0;
   int duplicateTokenCount = 0;
-
   bool isLoading = true;
-
+  List<Map<String, dynamic>> rentData = [];
+  List<Map<String, dynamic>> detailedRentData = [];
+  List<Map<String, dynamic>> propertyData = [];
+  List<Map<String, dynamic>> rmmBalances = [];
   List<Map<String, dynamic>> _allTokens = []; // Liste privée pour tous les tokens
-
-  // Getter pour accéder à tous les tokens
   List<Map<String, dynamic>> get allTokens => _allTokens;
-
-  // Portfolio data for PortfolioPage
   List<Map<String, dynamic>> _portfolio = [];
   List<Map<String, dynamic>> get portfolio => _portfolio;
-
-  // Ajout des données pour les mises à jour récentes
   List<Map<String, dynamic>> _recentUpdates = [];
   List<Map<String, dynamic>> get recentUpdates => _recentUpdates;
-  // Initialisation des variables pour les données
   List<Map<String, dynamic>> walletTokensGnosis = [];
   List<Map<String, dynamic>> walletTokensEtherum = [];
   List<Map<String, dynamic>> rmmTokens = [];
   List<Map<String, dynamic>> realTokens = [];
   List<Map<String, dynamic>> tempRentData = [];
+  List<BalanceRecord> balanceHistory = [];
 
   final String rwaTokenAddress = '0x0675e8f4a52ea6c845cb6427af03616a2af42170';
+
 
 
 
@@ -116,15 +146,21 @@ class DataManager extends ChangeNotifier {
     }
 
     // Mise à jour des RMM Balances
-    var rmmBalancesData = await ApiService.fetchRmmBalances();
-    if (rmmBalancesData.isNotEmpty) {
-      logger.i("Mise à jour des RMM Balances avec de nouvelles valeurs.");
-      box.put('rmmBalances', json.encode(rmmBalancesData));
-      rmmBalances = rmmBalancesData.cast<Map<String, dynamic>>();
-      notifyListeners(); // Notifier les listeners après la mise à jour
-    } else {
-      logger.d("Les RMM Balances sont vides, pas de mise à jour.");
-    }
+      var rmmBalancesData = await ApiService.fetchRmmBalances(forceFetch: forceFetch);
+      if (rmmBalancesData.isNotEmpty) {
+        logger.i("Mise à jour des RMM Balances avec de nouvelles valeurs.");
+
+        // Sauvegarder les balances dans Hive
+        box.put('rmmBalances', json.encode(rmmBalancesData));
+        rmmBalances = rmmBalancesData.cast<Map<String, dynamic>>();
+        logger.w(rmmBalances);
+        RmmBalances();
+        notifyListeners(); // Notifier les listeners après la mise à jour
+      } else {
+        logger.d("Les RMM Balances sont vides, pas de mise à jour.");
+      }
+      
+
 
     // Mise à jour des données de loyer temporaires
     var rentData = await ApiService.fetchRentData(forceFetch: forceFetch);
@@ -241,8 +277,19 @@ class DataManager extends ChangeNotifier {
 
  
 
- Future<void> fetchAndStoreAllTokens() async {
+Future<void> fetchAndStoreAllTokens() async {
   var box = Hive.box('realTokens');
+
+    // Variables temporaires pour calculer les nouvelles valeurs
+    int tempTotalTokens = 0;
+    double tempTotalInvestment = 0.0;
+    double tempNetRentYear = 0.0;
+    double tempInitialPrice = 0.0;
+    double tempActualPrice = 0.0;
+    int tempTotalUnits = 0;
+    int tempRentedUnits = 0;
+    double tempAnnualYieldSum = 0.0;
+    int yieldCount = 0;
 
     final cachedRealTokens = box.get('cachedRealTokens');
   if (cachedRealTokens != null) {
@@ -256,8 +303,7 @@ class DataManager extends ChangeNotifier {
     _recentUpdates = _extractRecentUpdates(realTokens);
     for (var realToken in realTokens.cast<Map<String, dynamic>>()) {
       // Vérification: Ne pas ajouter si totalTokens est 0 ou si fullName commence par "OLD-"
-      if (realToken['totalTokens'] != null && realToken['totalTokens'] > 0 &&
-          realToken['fullName'] != null && !realToken['fullName'].startsWith('OLD-')) {
+      if (realToken['totalTokens'] != null && realToken['totalTokens'] > 0 && realToken['fullName'] != null && !realToken['fullName'].startsWith('OLD-') && realToken['uuid'].toLowerCase() != rwaTokenAddress) {
         allTokensList.add({
           'shortName': realToken['shortName'],
           'fullName': realToken['fullName'],
@@ -292,13 +338,55 @@ class DataManager extends ChangeNotifier {
           'gnosisContract': realToken['gnosisContract'],
           'totalRentReceived': 0.0, // Ajout du loyer total reçu
         });
-      }
+
+        tempTotalTokens += 1; // Conversion explicite en int
+        tempTotalInvestment += realToken['totalInvestment'] ?? 0.0;
+        tempNetRentYear += realToken['netRentYearPerToken'] * (realToken['totalTokens'] as num).toInt();
+        tempTotalUnits += (realToken['totalUnits'] as num?)?.toInt() ?? 0; // Conversion en int avec vérification
+        tempRentedUnits += (realToken['rentedUnits'] as num?)?.toInt() ?? 0;
+      // Gérer le cas où tokenPrice est soit un num soit une liste
+        dynamic tokenPriceData = realToken['tokenPrice'];
+        double? tokenPrice;
+        double? initPrice = (realToken['historic']['init_price'] as num?)?.toDouble();
+        int totalTokens = (realToken['totalTokens'] as num).toInt();
+        
+        if (tokenPriceData is List && tokenPriceData.isNotEmpty) {
+          tokenPrice = (tokenPriceData.first as num).toDouble(); // Utiliser le premier élément de la liste
+        } else if (tokenPriceData is num) {
+          tokenPrice = tokenPriceData.toDouble(); // Utiliser directement si c'est un num
+        }
+
+        if (initPrice != null) {
+          tempInitialPrice += initPrice * totalTokens;
+        }
+
+        if (tokenPrice != null) {
+          tempActualPrice += tokenPrice * totalTokens;
+        }
+
+         // Calcul du rendement annuel
+        if (realToken['annualPercentageYield'] != null) {
+          tempAnnualYieldSum += realToken['annualPercentageYield'];
+          yieldCount++;
+        }
+      }   
     }
   }
 
   // Mettre à jour la liste des tokens
   _allTokens = allTokensList;
   logger.i("Tokens récupérés: ${allTokensList.length}"); // Vérifiez que vous obtenez bien des tokens
+
+  // Mise à jour des variables partagées
+  totalRealtTokens = tempTotalTokens; //en retire le RWA token dans le calcul
+  totalRealtInvestment = tempTotalInvestment;
+  realtInitialPrice = tempInitialPrice;
+  realtActualPrice = tempActualPrice;
+  netRealtRentYear = tempNetRentYear;
+  totalRealtUnits = tempTotalUnits;
+  rentedRealtUnits = tempRentedUnits;
+  averageRealtAnnualYield = yieldCount > 0 ? tempAnnualYieldSum / yieldCount : 0.0;
+
 
   // Notifie les widgets que les données ont changé
   notifyListeners();
@@ -311,7 +399,7 @@ class DataManager extends ChangeNotifier {
    logger.i("Début de la récupération des données de tokens...");
 
   var box = Hive.box('realTokens');
-
+initialTotalValue = 0.0;
   // Charger les données en cache si disponibles
   final cachedGnosisTokens = box.get('cachedTokenData_gnosis');
   if (cachedGnosisTokens != null) {
@@ -407,16 +495,16 @@ class DataManager extends ChangeNotifier {
         uniqueWalletTokens
             .add(tokenAddress); // Ajouter à l'ensemble des tokens uniques
 
-        final matchingRealToken =
-            realTokens.cast<Map<String, dynamic>>().firstWhere(
-                  (realToken) =>
-                      realToken['uuid'].toLowerCase() == tokenAddress,
+        final matchingRealToken = realTokens.cast<Map<String, dynamic>>().firstWhere(
+                  (realToken) => realToken['uuid'].toLowerCase() == tokenAddress,
                   orElse: () => <String, dynamic>{},
                 );
 
         if (matchingRealToken.isNotEmpty) {
           final double tokenPrice = matchingRealToken['tokenPrice'] ?? 0.0;
           final double tokenValue = (double.parse(walletToken['amount']) * tokenPrice) ?? 0.0;
+
+          initialTotalValue += double.parse(walletToken['amount']) * (matchingRealToken['historic']['init_price'] as num?)!.toDouble();
 
           // Compter les unités louées et totales si elles n'ont pas déjà été comptées
           if (!uniqueRentedUnitAddresses.contains(tokenAddress)) {
@@ -510,11 +598,9 @@ class DataManager extends ChangeNotifier {
         );
 
         portfolioItem['totalRentReceived'] = totalRentReceived;
-              
+      }
         // Notifiez les listeners après avoir mis à jour le portfolio
         notifyListeners();
-      }
-
 
         }
       }
@@ -525,8 +611,7 @@ class DataManager extends ChangeNotifier {
       final tokenAddress = rmmToken['token']['id'].toLowerCase();
       uniqueRmmTokens.add(tokenAddress); // Ajouter à l'ensemble des tokens uniques
 
-      final matchingRealToken =
-          realTokens.cast<Map<String, dynamic>>().firstWhere(
+      final matchingRealToken = realTokens.cast<Map<String, dynamic>>().firstWhere(
                 (realToken) => realToken['uuid'].toLowerCase() == tokenAddress,
                 orElse: () => <String, dynamic>{},
               );
@@ -538,6 +623,7 @@ class DataManager extends ChangeNotifier {
         final double tokenPrice = matchingRealToken['tokenPrice'];
         rmmValueSum += amount * tokenPrice;
         rmmTokensSum += amount;
+        initialTotalValue += amount * (matchingRealToken['historic']['init_price'] as num?)!.toDouble();
 
         // Compter les unités louées et totales si elles n'ont pas déjà été comptées
         if (!uniqueRentedUnitAddresses.contains(tokenAddress)) {
@@ -721,10 +807,8 @@ List<Map<String, dynamic>> getCumulativeRentEvolution() {
 
   // Méthode pour extraire les mises à jour récentes sur les 30 derniers jours
 
-  List<Map<String, dynamic>> _extractRecentUpdates(
-      List<dynamic> realTokensRaw) {
-    final List<Map<String, dynamic>> realTokens =
-        realTokensRaw.cast<Map<String, dynamic>>();
+  List<Map<String, dynamic>> _extractRecentUpdates(List<dynamic> realTokensRaw) {
+    final List<Map<String, dynamic>> realTokens = realTokensRaw.cast<Map<String, dynamic>>();
     List<Map<String, dynamic>> recentUpdates = [];
 
     for (var token in realTokens) {
@@ -755,8 +839,7 @@ List<Map<String, dynamic>> getCumulativeRentEvolution() {
         // Ajouter les mises à jour extraites dans recentUpdates
         recentUpdates.addAll(updatesWithDetails);
       } else {
-        logger.i(
-            'Aucune mise à jour pour le token : ${token['shortName'] ?? 'Nom inconnu'}');
+        //logger.i('Aucune mise à jour pour le token : ${token['shortName'] ?? 'Nom inconnu'}');
       }
     }
 
@@ -890,43 +973,76 @@ Future<void> fetchRentData({bool forceFetch = false}) async {
     notifyListeners();
   }
   
-  // Méthode pour réinitialiser toutes les données
-  Future<void> resetData() async {
-    // Remettre toutes les variables à leurs valeurs initiales
-    totalValue = 0;
-    walletValue = 0;
-    rmmValue = 0;
-    rwaHoldingsValue = 0;
-    rentedUnits = 0;
-    totalUnits = 0;
-    totalTokens = 0;
-    walletTokensSums = 0.0;
-    rmmTokensSums = 0.0;
-    averageAnnualYield = 0;
-    dailyRent = 0;
-    weeklyRent = 0;
-    monthlyRent = 0;
-    yearlyRent = 0;
+// Méthode pour réinitialiser toutes les données
+Future<void> resetData() async {
+  // Remettre toutes les variables à leurs valeurs initiales
+  totalValue = 0;
+  walletValue = 0;
+  rmmValue = 0;
+  rwaHoldingsValue = 0;
+  rentedUnits = 0;
+  totalUnits = 0;
+  totalTokens = 0;
+  walletTokensSums = 0.0;
+  rmmTokensSums = 0.0;
+  averageAnnualYield = 0;
+  dailyRent = 0;
+  weeklyRent = 0;
+  monthlyRent = 0;
+  yearlyRent = 0;
+  totalUsdcDepositBalance = 0;
+  totalUsdcBorrowBalance = 0;
+  totalXdaiDepositBalance = 0;
+  totalXdaiBorrowBalance = 0;
+  conversionRate = 1.0;
+  currencySymbol = '\$';
+  selectedCurrency = 'usd';
 
-    // Vider les listes de données
-    rentData = [];
-    propertyData = [];
-    _portfolio = [];
-    _recentUpdates = [];
+  // Réinitialiser toutes les variables relatives à RealTokens
+  totalRealtTokens = 0;
+  totalRealtInvestment = 0.0;
+  netRealtRentYear = 0.0;
+  realtInitialPrice = 0.0;
+  realtActualPrice = 0.0;
+  totalRealtUnits = 0;
+  rentedRealtUnits = 0;
+  averageRealtAnnualYield = 0.0;
 
-    // Réinitialiser les compteurs
-    walletTokenCount = 0;
-    rmmTokenCount = 0;
-    totalTokenCount = 0;
-    duplicateTokenCount = 0;
+  // Réinitialiser les compteurs de tokens
+  walletTokenCount = 0;
+  rmmTokenCount = 0;
+  totalTokenCount = 0;
+  duplicateTokenCount = 0;
 
-    // Notifier les observateurs que les données ont été réinitialisées
-    notifyListeners();
+  // Vider les listes de données
+  rentData = [];
+  detailedRentData = [];
+  propertyData = [];
+  rmmBalances = [];
+  walletTokensGnosis = [];
+  walletTokensEtherum = [];
+  rmmTokens = [];
+  realTokens = [];
+  tempRentData = [];
+  _portfolio = [];
+  _recentUpdates = [];
 
-    // Supprimer également les préférences sauvegardées si nécessaire
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.clear(); // Si vous voulez vider toutes les préférences
-  }
+  // Réinitialiser la map userIdToAddresses
+  userIdToAddresses.clear();
+
+  // Notifier les observateurs que les données ont été réinitialisées
+  notifyListeners();
+
+  // Supprimer également les préférences sauvegardées si nécessaire
+  final prefs = await SharedPreferences.getInstance();
+  await prefs.clear(); // Si vous voulez vider toutes les préférences
+
+  // Vider les caches Hive
+  var box = Hive.box('realTokens');
+  await box.clear(); // Vider la boîte Hive utilisée pour le cache des tokens
+
+  logger.i('Toutes les données ont été réinitialisées.');
+}
 
 // Méthode pour mettre à jour le taux de conversion et le symbole
 Future<void> updateConversionRate(
@@ -971,54 +1087,201 @@ Future<void> updateConversionRate(
   }
 
 // Nouvelle méthode pour récupérer les balances RMM
-  Future<void> fetchRmmBalances() async {
-    try {
-      // Récupérer les balances de l'API
+DateTime? lastArchiveTime; // Variable pour stocker le dernier archivage
 
-      double usdcDepositSum = 0;
-      double usdcBorrowSum = 0;
-      double xdaiDepositSum = 0;
-      double xdaiBorrowSum = 0;
+Future<void> RmmBalances() async {
+  try {
+    double usdcDepositSum = 0;
+    double usdcBorrowSum = 0;
+    double xdaiDepositSum = 0;
+    double xdaiBorrowSum = 0;
+    String timestamp = "";
 
-      for (var balance in rmmBalances) {
-        // Vérifier si les valeurs existent avant de les traiter
-        double usdcDepositBalance = balance['usdcDepositBalance'] != null
-            ? double.parse(balance['usdcDepositBalance']) / (1e6)
-            : 0;
+    for (var balance in rmmBalances) {
+      // Cumuler les balances de tous les wallets pour chaque type de token
+      usdcDepositSum += balance['usdcDepositBalance'];
+      usdcBorrowSum += balance['usdcBorrowBalance'];
+      xdaiDepositSum += balance['xdaiDepositBalance'];
+      xdaiBorrowSum += balance['xdaiBorrowBalance'];
+      timestamp = balance['timestamp'];
+    }
 
-        double usdcBorrowBalance = balance['usdcBorrowBalance'] != null
-            ? double.parse(balance['usdcBorrowBalance']) / (1e6)
-            : 0;
+    // Vérifier si une minute s'est écoulée depuis le dernier archivage
+    if (lastArchiveTime == null || DateTime.now().difference(lastArchiveTime!).inHours >= 1) {
+      // Archiver les balances cumulées pour chaque type de token
+      archiveBalance('usdcDeposit', usdcDepositSum, timestamp);
+      archiveBalance('usdcBorrow', usdcBorrowSum, timestamp);
+      archiveBalance('xdaiDeposit', xdaiDepositSum, timestamp);
+      archiveBalance('xdaiBorrow', xdaiBorrowSum, timestamp);
+      
+      // Mettre à jour le temps du dernier archivage
+      lastArchiveTime = DateTime.now();
 
-        double xdaiDepositBalance = balance['xdaiDepositBalance'] != null
-            ? double.parse(balance['xdaiDepositBalance']) / (1e18)
-            : 0;
+    // Calculer l'APY après avoir archivé les balances
+    usdcDepositApy = await calculateAPY('usdcDeposit');
+    usdcBorrowApy = await calculateAPY('usdcBorrow');
+    xdaiDepositApy = await calculateAPY('xdaiDeposit');
+    xdaiBorrowApy = await calculateAPY('xdaiBorrow');
 
-        double xdaiBorrowBalance = balance['xdaiBorrowBalance'] != null
-            ? double.parse(balance['xdaiBorrowBalance']) / (1e18)
-            : 0;
+    // Stocker les balances agrégées dans les variables
+    totalUsdcDepositBalance = usdcDepositSum;
+    totalUsdcBorrowBalance = usdcBorrowSum;
+    totalXdaiDepositBalance = xdaiDepositSum;
+    totalXdaiBorrowBalance = xdaiBorrowSum;
+ }
+    notifyListeners(); // Notifier l'interface que les données ont été mises à jour
+  } catch (e) {
+    logger.i('Error fetching RMM balances: $e');
+  }
+}
 
-        // Ajouter les balances à la somme totale
-        usdcDepositSum += usdcDepositBalance;
-        usdcBorrowSum += usdcBorrowBalance;
-        xdaiDepositSum += xdaiDepositBalance;
-        xdaiBorrowSum += xdaiBorrowBalance;
-      }
+Future<List<BalanceRecord>> getBalanceHistory(String tokenType) async {
+  var box = Hive.box('balanceHistory'); // Boîte Hive pour récupérer les balances
 
-      // Stocker les balances agrégées dans les variables
-      totalUsdcDepositBalance = usdcDepositSum;
-      totalUsdcBorrowBalance = usdcBorrowSum;
-      totalXdaiDepositBalance = xdaiDepositSum;
-      totalXdaiBorrowBalance = xdaiBorrowSum;
+  // Récupérer les données depuis Hive
+  List<dynamic>? balanceHistoryJson = box.get('balanceHistory_$tokenType');
+  if (balanceHistoryJson != null) {
+    // Convertir chaque élément JSON en objet BalanceRecord
+    return balanceHistoryJson
+        .map((recordJson) => BalanceRecord.fromJson(Map<String, dynamic>.from(recordJson)))
+        .where((record) => record.tokenType == tokenType) // Filtrer par tokenType
+        .toList();
+  }
 
-      notifyListeners(); // Notifier l'interface que les données ont été mises à jour
-    } catch (e) {
-      logger.i('Error fetching RMM balances: $e');
+  return []; // Retourne une liste vide si aucun historique n'est trouvé
+}
+
+
+void archiveBalance(String tokenType, double balance, String timestamp) async {
+  var box = Hive.box('balanceHistory'); // Boîte Hive pour stocker les balances
+
+  // Charger l'historique existant depuis Hive
+  List<dynamic>? balanceHistoryJson = box.get('balanceHistory_$tokenType');
+  List<BalanceRecord> balanceHistory = balanceHistoryJson != null
+      ? balanceHistoryJson.map((recordJson) => BalanceRecord.fromJson(Map<String, dynamic>.from(recordJson))).toList()
+      : [];
+
+  // Ajouter le nouvel enregistrement à l'historique
+  BalanceRecord newRecord = BalanceRecord(
+    tokenType: tokenType,
+    balance: balance,
+    timestamp: DateTime.parse(timestamp),
+  );
+  balanceHistory.add(newRecord);
+
+  // Sauvegarder la liste mise à jour dans Hive
+  List<Map<String, dynamic>> balanceHistoryJsonToSave = balanceHistory.map((record) => record.toJson()).toList();
+  await box.put('balanceHistory_$tokenType', balanceHistoryJsonToSave); // Stocker chaque type de token séparément
+}
+
+Future<double> calculateAPY(String tokenType) async {
+  // Récupérer l'historique des balances
+  List<BalanceRecord> history = await getBalanceHistory(tokenType);
+  
+  // Vérifier s'il y a au moins deux enregistrements pour calculer l'APY
+  if (history.length < 2) {
+    throw Exception("Not enough data to calculate APY.");
+  }
+
+  // Calculer l'APY moyen des 3 dernières paires valides
+  double averageAPYForLastThreePairs = _calculateAPYForLastThreeValidPairs(history);
+
+  // Si aucune paire valide n'est trouvée, retourner 0
+  if (averageAPYForLastThreePairs == 0) {
+    return 0;
+  }
+
+  // Calculer l'APY moyen global sur toutes les paires
+  apyAverage = _calculateAverageAPY(history);
+
+  return averageAPYForLastThreePairs;  // Retourner l'APY moyen des 3 dernières paires valides
+}
+
+// Calculer l'APY sur les 3 dernières paires valides (APY > 0 et < 20%)
+double _calculateAPYForLastThreeValidPairs(List<BalanceRecord> history) {
+  double totalAPY = 0;
+  int validPairsCount = 0;
+
+  // Parcourir l'historique à l'envers pour chercher les paires valides
+  for (int i = history.length - 1; i > 0 && validPairsCount < 3; i--) {
+    double apy = _calculateAPY(history[i], history[i - 1]);
+
+    // Si l'APY est valide (entre 0 et 20%), on l'ajoute
+    if (apy > 0 && apy < 20) {
+      totalAPY += apy;
+      validPairsCount++;
     }
   }
 
+  // Calculer la moyenne sur les paires valides trouvées
+  return validPairsCount > 0 ? totalAPY / validPairsCount : 0;
+}
+
+// Chercher l'APY non nul en remontant dans l'historique
+double _findNonZeroAPY(List<BalanceRecord> history) {
+  for (int i = history.length - 1; i > 0; i--) {
+    double apy = _calculateAPY(history[i], history[i - 1]);
+    if (apy != 0) {
+      return apy;
+    }
+  }
+  return 0; // Retourner 0 si toutes les valeurs donnent un APY nul
+}
+
+// Calculer la moyenne des APY sur toutes les paires d'enregistrements, en ignorant les dépôts/retraits
+double _calculateAverageAPY(List<BalanceRecord> history) {
+  double totalAPY = 0;
+  int count = 0;
+
+  for (int i = 1; i < history.length; i++) {
+    double apy = _calculateAPY(history[i], history[i - 1]);
+
+    // Ne prendre en compte que les paires valides (APY entre 0 et 25%)
+    if (apy > 0 && apy < 25) {
+      totalAPY += apy;
+      count++;
+    }
+  }
+
+  // Retourner la moyenne des APY valides, ou 0 s'il n'y a aucune paire valide
+  return count > 0 ? totalAPY / count : 0;
+}
+
+// Fonction pour calculer l'APY entre deux enregistrements avec une tolérance pour les petits changements
+double _calculateAPY(BalanceRecord current, BalanceRecord previous) {
+  double initialBalance = previous.balance;
+  double finalBalance = current.balance;
+
+  // Calculer la différence en pourcentage
+  double percentageChange = ((finalBalance - initialBalance) / initialBalance) * 100;
+
+  // Ignorer si la différence est trop faible (par exemple moins de 0,001%)
+  if (percentageChange.abs() < 0.001) {
+    return 0; // Ne pas prendre en compte cette paire
+  }
+
+  // Ignorer si la différence est supérieure à 20% ou inférieure à 0% (dépôt ou retrait)
+  if (percentageChange > 20 || percentageChange < 0) {
+    return 0; // Ne pas prendre en compte cette paire
+  }
+
+  // Calculer la durée en secondes
+  double timePeriodInSeconds = current.timestamp.difference(previous.timestamp).inSeconds.toDouble();
+
+  // Ignorer les périodes trop courtes (moins de 1 minute, par exemple)
+  if (timePeriodInSeconds < 60) {
+    return 0;
+  }
+
+  // Calculer l'APY en utilisant des secondes et convertir pour une période annuelle
+  double apy = ((finalBalance - initialBalance) / initialBalance) * (365 * 24 * 60 * 60 / timePeriodInSeconds) * 100;
+
+  return apy;
+}
+
+
   double getTotalRentReceived() {
-      return rentData.fold(0.0, (total, rentEntry) => total + rentEntry['rent']);
+    return rentData.fold(0.0, (total, rentEntry) => total + (rentEntry['rent'] is String ? double.parse(rentEntry['rent']) : rentEntry['rent']));
   }
 
 double getRentDetailsForToken(String token) {

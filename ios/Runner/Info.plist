@@ -55,5 +55,7 @@
 		<false/>
 		<key>UIViewControllerBasedStatusBarAppearance</key>
 		<false/>
+        <key>NSDocumentsFolderUsageDescription</key>
+        <string>Nous avons besoin d'accéder à vos documents pour sauvegarder et charger les fichiers.</string>
 	</dict>
 </plist>

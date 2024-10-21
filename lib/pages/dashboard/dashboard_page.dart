@@ -20,13 +20,23 @@ class DashboardPage extends StatefulWidget {
 
 class _DashboardPageState extends State<DashboardPage> {
   bool _showAmounts = true; // Variable pour contrôler la visibilité des montants
+  List<String>? evmAddresses; // Variable pour stocker les adresses EVM
 
   @override
   void initState() {
     super.initState();
     _loadPrivacyMode(); // Charger l'état du mode confidentialité au démarrage
+    _loadEvmAddresses(); // Charger les adresses EVM au démarrage
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _loadData(); // Charger les données au démarrage
+    });
+  }
+
+// Charger les adresses EVM depuis SharedPreferences
+  Future<void> _loadEvmAddresses() async {
+    final prefs = await SharedPreferences.getInstance();
+    setState(() {
+      evmAddresses = prefs.getStringList('evmAddresses'); // Charger les adresses
     });
   }
 
@@ -34,7 +44,6 @@ class _DashboardPageState extends State<DashboardPage> {
     final dataManager = Provider.of<DataManager>(context, listen: false);
     dataManager.updateGlobalVariables();
     dataManager.updatedDetailRentVariables();
-    dataManager.fetchRmmBalances();
     dataManager.fetchRentData(); // Charger les données de loyer
     dataManager.fetchAndCalculateData(); // Charger les données du portefeuille
   }
@@ -45,7 +54,6 @@ class _DashboardPageState extends State<DashboardPage> {
     await dataManager.updateGlobalVariables(forceFetch: true);
     await dataManager.updatedDetailRentVariables(forceFetch: true);
     await dataManager.fetchRentData(forceFetch: true);
-    await dataManager.fetchRmmBalances();
     await dataManager.fetchAndCalculateData(forceFetch: true);
   }
 
@@ -73,7 +81,7 @@ class _DashboardPageState extends State<DashboardPage> {
       return Utils.formatCurrency(
           value, symbol); // Affiche le montant formaté si visible
     } else {
-      String formattedValue =Utils.formatCurrency(value, symbol); // Format le montant normalement
+      String formattedValue = Utils.formatCurrency(value, symbol); // Format le montant normalement
       return '*' *
           formattedValue
               .length; // Retourne une série d'astérisques de la même longueur
@@ -98,35 +106,83 @@ String _getLastRentReceived(DataManager dataManager) {
 
 
   // Groupement mensuel sur les 12 derniers mois glissants pour la carte Rendement
-  List<double> _getLast12MonthsRent(DataManager dataManager) {
-    final currentDate = DateTime.now();
-    final rentData = dataManager.rentData;
+List<double> _getLast12MonthsRent(DataManager dataManager) {
+  final currentDate = DateTime.now();
+  final rentData = dataManager.rentData;
 
-    Map<String, double> monthlyRent = {};
+  Map<String, double> monthlyRent = {};
 
-    for (var rentEntry in rentData) {
-      DateTime date = DateTime.parse(rentEntry['date']);
-      if (date.isAfter(currentDate.subtract(const Duration(days: 365)))) {
-        String monthKey = DateFormat('yyyy-MM').format(date);
-        monthlyRent[monthKey] =
-            (monthlyRent[monthKey] ?? 0) + rentEntry['rent'];
-      }
+  for (var rentEntry in rentData) {
+    DateTime date = DateTime.parse(rentEntry['date']);
+    // Exclure le mois en cours et ne garder que les données des 12 mois précédents
+    if (date.isBefore(DateTime(currentDate.year, currentDate.month)) && 
+        date.isAfter(DateTime(currentDate.year, currentDate.month - 12, 1))) {
+      String monthKey = DateFormat('yyyy-MM').format(date);
+      monthlyRent[monthKey] =
+          (monthlyRent[monthKey] ?? 0) + rentEntry['rent'];
     }
-
-    // Assurer que nous avons les 12 derniers mois dans l'ordre
-    List<String> sortedMonths = List.generate(12, (index) {
-      DateTime date = DateTime(currentDate.year, currentDate.month - index, 1);
-      return DateFormat('yyyy-MM').format(date);
-    }).reversed.toList();
-
-    return sortedMonths.map((month) => monthlyRent[month] ?? 0).toList();
   }
+
+  // Assurer que nous avons les 12 derniers mois dans l'ordre (sans le mois en cours)
+  List<String> sortedMonths = List.generate(12, (index) {
+    DateTime date = DateTime(currentDate.year, currentDate.month - 1 - index, 1); // Commence à partir du mois précédent
+    return DateFormat('yyyy-MM').format(date);
+  }).reversed.toList();
+
+  return sortedMonths.map((month) => monthlyRent[month] ?? 0).toList();
+}
+
 
  double _getPortfolioBarGraphData(DataManager dataManager) {
   // Calcul du pourcentage de rentabilité (ROI)
-  return (dataManager.getTotalRentReceived() / (dataManager.walletValue + dataManager.rmmValue)  * 100); // ROI en %
+  return (dataManager.getTotalRentReceived() / (dataManager.initialTotalValue)  * 100); // ROI en %
 }
 
+Widget _buildPieChart(double rentedPercentage, BuildContext context) {
+  return SizedBox(
+    width: 120,  // Largeur du camembert
+    height: 70,  // Hauteur du camembert
+    child: PieChart(
+      PieChartData(
+        startDegreeOffset: -90,  // Pour placer la petite section en haut
+        sections: [
+          PieChartSectionData(
+            value: rentedPercentage,
+            color: Colors.green, // Couleur pour les unités louées
+            title: '',
+            radius: 25,  // Taille de la section louée
+            titleStyle: TextStyle(
+              fontSize: 12,
+              fontWeight: FontWeight.bold,
+              color: Colors.white,
+            ),
+            gradient: LinearGradient(
+              colors: [Colors.green.shade300, Colors.green.shade700],
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+            ),
+          ),
+          PieChartSectionData(
+            value: 100 - rentedPercentage,
+            color: Colors.blue, // Couleur pour les unités non louées
+            title: '',
+            radius: 20,  // Taille de la section non louée
+            gradient: LinearGradient(
+              colors: [Colors.blue.shade300, Colors.blue.shade700],
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+            ),
+          ),
+        ],
+        borderData: FlBorderData(show: false),
+        sectionsSpace: 2,  // Un léger espace entre les sections pour les démarquer
+        centerSpaceRadius: 25,  // Taille de l'espace central
+      ),
+      swapAnimationDuration: const Duration(milliseconds: 800), // Durée de l'animation
+      swapAnimationCurve: Curves.easeInOut,  // Courbe pour rendre l'animation fluide
+    ),
+  );
+}
 
 // Méthode pour créer un graphique en barres en tant que jauge
 Widget _buildVerticalGauge(double value, BuildContext context) {
@@ -134,161 +190,186 @@ Widget _buildVerticalGauge(double value, BuildContext context) {
   double displayValue = value.isNaN || value < 0 ? 0 : value;
 
   return Padding(
-  padding: const EdgeInsets.only(right: 12.0), // Ajustez ici le décalage à gauche
-  child: Column(
-    mainAxisSize: MainAxisSize.min, // Ajuster la taille de la colonne au contenu
-    children: [
-      Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Text(
-            "ROI", // Titre de la jauge
-            style: TextStyle(
-              fontSize: 16,
-              fontWeight: FontWeight.bold,
+    padding: const EdgeInsets.only(right: 12.0),
+    child: Column(
+      mainAxisSize: MainAxisSize.min, // Ajuster la taille de la colonne au contenu
+      children: [
+        Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text(
+              "ROI", // Titre de la jauge
+              style: TextStyle(
+                fontSize: 16,
+                fontWeight: FontWeight.bold,
+              ),
             ),
-          ),
-          const SizedBox(width: 8), // Espacement entre le texte et l'icône
-          GestureDetector(
-            onTap: () {
-              showDialog(
-                context: context,
-                builder: (BuildContext context) {
-                  return AlertDialog(
-                    title: Text(S.of(context).roiPerProperties), // Titre du popup
-                    content: Text(S.of(context).roiAlertInfo), // Texte du popup
-                    actions: <Widget>[
-                      TextButton(
-                        onPressed: () {
-                          Navigator.of(context).pop(); // Fermer le popup
-                        },
-                        child: Text('OK'),
+            const SizedBox(width: 8), // Espacement entre le texte et l'icône
+            GestureDetector(
+              onTap: () {
+                showDialog(
+                  context: context,
+                  builder: (BuildContext context) {
+                    return AlertDialog(
+                      title: Text(S.of(context).roiPerProperties), // Titre du popup
+                      content: Text(S.of(context).roiAlertInfo), // Texte du popup
+                      actions: <Widget>[
+                        TextButton(
+                          onPressed: () {
+                            Navigator.of(context).pop(); // Fermer le popup
+                          },
+                          child: Text('OK'),
+                        ),
+                      ],
+                    );
+                  },
+                );
+              },
+              child: Icon(
+                Icons.info_outline, // Icône à afficher
+                size: 15, // Taille de l'icône
+                color: Colors.grey, // Couleur de l'icône
+              ),
+            ),
+          ],
+        ),
+        const SizedBox(height: 8), // Espacement entre le titre et la jauge
+        SizedBox(
+          height: 100, // Hauteur totale de la jauge
+          width: 90,   // Largeur de la jauge
+          child: BarChart(
+            BarChartData(
+              alignment: BarChartAlignment.center,
+              maxY: 100, // Échelle sur 100%
+              barTouchData: BarTouchData(
+                enabled: true, // Activer l'interaction pour l'animation au toucher
+                touchTooltipData: BarTouchTooltipData(
+                  getTooltipItem: (group, groupIndex, rod, rodIndex) {
+                    return BarTooltipItem(
+                      '${rod.toY.toStringAsFixed(1)}%',
+                      const TextStyle(
+                        color: Colors.white,
+                        fontWeight: FontWeight.bold,
                       ),
-                    ],
-                  );
-                },
-              );
-            },
-            child: Icon(
-              Icons.info_outline, // Icône à afficher
-              size: 20, // Taille de l'icône
-              color: Colors.grey, // Couleur de l'icône
-            ),
-          ),
-        ],
-      ),
-      const SizedBox(height: 8), // Espacement entre le titre et la jauge
-      SizedBox(
-        height: 100, // Hauteur totale de la jauge
-        width: 40,   // Largeur de la jauge
-        child: BarChart(
-          BarChartData(
-            alignment: BarChartAlignment.center,
-            maxY: 100, // Échelle sur 100%
-            barTouchData: BarTouchData(enabled: false), // Désactiver les interactions
-            titlesData: FlTitlesData(
-              leftTitles: AxisTitles(
-                sideTitles: SideTitles(
-                  showTitles: true,
-                  reservedSize: 30,
-                  getTitlesWidget: (value, meta) {
-                    if (value % 25 == 0) {
-                      return Text(
-                        value.toInt().toString(),
-                        style: TextStyle(fontSize: 10), // Définir la taille du texte
-                      );
-                    }
-                    return Container();
+                    );
                   },
                 ),
               ),
-              rightTitles: AxisTitles(sideTitles: SideTitles(showTitles: false)),
-              topTitles: AxisTitles(sideTitles: SideTitles(showTitles: false)),
-              bottomTitles: AxisTitles(sideTitles: SideTitles(showTitles: false)),
-            ),
-            gridData: FlGridData(show: false),
-            borderData: FlBorderData(show: false),
-            barGroups: [
-              BarChartGroupData(
-                x: 0,
-                barRods: [
-                  BarChartRodData(
-                    toY: displayValue, // Utiliser la valeur corrigée
-                    width: 20,  // Largeur de la barre
-                    color: Colors.blue, // Couleur de la barre
-                    borderRadius: BorderRadius.circular(5),
-                    backDrawRodData: BackgroundBarChartRodData(
-                      show: true,
-                      toY: 100, // Fond de la jauge
-                      color: Colors.grey.shade400,
-                    ),
-                    rodStackItems: [
-                      BarChartRodStackItem(0, displayValue, Colors.blue),
-                    ],
+              titlesData: FlTitlesData(
+                leftTitles: AxisTitles(
+                  sideTitles: SideTitles(
+                    showTitles: false,
+                    reservedSize: 30,
+                    getTitlesWidget: (value, meta) {
+                      if (value % 25 == 0) {
+                        return Text(
+                          value.toInt().toString(),
+                          style: TextStyle(fontSize: 10, color: Colors.black54), // Définir la taille et couleur du texte
+                        );
+                      }
+                      return Container();
+                    },
                   ),
-                ],
+                ),
+                rightTitles: AxisTitles(sideTitles: SideTitles(showTitles: false)),
+                topTitles: AxisTitles(sideTitles: SideTitles(showTitles: false)),
+                bottomTitles: AxisTitles(sideTitles: SideTitles(showTitles: false)),
               ),
-            ],
+              gridData: FlGridData(show: false), // Désactiver la grille
+              borderData: FlBorderData(show: false),
+              barGroups: [
+                BarChartGroupData(
+                  x: 0,
+                  barRods: [
+                    BarChartRodData(
+                      toY: displayValue, // Utiliser la valeur corrigée
+                      width: 20,  // Largeur de la barre
+                      borderRadius: BorderRadius.circular(4), // Bordures arrondies
+                      color: Colors.transparent, // Couleur transparente pour appliquer le dégradé
+                      gradient: LinearGradient(
+                        colors: [Colors.blueAccent, Colors.lightBlueAccent],
+                        begin: Alignment.bottomCenter,
+                        end: Alignment.topCenter,
+                      ),
+                      backDrawRodData: BackgroundBarChartRodData(
+                        show: true,
+                        toY: 100, // Fond de la jauge
+                        color: Colors.grey.withOpacity(0.5), // Couleur du fond
+                      ),
+                      rodStackItems: [
+                        BarChartRodStackItem(0, displayValue, Colors.blueAccent.withOpacity(0.6)),
+                      ],
+                    ),
+                  ],
+                ),
+              ],
+            ),
           ),
         ),
-      ),
-      const SizedBox(height: 8), // Espacement entre le titre et la jauge
-      Text(
-        "${displayValue.toStringAsFixed(1)}%", // Valeur de la barre affichée en dessous
-        style: TextStyle(
-          fontSize: 12,
-          fontWeight: FontWeight.w500,
-          color: Colors.blue, // Même couleur que la barre
+        const SizedBox(height: 8), // Espacement entre le titre et la jauge
+        Text(
+          "${displayValue.toStringAsFixed(1)}%", // Valeur de la barre affichée en dessous
+          style: TextStyle(
+            fontSize: 12,
+            fontWeight: FontWeight.w500,
+            color: Colors.blue, // Même couleur que la barre
+          ),
         ),
-      ),
-    ],
-  ),
-);
+      ],
+    ),
+  );
 }
 
   // Méthode pour créer un mini graphique pour la carte Rendement
-  Widget _buildMiniGraphForRendement(List<double> data, BuildContext context) {
-    return Align(
-      alignment: Alignment.center,
-      child: SizedBox(
-        height: 60,
-        width: 120,
-        child: LineChart(
-          LineChartData(
-            gridData: FlGridData(show: false),
-            titlesData: FlTitlesData(show: false),
-            borderData: FlBorderData(show: false),
-            minX: 0,
-            maxX: data.length.toDouble() - 1,
-            minY: data.reduce((a, b) => a < b ? a : b),
-            maxY: data.reduce((a, b) => a > b ? a : b),
-            lineBarsData: [
-              LineChartBarData(
-                spots: List.generate(data.length,
-                    (index) => FlSpot(index.toDouble(), data[index])),
-                isCurved: true,
-                barWidth: 2,
-                color: Colors.blue,
-                dotData: FlDotData(
-                  show: true,
-                  getDotPainter: (spot, percent, barData, index) =>
-                      FlDotCirclePainter(
-                    radius: 2,
-                    color: Colors.blue,
-                    strokeWidth: 0,
-                  ),
-                ),
-                belowBarData: BarAreaData(
-                  show: true,
-                  color: Colors.blue.withOpacity(0.3),
+Widget _buildMiniGraphForRendement(List<double> data, BuildContext context) {
+  return Align(
+    alignment: Alignment.center,
+    child: SizedBox(
+      height: 70,
+      width: 120,
+      child: LineChart(
+        LineChartData(
+          gridData: FlGridData(show: false),
+          titlesData: FlTitlesData(show: false),
+          borderData: FlBorderData(show: false),
+          minX: 0,
+          maxX: data.length.toDouble() - 1,
+          minY: data.reduce((a, b) => a < b ? a : b),
+          maxY: data.reduce((a, b) => a > b ? a : b),
+          lineBarsData: [
+            LineChartBarData(
+              spots: List.generate(data.length,
+                  (index) => FlSpot(index.toDouble(), data[index])),
+              isCurved: true,
+              barWidth: 2,
+              color: Colors.blue,
+              dotData: FlDotData(
+                show: true,
+                getDotPainter: (spot, percent, barData, index) =>
+                    FlDotCirclePainter(
+                  radius: 2,
+                  color: Colors.blue,
+                  strokeWidth: 0,
                 ),
               ),
-            ],
-          ),
+              belowBarData: BarAreaData(
+                show: true,
+                gradient: LinearGradient(
+                  colors: [
+                    Colors.blue.withOpacity(0.4), // Couleur plus opaque en haut
+                    Colors.blue.withOpacity(0), // Couleur plus transparente en bas
+                  ],
+                  begin: Alignment.topCenter,
+                  end: Alignment.bottomCenter,
+                ),
+              ),
+            ),
+          ],
         ),
       ),
-    );
-  }
+    ),
+  );
+}
 
   // Construction des cartes du Dashboard
  Widget _buildCard(
@@ -343,8 +424,7 @@ Widget _buildVerticalGauge(double value, BuildContext context) {
                     onPressed: () {
                       Navigator.of(context).push(
                         MaterialPageRoute(
-                          builder: (context) =>
-                              const DashboardRentsDetailsPage(),
+                          builder: (context) => const DashboardRentsDetailsPage(),
                         ),
                       );
                     },
@@ -376,7 +456,7 @@ Widget _buildVerticalGauge(double value, BuildContext context) {
         Text(
           value,
           style: TextStyle(
-            fontSize: 16 + appState.getTextSizeOffset(), // Réduction pour Android
+            fontSize: 16 + appState.getTextSizeOffset(), 
             fontWeight: FontWeight.bold, // Mettre la valeur en gras
           ),
         ),
@@ -384,7 +464,7 @@ Widget _buildVerticalGauge(double value, BuildContext context) {
         Text(
           text,
           style: TextStyle(
-            fontSize: 13 + appState.getTextSizeOffset(), // Réduction pour Android
+            fontSize: 13 + appState.getTextSizeOffset(),
           ),
         ),
       ],
@@ -481,7 +561,7 @@ Widget build(BuildContext context) {
                         visibilityButton,
                       ],
                     ),
-                    if (lastRentReceived == S.of(context).lastRentReceived || dataManager.walletValue == 0) _buildNoWalletCard(context),
+                    if (dataManager.rentData.isEmpty || dataManager.walletValue == 0) _buildNoWalletCard(context),
                     const SizedBox(height: 8),
                     RichText(
                       text: TextSpan(
@@ -584,11 +664,11 @@ Widget build(BuildContext context) {
                           style: TextStyle(fontSize: 13 + appState.getTextSizeOffset()),
                         ),
                         Text(
-                          '${S.of(context).wallet}: ${dataManager.walletTokenCount}',
+                          '   ${S.of(context).wallet}: ${dataManager.walletTokenCount}',
                           style: TextStyle(fontSize: 13 + appState.getTextSizeOffset()),
                         ),
                         Text(
-                          '${S.of(context).rmm}: ${dataManager.rmmTokenCount.toInt()} (${dataManager.duplicateTokenCount.toInt()} ${S.of(context).duplicate})',
+                          '   ${S.of(context).rmm}: ${dataManager.rmmTokenCount.toInt()} (${dataManager.duplicateTokenCount.toInt()} ${S.of(context).duplicate})',
                           style: TextStyle(fontSize: 13 + appState.getTextSizeOffset()),
                         ),
                         Text(
@@ -598,7 +678,16 @@ Widget build(BuildContext context) {
                       ],
                       dataManager,
                       context,
-                    ),
+                      hasGraph: true,
+                      rightWidget: Builder(
+                          builder: (context) {
+                            double rentedPercentage = dataManager.rentedUnits / dataManager.totalUnits * 100;
+                            if (rentedPercentage.isNaN || rentedPercentage < 0) {
+                              rentedPercentage = 0;  // Remplacer NaN par une valeur par défaut comme 0
+                            }
+                            return _buildPieChart(rentedPercentage, context);  // Ajout du camembert avec la vérification
+                          },
+                        ),                    ),
                     const SizedBox(height: 15),
                     _buildCard(
                       S.of(context).tokens,
@@ -616,6 +705,16 @@ Widget build(BuildContext context) {
                       ],
                       dataManager,
                       context,
+                      hasGraph: true,
+                      rightWidget: Builder(
+                      builder: (context) {
+                        double rentedPercentage = dataManager.walletTokensSums / dataManager.totalTokens * 100;
+                        if (rentedPercentage.isNaN || rentedPercentage < 0) {
+                          rentedPercentage = 0;  // Remplacer NaN par une valeur par défaut comme 0
+                        }
+                        return _buildPieChart(rentedPercentage, context);  // Ajout du camembert avec la vérification
+                      },
+                    ),
                     ),
                     const SizedBox(height: 15),
                     _buildCard(

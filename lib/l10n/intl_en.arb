@@ -146,7 +146,7 @@
   "cumulativeRentGraph": "Cumulative Rent Graph",
   "roiPerProperties": "Property ROI",
   "roiAlertInfo": "This ROI feature is in beta and is currently calculated based on the income received from the property and the current token value.",
-  "recentUpdatesTitle": "Changes in the last 30 days",
+  "recentUpdatesTitle": "last 30 days",
   "noRecentUpdates": "No recent changes available.",
   "unknownTokenName": "Unknown name",
   "noImageAvailable": "Image link not available",
@@ -157,16 +157,30 @@
   "noCommunicatedDate": "Date not provided",
   "serviceStatusPage": "Services status",
   "lastExecution": "Last update",
-  "@dashboard": {
-    "description": "Label for the Dashboard tab"
-  },
-  "@portfolio": {
-    "description": "Label for the Portfolio tab"
-  },
-  "@statistics": {
-    "description": "Label for the Statistics tab"
-  },
-  "@maps": {
-    "description": "Label for the Maps tab"
-  }
+  "allWorkCorrectly": "Everything is working correctly",
+  "somethingWrong": "The data may not be up to date",
+  "realTTitle": "RealT",
+  "totalTokens": "Total Tokens",
+  "tokens": "tokens",
+  "totalInvestment": "Total Investment",
+  "netAnnualRent": "Net Annual Rent",
+  "totalUnits": "Total Units",
+  "units": "units",
+  "rentedUnits": "rented units",
+  "realTPerformance": "RealT Performance",
+  "annualYield": "annual yield",
+  "textSize":"Text size",
+  "convertSqft":"Convert sqft to m²",
+  "rentStartFuture": "Rent not started",
+  "confirmAction": "Confirm Action",
+  "areYouSureClearData": "Are you sure you want to clear cache and data?",
+  "cancel": "Cancel",
+  "confirm": "Confirm",
+  "clearCacheData": "Clear Cache and Data",
+  "exportData": "Export Data",
+  "importData": "Import Data",
+  "exportSuccess": "Data exported successfully",
+  "exportFailed": "Failed to export data",
+  "importSuccess": "Data imported successfully",
+  "importFailed": "Failed to import data"
 }

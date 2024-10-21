@@ -35,10 +35,10 @@ target 'Runner' do
   # Utilisez l'une des deux directives ci-dessous en fonction de vos dépendances
 
   # Option 1: Si vous avez des pods nécessitant 'use_frameworks!'
- # use_frameworks!
+  use_frameworks!
 
   # Option 2: Si vous rencontrez des problèmes avec 'use_frameworks!', commentez la ligne ci-dessus et décommentez la suivante
-   use_modular_headers!
+   #use_modular_headers!
 
   # Installe tous les pods requis par Flutter et les plugins
   flutter_install_all_ios_pods File.dirname(File.realpath(__FILE__))

@@ -271,8 +271,8 @@ Future<void> showTokenDetails( BuildContext context, Map<String, dynamic> token)
                                 token['constructionYear']?.toString() ??
                                     S.of(context).notSpecified),
                             _buildDetailRow(context,
-                                S.of(context).propertyStories,
-                                token['propertyStories']?.toString() ??
+                                S.of(context).rentalType,
+                                token['rentalType']?.toString() ??
                                     S.of(context).notSpecified),
                             _buildDetailRow(context,
                                 S.of(context).totalUnits,
@@ -660,15 +660,14 @@ Widget _buildYieldChartOrMessage(BuildContext context, List<dynamic> yields, dou
   if (yields.length <= 1) {
     // Afficher le message si une seule donnée est disponible
     return Text(
-      "${S.of(context).noYieldEvolution} ${yields.isNotEmpty ? yields.first['yield'].toStringAsFixed(2) : S.of(context).notSpecified}",
+      "${S.of(context).noYieldEvolution} ${yields.isNotEmpty ? yields.first['yield'].toStringAsFixed(2) : S.of(context).notSpecified} %",
       style: TextStyle(
           fontSize: 13 + appState.getTextSizeOffset()), // Réduction pour Android
     );
   } else {
     // Calculer l'évolution en pourcentage
     double lastYield = yields.last['yield']?.toDouble() ?? 0;
-    double percentageChange =
-        ((lastYield - (initYield ?? lastYield)) / (initYield ?? lastYield)) * 100;
+    double percentageChange = ((lastYield - (initYield ?? lastYield)) / (initYield ?? lastYield)) * 100;
 
     // Afficher le graphique et le % d'évolution
     return Column(
@@ -693,15 +692,13 @@ Widget _buildPriceChartOrMessage(BuildContext context, List<dynamic> prices, dou
   if (prices.length <= 1) {
     // Afficher le message si une seule donnée est disponible
     return Text(
-      "${S.of(context).noPriceEvolution} ${prices.isNotEmpty ? prices.first['price'].toStringAsFixed(2) : S.of(context).notSpecified}",
-      style: TextStyle(
-          fontSize: 13 + appState.getTextSizeOffset()), // Réduction pour Android
+      "${S.of(context).noPriceEvolution} ${prices.isNotEmpty ? prices.first['price'].toStringAsFixed(2) : S.of(context).notSpecified} \$",
+      style: TextStyle(fontSize: 13 + appState.getTextSizeOffset()), // Réduction pour Android
     );
   } else {
     // Calculer l'évolution en pourcentage
     double lastPrice = prices.last['price']?.toDouble() ?? 0;
-    double percentageChange =
-        ((lastPrice - (initPrice ?? lastPrice)) / (initPrice ?? lastPrice)) * 100;
+    double percentageChange = ((lastPrice - (initPrice ?? lastPrice)) / (initPrice ?? lastPrice)) * 100;
 
     // Afficher le graphique et le % d'évolution
     return Column(

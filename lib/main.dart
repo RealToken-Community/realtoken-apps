@@ -21,6 +21,8 @@ void main() async {
 
   await Hive.initFlutter();
   await Hive.openBox('realTokens');
+  await Hive.openBox('balanceHistory');
+
 
   // Initialisation de SharedPreferences et DataManager
   final dataManager = DataManager();

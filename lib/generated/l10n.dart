@@ -185,7 +185,7 @@ class S {
     return Intl.message(
       'Portfolio',
       name: 'portfolio',
-      desc: 'Label for the Portfolio tab',
+      desc: '',
       args: [],
     );
   }
@@ -260,20 +260,20 @@ class S {
     );
   }
 
-  /// `Rented Units`
+  /// `rented units`
   String get rentedUnits {
     return Intl.message(
-      'Rented Units',
+      'rented units',
       name: 'rentedUnits',
       desc: '',
       args: [],
     );
   }
 
-  /// `Tokens`
+  /// `tokens`
   String get tokens {
     return Intl.message(
-      'Tokens',
+      'tokens',
       name: 'tokens',
       desc: '',
       args: [],
@@ -300,10 +300,10 @@ class S {
     );
   }
 
-  /// `Annual Yield`
+  /// `annual yield`
   String get annualYield {
     return Intl.message(
-      'Annual Yield',
+      'annual yield',
       name: 'annualYield',
       desc: '',
       args: [],
@@ -420,10 +420,10 @@ class S {
     );
   }
 
-  /// `Total units`
+  /// `Total Units`
   String get totalUnits {
     return Intl.message(
-      'Total units',
+      'Total Units',
       name: 'totalUnits',
       desc: '',
       args: [],
@@ -490,10 +490,10 @@ class S {
     );
   }
 
-  /// `Total investment`
+  /// `Total Investment`
   String get totalInvestment {
     return Intl.message(
-      'Total investment',
+      'Total Investment',
       name: 'totalInvestment',
       desc: '',
       args: [],
@@ -1300,10 +1300,10 @@ class S {
     );
   }
 
-  /// `Clear Cache/Data`
+  /// `Clear Cache and Data`
   String get clearCacheData {
     return Intl.message(
-      'Clear Cache/Data',
+      'Clear Cache and Data',
       name: 'clearCacheData',
       desc: '',
       args: [],
@@ -1315,7 +1315,7 @@ class S {
     return Intl.message(
       'Dashboard',
       name: 'dashboard',
-      desc: 'Label for the Dashboard tab',
+      desc: '',
       args: [],
     );
   }
@@ -1325,7 +1325,7 @@ class S {
     return Intl.message(
       'Statistics',
       name: 'statistics',
-      desc: 'Label for the Statistics tab',
+      desc: '',
       args: [],
     );
   }
@@ -1445,7 +1445,7 @@ class S {
     return Intl.message(
       'Maps',
       name: 'maps',
-      desc: 'Label for the Maps tab',
+      desc: '',
       args: [],
     );
   }
@@ -1500,10 +1500,10 @@ class S {
     );
   }
 
-  /// `Changes in the last 30 days`
+  /// `last 30 days`
   String get recentUpdatesTitle {
     return Intl.message(
-      'Changes in the last 30 days',
+      'last 30 days',
       name: 'recentUpdatesTitle',
       desc: '',
       args: [],
@@ -1605,6 +1605,196 @@ class S {
     return Intl.message(
       'Last update',
       name: 'lastExecution',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Everything is working correctly`
+  String get allWorkCorrectly {
+    return Intl.message(
+      'Everything is working correctly',
+      name: 'allWorkCorrectly',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `The data may not be up to date`
+  String get somethingWrong {
+    return Intl.message(
+      'The data may not be up to date',
+      name: 'somethingWrong',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `RealT`
+  String get realTTitle {
+    return Intl.message(
+      'RealT',
+      name: 'realTTitle',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Net Annual Rent`
+  String get netAnnualRent {
+    return Intl.message(
+      'Net Annual Rent',
+      name: 'netAnnualRent',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `units`
+  String get units {
+    return Intl.message(
+      'units',
+      name: 'units',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `RealT Performance`
+  String get realTPerformance {
+    return Intl.message(
+      'RealT Performance',
+      name: 'realTPerformance',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Text size`
+  String get textSize {
+    return Intl.message(
+      'Text size',
+      name: 'textSize',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Convert sqft to m²`
+  String get convertSqft {
+    return Intl.message(
+      'Convert sqft to m²',
+      name: 'convertSqft',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Rent not started`
+  String get rentStartFuture {
+    return Intl.message(
+      'Rent not started',
+      name: 'rentStartFuture',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Confirm Action`
+  String get confirmAction {
+    return Intl.message(
+      'Confirm Action',
+      name: 'confirmAction',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Are you sure you want to clear cache and data?`
+  String get areYouSureClearData {
+    return Intl.message(
+      'Are you sure you want to clear cache and data?',
+      name: 'areYouSureClearData',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Cancel`
+  String get cancel {
+    return Intl.message(
+      'Cancel',
+      name: 'cancel',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Confirm`
+  String get confirm {
+    return Intl.message(
+      'Confirm',
+      name: 'confirm',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Export Data`
+  String get exportData {
+    return Intl.message(
+      'Export Data',
+      name: 'exportData',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Import Data`
+  String get importData {
+    return Intl.message(
+      'Import Data',
+      name: 'importData',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Data exported successfully`
+  String get exportSuccess {
+    return Intl.message(
+      'Data exported successfully',
+      name: 'exportSuccess',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Failed to export data`
+  String get exportFailed {
+    return Intl.message(
+      'Failed to export data',
+      name: 'exportFailed',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Data imported successfully`
+  String get importSuccess {
+    return Intl.message(
+      'Data imported successfully',
+      name: 'importSuccess',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Failed to import data`
+  String get importFailed {
+    return Intl.message(
+      'Failed to import data',
+      name: 'importFailed',
       desc: '',
       args: [],
     );

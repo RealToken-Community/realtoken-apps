@@ -3,7 +3,7 @@ import 'bottom_bar.dart';
 import 'drawer.dart';
 import '../pages/dashboard/dashboard_page.dart';
 import '../pages/portfolio/portfolio_page.dart';
-import '../pages/statistics_page.dart';
+import '../pages/Statistics/stats_selector_page.dart';
 import '../pages/maps_page.dart';
 import 'dart:ui'; // Import for blur effect
 import 'package:provider/provider.dart';
@@ -22,7 +22,7 @@ class _MyHomePageState extends State<MyHomePage> {
   static const List<Widget> _pages = <Widget>[
     DashboardPage(),
     PortfolioPage(),
-    StatisticsPage(),
+    StatsSelectorPage(),
     MapsPage(),
   ];
 

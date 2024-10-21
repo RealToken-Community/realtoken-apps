@@ -22,6 +22,7 @@ class _MapsPageState extends State<MapsPage> {
   final String _sortOption = 'Name';
   final bool _isAscending = true;
   bool _isDarkTheme = false; // Variable pour suivre le thème sélectionné
+  bool _forceLightMode = false; // Nouveau switch pour forcer le mode clair
 
   @override
   void initState() {
@@ -147,15 +148,17 @@ return Scaffold(
             onTap: (_, __) => _popupController.hideAllPopups(),
           ),
           children: [
-            TileLayer(
-              // Utilisation de tuiles différentes selon le thème sélectionné
-              urlTemplate: _isDarkTheme
-                  ? 'https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png'
-                  : 'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
-              subdomains: ['a', 'b', 'c'],
-              userAgentPackageName: 'com.byackee.app',
-              retinaMode: true,
-            ),
+              TileLayer(
+                // Si _forceLightMode est activé, on utilise le mode clair
+                urlTemplate: _forceLightMode
+                    ? 'https://tile.openstreetmap.org/{z}/{x}/{y}.png'
+                    : _isDarkTheme
+                        ? 'https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png'
+                        : 'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
+                subdomains: ['a', 'b', 'c'],
+                userAgentPackageName: 'com.byackee.app',
+                retinaMode: true,
+              ),
             MarkerClusterLayerWidget(
               options: MarkerClusterLayerOptions(
                 maxClusterRadius: 70,
@@ -193,22 +196,53 @@ return Scaffold(
           ],
         ),
       ),
+       // Switch pour basculer entre le mode sombre/clair et forcer le mode clair pour la carte
+          Positioned(
+            top: 90,
+            right: 16,
+            child: Row(
+              children: [
+                Text(_forceLightMode ? 'Light' : 'Auto'),
+                Transform.scale(
+                  scale: 0.8, // Réduire la taille du switch à 80%
+                  child: Switch(
+                    value: _forceLightMode,
+                    onChanged: (value) {
+                      setState(() {
+                        _forceLightMode = value; // Mettre à jour le switch pour forcer le mode clair
+                      });
+                    },
+                    activeColor: Colors.blue,
+                    inactiveThumbColor: Colors.grey,
+                    inactiveTrackColor: Colors.grey[300],
+                  ),
+                ),
+              ],
+            ),
+          ),
       // Switch en haut à gauche pour basculer entre les tokens du portefeuille et tous les tokens
       Positioned(
         top: 90, // Positionner juste en dessous de l'AppBar
         left: 16,
         child: Row(
-          children: [
-            Text(_showAllTokens ? 'All Tokens' : 'Portfolio'),
-            Switch(
+        children: [
+          Transform.scale(
+            scale: 0.8, // Réduit la taille du Switch à 80%
+            child: Switch(
               value: _showAllTokens,
               onChanged: (value) {
                 setState(() {
                   _showAllTokens = value;
                 });
               },
+              activeColor: Colors.blue, // Couleur du bouton en mode activé
+              inactiveThumbColor: Colors.grey, // Couleur du bouton en mode désactivé
             ),
-          ],
+          ),
+                    Text(_showAllTokens ? 'All Tokens' : 'Portfolio'),
+
+        ],
+
         ),
       ),
       // Légende en bas à gauche

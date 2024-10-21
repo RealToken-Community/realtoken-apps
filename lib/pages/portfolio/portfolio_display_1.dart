@@ -17,30 +17,6 @@ String extractCity(String fullName) {
       : S.current.unknownCity; // Traduction pour "Ville inconnue"
 }
 
-// Fonction pour déterminer la couleur de la pastille en fonction du taux de location
-Color getRentalStatusColor(int rentedUnits, int totalUnits) {
-  if (rentedUnits == 0) {
-    return Colors.red; // Aucun logement loué
-  } else if (rentedUnits == totalUnits) {
-    return Colors.green; // Tous les logements sont loués
-  } else {
-    return Colors.orange; // Partiellement loué
-  }
-}
-
-// Fonction modifiée pour formater la monnaie avec le taux de conversion et le symbole
-String formatCurrency(BuildContext context, double value) {
-  final dataManager =
-      Provider.of<DataManager>(context, listen: false); // Récupérer DataManager
-  final NumberFormat formatter = NumberFormat.currency(
-    locale: 'fr_FR', // Vous pouvez adapter la locale selon vos besoins
-    symbol: dataManager.currencySymbol, // Utilise le symbole de la devise
-    decimalDigits: 2,
-  );
-  return formatter.format(
-      dataManager.convert(value)); // Conversion selon la devise sélectionnée
-}
-
 class PortfolioDisplay1 extends StatelessWidget {
   final List<Map<String, dynamic>> portfolio;
   const PortfolioDisplay1({super.key, required this.portfolio});
@@ -92,7 +68,7 @@ class PortfolioDisplay1 extends StatelessWidget {
                 ),
               )
             : ListView.builder(
-                padding: const EdgeInsets.only(top: 20),
+                padding: const EdgeInsets.only(top: 20, bottom: 80),
                 itemCount: portfolio.length,
                 itemBuilder: (context, index) {
                   final token = portfolio[index];
@@ -102,6 +78,10 @@ class PortfolioDisplay1 extends StatelessWidget {
 
                   final rentedUnits = token['rentedUnits'] ?? 0;
                   final totalUnits = token['totalUnits'] ?? 1;
+
+                  // Vérifier si la date de 'rent_start' est dans le futur
+                  final rentStartDate = DateTime.parse(token['rentStartDate'] ?? DateTime.now().toString());
+                  final bool isFutureRentStart = rentStartDate.isAfter(DateTime.now());
 
                   return Padding(
                     padding: const EdgeInsets.symmetric(horizontal: 16.0),
@@ -121,18 +101,38 @@ class PortfolioDisplay1 extends StatelessWidget {
                                   ),
                                   child: Stack(
                                     children: [
-                                      SizedBox(
-                                        width: 120,
-                                        height: double.infinity,
-                                        child: CachedNetworkImage(
-                                          imageUrl: token['imageLink'][0] ?? '',
-                                          fit: BoxFit.cover,
-                                          placeholder: (context, url) =>
-                                              const CircularProgressIndicator(),
-                                          errorWidget: (context, url, error) =>
-                                              const Icon(Icons.error),
+                                      ColorFiltered(
+                                        colorFilter: isFutureRentStart
+                                            ? const ColorFilter.mode(Colors.black45, BlendMode.darken)
+                                            : const ColorFilter.mode(Colors.transparent, BlendMode.multiply),
+                                        child: SizedBox(
+                                          width: 120,
+                                          height: double.infinity,
+                                          child: CachedNetworkImage(
+                                            imageUrl: token['imageLink'][0] ?? '',
+                                            fit: BoxFit.cover,
+                                            errorWidget: (context, url, error) => const Icon(Icons.error),
+                                          ),
                                         ),
                                       ),
+                                      // Superposition du texte si 'rent_start' est dans le futur
+                                      if (isFutureRentStart)
+                                        Positioned.fill(
+                                          child: Center(
+                                            child: Container(
+                                              color: Colors.black54,
+                                              padding: const EdgeInsets.all(8.0),
+                                              child: Text(
+                                                S.of(context).rentStartFuture, // Texte indiquant que le loyer commence dans le futur
+                                                style: TextStyle(
+                                                  color: Colors.white,
+                                                  fontWeight: FontWeight.bold,
+                                                  fontSize: 12 + appState.getTextSizeOffset(),
+                                                ),
+                                              ),
+                                            ),
+                                          ),
+                                        ),
                                       Positioned(
                                         bottom: 0,
                                         left: 0,
@@ -317,10 +317,11 @@ class PortfolioDisplay1 extends StatelessWidget {
                           ),
                         ),
                         const SizedBox(height: 20),
-                      ],
+                      ],                    
                     ),
                   );
                 },
-              ));
+              ),
+              );
   }
 }

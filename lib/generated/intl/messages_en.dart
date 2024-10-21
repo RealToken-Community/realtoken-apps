@@ -30,30 +30,39 @@ class MessageLookup extends MessageLookupByLibrary {
         "addressCopied":
             MessageLookupByLibrary.simpleMessage("Address copied to clipboard"),
         "allCities": MessageLookupByLibrary.simpleMessage("All Cities"),
+        "allWorkCorrectly": MessageLookupByLibrary.simpleMessage(
+            "Everything is working correctly"),
         "amount": MessageLookupByLibrary.simpleMessage("Amount"),
         "annualPercentageYield":
             MessageLookupByLibrary.simpleMessage("Annual yield"),
-        "annualYield": MessageLookupByLibrary.simpleMessage("Annual Yield"),
+        "annualYield": MessageLookupByLibrary.simpleMessage("annual yield"),
         "annually": MessageLookupByLibrary.simpleMessage("Annually"),
         "appDescription":
             MessageLookupByLibrary.simpleMessage("mobile app for Community"),
         "appName": MessageLookupByLibrary.simpleMessage("RealToken"),
         "application": MessageLookupByLibrary.simpleMessage("Application"),
         "apy": MessageLookupByLibrary.simpleMessage("APY"),
+        "areYouSureClearData": MessageLookupByLibrary.simpleMessage(
+            "Are you sure you want to clear cache and data?"),
         "ascending": MessageLookupByLibrary.simpleMessage("Ascending"),
         "author": MessageLookupByLibrary.simpleMessage("Author"),
         "blockchain": MessageLookupByLibrary.simpleMessage("Blockchain"),
         "borrowBalance": MessageLookupByLibrary.simpleMessage("Borrows"),
+        "cancel": MessageLookupByLibrary.simpleMessage("Cancel"),
         "characteristics":
             MessageLookupByLibrary.simpleMessage("Characteristics"),
         "clearCacheData":
-            MessageLookupByLibrary.simpleMessage("Clear Cache/Data"),
+            MessageLookupByLibrary.simpleMessage("Clear Cache and Data"),
         "close": MessageLookupByLibrary.simpleMessage("Close"),
         "commercial": MessageLookupByLibrary.simpleMessage("Commercial"),
         "condominium": MessageLookupByLibrary.simpleMessage("Condominium"),
+        "confirm": MessageLookupByLibrary.simpleMessage("Confirm"),
+        "confirmAction": MessageLookupByLibrary.simpleMessage("Confirm Action"),
         "constructionYear":
             MessageLookupByLibrary.simpleMessage("Year of construction"),
         "contractType": MessageLookupByLibrary.simpleMessage("Contract type"),
+        "convertSqft":
+            MessageLookupByLibrary.simpleMessage("Convert sqft to m²"),
         "copy": MessageLookupByLibrary.simpleMessage("Copy"),
         "crypto": MessageLookupByLibrary.simpleMessage("Crypto"),
         "cryptoDonationAddress":
@@ -76,6 +85,11 @@ class MessageLookup extends MessageLookupByLibrary {
         "english": MessageLookupByLibrary.simpleMessage("English"),
         "ethereumContract":
             MessageLookupByLibrary.simpleMessage("Ethereum contract"),
+        "exportData": MessageLookupByLibrary.simpleMessage("Export Data"),
+        "exportFailed":
+            MessageLookupByLibrary.simpleMessage("Failed to export data"),
+        "exportSuccess":
+            MessageLookupByLibrary.simpleMessage("Data exported successfully"),
         "feedback": MessageLookupByLibrary.simpleMessage("Feedback"),
         "finances": MessageLookupByLibrary.simpleMessage("Finances"),
         "french": MessageLookupByLibrary.simpleMessage("French"),
@@ -87,6 +101,11 @@ class MessageLookup extends MessageLookupByLibrary {
         "groupedRentGraph":
             MessageLookupByLibrary.simpleMessage("Grouped Rent Graph"),
         "hello": MessageLookupByLibrary.simpleMessage("Hello"),
+        "importData": MessageLookupByLibrary.simpleMessage("Import Data"),
+        "importFailed":
+            MessageLookupByLibrary.simpleMessage("Failed to import data"),
+        "importSuccess":
+            MessageLookupByLibrary.simpleMessage("Data imported successfully"),
         "initialLaunchDate":
             MessageLookupByLibrary.simpleMessage("Initial launch date"),
         "initialMaintenanceReserve":
@@ -110,6 +129,8 @@ class MessageLookup extends MessageLookupByLibrary {
         "multiFamily": MessageLookupByLibrary.simpleMessage("Multi Family"),
         "nameUnavailable":
             MessageLookupByLibrary.simpleMessage("Name Unavailable"),
+        "netAnnualRent":
+            MessageLookupByLibrary.simpleMessage("Net Annual Rent"),
         "netRentMonth":
             MessageLookupByLibrary.simpleMessage("Net rent per month"),
         "network": MessageLookupByLibrary.simpleMessage("Network"),
@@ -143,14 +164,19 @@ class MessageLookup extends MessageLookupByLibrary {
         "properties": MessageLookupByLibrary.simpleMessage("Properties"),
         "propertyStories":
             MessageLookupByLibrary.simpleMessage("Number of stories"),
+        "realTPerformance":
+            MessageLookupByLibrary.simpleMessage("RealT Performance"),
+        "realTTitle": MessageLookupByLibrary.simpleMessage("RealT"),
         "realTokensList":
             MessageLookupByLibrary.simpleMessage("RealTokens list"),
         "recentChanges": MessageLookupByLibrary.simpleMessage("Recent changes"),
         "recentUpdatesTitle":
-            MessageLookupByLibrary.simpleMessage("Changes in the last 30 days"),
+            MessageLookupByLibrary.simpleMessage("last 30 days"),
         "rentGraph":
             MessageLookupByLibrary.simpleMessage("Rent Received Graph"),
         "rentStartDate": MessageLookupByLibrary.simpleMessage("First rent"),
+        "rentStartFuture":
+            MessageLookupByLibrary.simpleMessage("Rent not started"),
         "rentalStatus": MessageLookupByLibrary.simpleMessage("Rental status"),
         "rentalStatusAll": MessageLookupByLibrary.simpleMessage("All"),
         "rentalStatusNotRented":
@@ -160,7 +186,7 @@ class MessageLookup extends MessageLookupByLibrary {
         "rentalStatusRented": MessageLookupByLibrary.simpleMessage("Rented"),
         "rentalType": MessageLookupByLibrary.simpleMessage("Rental type"),
         "rented": MessageLookupByLibrary.simpleMessage("Rented"),
-        "rentedUnits": MessageLookupByLibrary.simpleMessage("Rented Units"),
+        "rentedUnits": MessageLookupByLibrary.simpleMessage("rented units"),
         "rents": MessageLookupByLibrary.simpleMessage("Rents"),
         "resortBungalow":
             MessageLookupByLibrary.simpleMessage("Resort Bungalow"),
@@ -180,6 +206,8 @@ class MessageLookup extends MessageLookupByLibrary {
         "settingsTitle": MessageLookupByLibrary.simpleMessage("Settings"),
         "sfrPortfolio": MessageLookupByLibrary.simpleMessage("SFR Portfolio"),
         "singleFamily": MessageLookupByLibrary.simpleMessage("Single Family"),
+        "somethingWrong": MessageLookupByLibrary.simpleMessage(
+            "The data may not be up to date"),
         "sortByAPY": MessageLookupByLibrary.simpleMessage("Sort by APY"),
         "sortByInitialLaunchDate":
             MessageLookupByLibrary.simpleMessage("sort by recently added"),
@@ -192,6 +220,7 @@ class MessageLookup extends MessageLookupByLibrary {
         "statistics": MessageLookupByLibrary.simpleMessage("Statistics"),
         "supportProject":
             MessageLookupByLibrary.simpleMessage("Support the project"),
+        "textSize": MessageLookupByLibrary.simpleMessage("Text size"),
         "thankYouMessage": MessageLookupByLibrary.simpleMessage(
             "Thank you to everyone who contributed to this project."),
         "thanks": MessageLookupByLibrary.simpleMessage("Thanks"),
@@ -206,18 +235,19 @@ class MessageLookup extends MessageLookupByLibrary {
         "tokenDistributionByRegion": MessageLookupByLibrary.simpleMessage(
             "Token Distribution by Region"),
         "tokenSymbol": MessageLookupByLibrary.simpleMessage("Token symbol"),
-        "tokens": MessageLookupByLibrary.simpleMessage("Tokens"),
+        "tokens": MessageLookupByLibrary.simpleMessage("tokens"),
         "totalInvestment":
-            MessageLookupByLibrary.simpleMessage("Total investment"),
+            MessageLookupByLibrary.simpleMessage("Total Investment"),
         "totalPortfolio":
             MessageLookupByLibrary.simpleMessage("Total Portfolio"),
         "totalRentReceived":
             MessageLookupByLibrary.simpleMessage("total of revenus"),
         "totalTokens": MessageLookupByLibrary.simpleMessage("Total Tokens"),
-        "totalUnits": MessageLookupByLibrary.simpleMessage("Total units"),
+        "totalUnits": MessageLookupByLibrary.simpleMessage("Total Units"),
         "totalValue": MessageLookupByLibrary.simpleMessage("Total Value"),
         "underlyingAssetPrice":
             MessageLookupByLibrary.simpleMessage("Asset price"),
+        "units": MessageLookupByLibrary.simpleMessage("units"),
         "unknown": MessageLookupByLibrary.simpleMessage("Unknown"),
         "unknownCity": MessageLookupByLibrary.simpleMessage("Unknown City"),
         "unknownTokenName":
