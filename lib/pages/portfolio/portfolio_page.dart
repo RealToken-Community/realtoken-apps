@@ -1,22 +1,23 @@
+import 'package:real_token/utils/utils.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import '../../api/data_manager.dart';
+import 'package:real_token/api/data_manager.dart';
 import 'portfolio_display_1.dart';
 import 'portfolio_display_2.dart';
-import '../../generated/l10n.dart'; // Import pour les traductions
+import 'package:real_token/generated/l10n.dart'; // Import pour les traductions
 
 class PortfolioPage extends StatefulWidget {
   const PortfolioPage({super.key});
 
   @override
-  _PortfolioPageState createState() => _PortfolioPageState();
+  PortfolioPageState createState() => PortfolioPageState();
 }
 
-class _PortfolioPageState extends State<PortfolioPage> {
+class PortfolioPageState extends State<PortfolioPage> {
   bool _isDisplay1 = true;
   String _searchQuery = '';
-  String _sortOption = 'Name';
+  String _sortOption = 'sort by recently added';
   bool _isAscending = true;
   String? _selectedCity;
   String _rentalStatusFilter = 'All'; // Nouveau filtre pour le statut de location
@@ -24,12 +25,8 @@ class _PortfolioPageState extends State<PortfolioPage> {
 @override
 void initState() {
   super.initState();
-  WidgetsBinding.instance.addPostFrameCallback((_) {
-    final dataManager = Provider.of<DataManager>(context, listen: false);
-    dataManager.updateGlobalVariables();
-    //dataManager.updatedDetailRentVariables();
-    dataManager.fetchAndCalculateData();
-    
+  WidgetsBinding.instance.addPostFrameCallback((_) async {
+    Utils.loadData(context);
     _loadDisplayPreference();
     _loadFilterPreferences();
   });
@@ -63,23 +60,22 @@ void initState() {
   }
 
   // Charger les filtres et tri depuis SharedPreferences
-Future<void> _loadFilterPreferences() async {
-  SharedPreferences prefs = await SharedPreferences.getInstance();
-  
-  // Assurez-vous d'utiliser addPostFrameCallback même ici
-  WidgetsBinding.instance.addPostFrameCallback((_) {
-    if (mounted) { // Vérifie que le widget est toujours monté
-      setState(() {
-        _searchQuery = prefs.getString('searchQuery') ?? '';
-        _sortOption = prefs.getString('sortOption') ?? 'Name';
-        _isAscending = prefs.getBool('isAscending') ?? false;  // Charger l'état de tri
-        _selectedCity = prefs.getString('selectedCity')?.isEmpty ?? true ? null : prefs.getString('selectedCity');
-        _rentalStatusFilter = prefs.getString('rentalStatusFilter') ?? 'All';
-      });
-    }
-  });
-}
-
+  Future<void> _loadFilterPreferences() async {
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    
+    // Assurez-vous d'utiliser addPostFrameCallback même ici
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) { // Vérifie que le widget est toujours monté
+        setState(() {
+          _searchQuery = prefs.getString('searchQuery') ?? '';
+          _sortOption = prefs.getString('sortOption') ?? S.of(context).sortByInitialLaunchDate;
+          _isAscending = prefs.getBool('isAscending') ?? false;  // Charger l'état de tri
+          _selectedCity = prefs.getString('selectedCity')?.isEmpty ?? true ? null : prefs.getString('selectedCity');
+          _rentalStatusFilter = prefs.getString('rentalStatusFilter') ?? 'All';
+        });
+      }
+    });
+  }
 
   // Sauvegarder les filtres et tri dans SharedPreferences
   Future<void> _saveFilterPreferences() async {
@@ -120,82 +116,80 @@ Future<void> _loadFilterPreferences() async {
     _saveFilterPreferences(); // Sauvegarde
   }
 
-List<Map<String, dynamic>> _groupAndSumPortfolio(List<Map<String, dynamic>> portfolio) {
-  Map<String, Map<String, dynamic>> groupedPortfolio = {};
+  List<Map<String, dynamic>> _groupAndSumPortfolio(List<Map<String, dynamic>> portfolio) {
+    Map<String, Map<String, dynamic>> groupedPortfolio = {};
 
-  for (var token in portfolio) {
-    String shortName = token['shortName']; // Utilisez l'identifiant unique
-    double tokenAmount = double.tryParse(token['amount'].toString()) ?? 0.0;
-    double tokenValue = double.tryParse(token['totalValue'].toString()) ?? 0.0;
-    double dailyIncome = double.tryParse(token['dailyIncome'].toString()) ?? 0.0;
-    double monthlyIncome = double.tryParse(token['monthlyIncome'].toString()) ?? 0.0;
-    double yearlyIncome = double.tryParse(token['yearlyIncome'].toString()) ?? 0.0;
+    for (var token in portfolio) {
+      String shortName = token['shortName']; // Utilisez l'identifiant unique
+      double tokenAmount = double.tryParse(token['amount'].toString()) ?? 0.0;
+      double tokenValue = double.tryParse(token['totalValue'].toString()) ?? 0.0;
+      double dailyIncome = double.tryParse(token['dailyIncome'].toString()) ?? 0.0;
+      double monthlyIncome = double.tryParse(token['monthlyIncome'].toString()) ?? 0.0;
+      double yearlyIncome = double.tryParse(token['yearlyIncome'].toString()) ?? 0.0;
 
-    bool isInWallet = token['source'] == 'Wallet'; // Ajout de la vérification pour le wallet
-    bool isInRMM = token['source'] == 'RMM'; // Ajout de la vérification pour le RMM
+      bool isInWallet = token['source'] == 'Wallet'; // Ajout de la vérification pour le wallet
+      bool isInRMM = token['source'] == 'RMM'; // Ajout de la vérification pour le RMM
 
-    if (groupedPortfolio.containsKey(shortName)) {
-      // Cumulez les champs comme `amount`, `totalValue`, `dailyIncome`, `monthlyIncome` et `yearlyIncome`
-      groupedPortfolio[shortName]!['amount'] = (groupedPortfolio[shortName]!['amount'] as double) + tokenAmount;
-      groupedPortfolio[shortName]!['totalValue'] = (groupedPortfolio[shortName]!['totalValue'] as double) + tokenValue;
-      groupedPortfolio[shortName]!['dailyIncome'] = (groupedPortfolio[shortName]!['dailyIncome'] as double) + dailyIncome;
-      groupedPortfolio[shortName]!['monthlyIncome'] = (groupedPortfolio[shortName]!['monthlyIncome'] as double) + monthlyIncome;
-      groupedPortfolio[shortName]!['yearlyIncome'] = (groupedPortfolio[shortName]!['yearlyIncome'] as double) + yearlyIncome;
+      if (groupedPortfolio.containsKey(shortName)) {
+        // Cumulez les champs comme `amount`, `totalValue`, `dailyIncome`, `monthlyIncome` et `yearlyIncome`
+        groupedPortfolio[shortName]!['amount'] = (groupedPortfolio[shortName]!['amount'] as double) + tokenAmount;
+        groupedPortfolio[shortName]!['totalValue'] = (groupedPortfolio[shortName]!['totalValue'] as double) + tokenValue;
+        groupedPortfolio[shortName]!['dailyIncome'] = (groupedPortfolio[shortName]!['dailyIncome'] as double) + dailyIncome;
+        groupedPortfolio[shortName]!['monthlyIncome'] = (groupedPortfolio[shortName]!['monthlyIncome'] as double) + monthlyIncome;
+        groupedPortfolio[shortName]!['yearlyIncome'] = (groupedPortfolio[shortName]!['yearlyIncome'] as double) + yearlyIncome;
 
-      // Mettre à jour les indicateurs de présence dans le wallet et le RMM
-      groupedPortfolio[shortName]!['inWallet'] |= isInWallet;
-      groupedPortfolio[shortName]!['inRMM'] |= isInRMM;
-    } else {
-      // Si c'est un nouveau token, ajoutez-le au groupe et initialisez les valeurs
-      groupedPortfolio[shortName] = Map<String, dynamic>.from(token);
-      groupedPortfolio[shortName]!['amount'] = tokenAmount;
-      groupedPortfolio[shortName]!['totalValue'] = tokenValue;
-      groupedPortfolio[shortName]!['dailyIncome'] = dailyIncome;
-      groupedPortfolio[shortName]!['monthlyIncome'] = monthlyIncome;
-      groupedPortfolio[shortName]!['yearlyIncome'] = yearlyIncome;
-      groupedPortfolio[shortName]!['inWallet'] = isInWallet;
-      groupedPortfolio[shortName]!['inRMM'] = isInRMM;
+        // Mettre à jour les indicateurs de présence dans le wallet et le RMM
+        groupedPortfolio[shortName]!['inWallet'] |= isInWallet;
+        groupedPortfolio[shortName]!['inRMM'] |= isInRMM;
+      } else {
+        // Si c'est un nouveau token, ajoutez-le au groupe et initialisez les valeurs
+        groupedPortfolio[shortName] = Map<String, dynamic>.from(token);
+        groupedPortfolio[shortName]!['amount'] = tokenAmount;
+        groupedPortfolio[shortName]!['totalValue'] = tokenValue;
+        groupedPortfolio[shortName]!['dailyIncome'] = dailyIncome;
+        groupedPortfolio[shortName]!['monthlyIncome'] = monthlyIncome;
+        groupedPortfolio[shortName]!['yearlyIncome'] = yearlyIncome;
+        groupedPortfolio[shortName]!['inWallet'] = isInWallet;
+        groupedPortfolio[shortName]!['inRMM'] = isInRMM;
+      }
     }
+
+    return groupedPortfolio.values.toList();
   }
-
-  return groupedPortfolio.values.toList();
-}
-
-
 
   // Modifier la méthode pour appliquer le filtre sur le statut de location
- List<Map<String, dynamic>> _filterAndSortPortfolio(List<Map<String, dynamic>> portfolio) {
-  // Regroupez et cumulez les tokens similaires
-  List<Map<String, dynamic>> groupedPortfolio = _groupAndSumPortfolio(portfolio);
+  List<Map<String, dynamic>> _filterAndSortPortfolio(List<Map<String, dynamic>> portfolio) {
+    // Regroupez et cumulez les tokens similaires
+    List<Map<String, dynamic>> groupedPortfolio = _groupAndSumPortfolio(portfolio);
 
-  // Filtrez et triez comme avant
-  List<Map<String, dynamic>> filteredPortfolio = groupedPortfolio
-      .where((token) =>
-          token['fullName'].toLowerCase().contains(_searchQuery.toLowerCase()) &&
-          (_selectedCity == null || token['fullName'].contains(_selectedCity!)) &&
-          (_rentalStatusFilter == S.of(context).rentalStatusAll || _filterByRentalStatus(token)))
-      .toList();
+    // Filtrez et triez comme avant
+    List<Map<String, dynamic>> filteredPortfolio = groupedPortfolio
+        .where((token) =>
+            token['fullName'].toLowerCase().contains(_searchQuery.toLowerCase()) &&
+            (_selectedCity == null || token['fullName'].contains(_selectedCity!)) &&
+            (_rentalStatusFilter == S.of(context).rentalStatusAll || _filterByRentalStatus(token)))
+        .toList();
 
-  if (_sortOption == S.of(context).sortByName) {
-    filteredPortfolio.sort((a, b) => _isAscending
-        ? a['shortName'].compareTo(b['shortName'])
-        : b['shortName'].compareTo(a['shortName']));
-  } else if (_sortOption == S.of(context).sortByValue) {
-    filteredPortfolio.sort((a, b) => _isAscending
-        ? a['totalValue'].compareTo(b['totalValue'])
-        : b['totalValue'].compareTo(a['totalValue']));
-  } else if (_sortOption == S.of(context).sortByAPY) {
-    filteredPortfolio.sort((a, b) => _isAscending
-        ? a['annualPercentageYield'].compareTo(b['annualPercentageYield'])
-        : b['annualPercentageYield'].compareTo(a['annualPercentageYield']));
-  }  else if (_sortOption == S.of(context).sortByInitialLaunchDate) {  // Nouveau tri par initialLaunchDate
-    filteredPortfolio.sort((a, b) => _isAscending
-        ? DateTime.parse(a['initialLaunchDate']).compareTo(DateTime.parse(b['initialLaunchDate']))
-        : DateTime.parse(b['initialLaunchDate']).compareTo(DateTime.parse(a['initialLaunchDate'])));
+    if (_sortOption == S.of(context).sortByName) {
+      filteredPortfolio.sort((a, b) => _isAscending
+          ? a['shortName'].compareTo(b['shortName'])
+          : b['shortName'].compareTo(a['shortName']));
+    } else if (_sortOption == S.of(context).sortByValue) {
+      filteredPortfolio.sort((a, b) => _isAscending
+          ? a['totalValue'].compareTo(b['totalValue'])
+          : b['totalValue'].compareTo(a['totalValue']));
+    } else if (_sortOption == S.of(context).sortByAPY) {
+      filteredPortfolio.sort((a, b) => _isAscending
+          ? a['annualPercentageYield'].compareTo(b['annualPercentageYield'])
+          : b['annualPercentageYield'].compareTo(a['annualPercentageYield']));
+    }  else if (_sortOption == S.of(context).sortByInitialLaunchDate) {  // Nouveau tri par initialLaunchDate
+      filteredPortfolio.sort((a, b) => _isAscending
+          ? DateTime.parse(a['initialLaunchDate']).compareTo(DateTime.parse(b['initialLaunchDate']))
+          : DateTime.parse(b['initialLaunchDate']).compareTo(DateTime.parse(a['initialLaunchDate'])));
+    }
+
+    return filteredPortfolio;
   }
-
-  return filteredPortfolio;
-}
 
   // Nouvelle méthode pour filtrer par statut de location
   bool _filterByRentalStatus(Map<String, dynamic> token) {
@@ -241,7 +235,7 @@ List<Map<String, dynamic>> _groupAndSumPortfolio(List<Map<String, dynamic>> port
               SliverAppBar(
                 floating: true,
                 snap: true,
-                expandedHeight: kToolbarHeight + 35, // Hauteur étendue
+                expandedHeight: Utils.getSliverAppBarHeight(context), // Hauteur étendue
                 flexibleSpace: FlexibleSpaceBar(
                   background: Container(
                     color: Theme.of(context).cardColor,

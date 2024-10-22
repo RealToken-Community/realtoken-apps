@@ -1,18 +1,19 @@
-import 'package:RealToken/app_state.dart';
+import 'package:real_token/app_state.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import '../api/data_manager.dart'; // Assurez-vous d'importer votre DataManager
-import '../../generated/l10n.dart'; // Import pour les traductions
+import 'package:real_token/api/data_manager.dart'; // Assurez-vous d'importer votre DataManager
+import 'package:real_token/generated/l10n.dart'; // Import pour les traductions
 
 class UpdatesPage extends StatefulWidget {
   const UpdatesPage({super.key});
 
   @override
-  _UpdatesPageState createState() => _UpdatesPageState();
+   createState() => UpdatesPageState();
 }
 
-class _UpdatesPageState extends State<UpdatesPage> {
+class UpdatesPageState extends State<UpdatesPage> {
   bool showUserTokensOnly = false; // Ajout du booléen pour le switch
+  Map<String, Map<String, List<Map<String, dynamic>>>> groupedUpdates = {};
 
   @override
   void initState() {
@@ -49,7 +50,6 @@ class _UpdatesPageState extends State<UpdatesPage> {
         : dataManager.recentUpdates;
 
     // Regrouper les mises à jour par date puis par token
-    Map<String, Map<String, List<Map<String, dynamic>>>> groupedUpdates = {};
     for (var update in recentUpdatesToShow) {
       final String dateKey = DateTime.parse(update['timsync'])
           .toLocal()
@@ -72,104 +72,125 @@ class _UpdatesPageState extends State<UpdatesPage> {
     }
 
     return Scaffold(
+        backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       appBar: AppBar(
+        backgroundColor: Theme.of(context).scaffoldBackgroundColor,
         title: Text(S.of(context).recentUpdatesTitle), // Utilisation des traductions
-        actions: [
-          Row(
-            children: [
-              Text(S.of(context).portfolio),
-              Transform.scale(
-                scale: 0.7, // Appliquer le scale
-                child: Switch(
-                  value: showUserTokensOnly,
-                  onChanged: (value) {
-                    setState(() {
-                      showUserTokensOnly = value;
-                    });
-                  },
-                  activeColor: Colors.blue, // Couleur du bouton actif
-                  activeTrackColor: Colors.blue[200], // Couleur de la piste active
-                ),
-              ),
-            ],
-          ),
-        ],
-
       ),
-      body: ListView.builder(
-        itemCount: groupedUpdates.keys.length,
-        itemBuilder: (context, dateIndex) {
-          final String dateKey = groupedUpdates.keys.elementAt(dateIndex);
-          final Map<String, List<Map<String, dynamic>>> updatesForDate = groupedUpdates[dateKey]!;
-
-          return Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Padding(
-                padding: const EdgeInsets.all(8.0),
-                child: Text(
-                  dateKey, // Afficher la date en gras
-                  style: TextStyle(
-                      fontSize: 18 + appState.getTextSizeOffset(), fontWeight: FontWeight.bold),
-                ),
-              ),
-              // Afficher les tokens et leurs infos regroupées
-              ...updatesForDate.entries.map((tokenEntry) {
-                final String tokenName = tokenEntry.key;
-                final List<Map<String, dynamic>> updatesForToken = tokenEntry.value;
-
-                // Assumer que toutes les mises à jour pour un token partagent la même image
-                final String imageUrl = updatesForToken.first['imageLink'] ?? S.of(context).noImageAvailable;
-
-                return Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
-                  child: Container(
-                    width: double.infinity, // Faire en sorte que la carte prenne toute la largeur disponible
-                    padding: const EdgeInsets.all(16.0),
-                    decoration: BoxDecoration(
-                      color: Theme.of(context).cardColor, // Utiliser la couleur du thème
-                      borderRadius: BorderRadius.circular(8), // Ajout de coins arrondis
-                    ),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
+      body: NestedScrollView(
+        headerSliverBuilder: (BuildContext context, bool innerBoxIsScrolled) {
+          return <Widget>[
+            SliverAppBar(
+              backgroundColor: Theme.of(context).scaffoldBackgroundColor,
+              floating: true, // Rend l'AppBar rétractable
+              snap: true, // Permet de faire réapparaître l'AppBar automatiquement
+              expandedHeight: kToolbarHeight, // Hauteur étendue si besoin
+              automaticallyImplyLeading: false,
+              flexibleSpace: FlexibleSpaceBar(
+                background: Container(
+                  color: Theme.of(context).cardColor,
+                  child: Padding(
+                    padding: const EdgeInsets.all(2.0),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
                       children: [
-                        // Afficher l'image du token si elle est disponible
-                        if (imageUrl != S.of(context).noImageAvailable)
-                          Image.network(
-                            imageUrl,
-                            height: 100,
-                            width: double.infinity, // Prendre toute la largeur disponible
-                            fit: BoxFit.cover,
+                        Text(S.of(context).portfolio),
+                        Transform.scale(
+                          scale: 0.8, // Appliquer le scale
+                          child: Switch(
+                            value: showUserTokensOnly,
+                            onChanged: (value) {
+                              setState(() {
+                                showUserTokensOnly = value;
+                              });
+                            },
+                            activeColor: Colors.blue, // Couleur du bouton actif
+                            activeTrackColor: Colors.blue[200], // Couleur de la piste active
                           ),
-                        const SizedBox(height: 8),
-                        // Afficher le nom du token
-                        Text(
-                          tokenName,
-                          style: TextStyle(
-                              fontSize: 16 + appState.getTextSizeOffset(), fontWeight: FontWeight.bold),
                         ),
-                        const SizedBox(height: 4),
-                        // Afficher les informations formatées pour ce token
-                        ...updatesForToken.map((update) {
-                          return Padding(
-                            padding: const EdgeInsets.symmetric(vertical: 4.0),
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Text(update['formattedKey']),
-                                Text("${update['formattedOldValue']} -> ${update['formattedNewValue']}"),
-                              ],
-                            ),
-                          );
-                        }),
                       ],
                     ),
                   ),
-                );
-              }),
-            ],
-          );
+                ),
+              ),
+            ),
+          ];
         },
+        body: ListView.builder(
+          itemCount: groupedUpdates.keys.length,
+          itemBuilder: (context, dateIndex) {
+            final String dateKey = groupedUpdates.keys.elementAt(dateIndex);
+            final Map<String, List<Map<String, dynamic>>> updatesForDate = groupedUpdates[dateKey]!;
+
+            return Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Padding(
+                  padding: const EdgeInsets.all(8.0),
+                  child: Text(
+                    dateKey, // Afficher la date en gras
+                    style: TextStyle(
+                        fontSize: 18 + appState.getTextSizeOffset(), fontWeight: FontWeight.bold),
+                  ),
+                ),
+                // Afficher les tokens et leurs infos regroupées
+                ...updatesForDate.entries.map((tokenEntry) {
+                  final String tokenName = tokenEntry.key;
+                  final List<Map<String, dynamic>> updatesForToken = tokenEntry.value;
+
+                  // Assumer que toutes les mises à jour pour un token partagent la même image
+                  final String imageUrl = updatesForToken.first['imageLink'] ?? S.of(context).noImageAvailable;
+
+                  return Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
+                    child: Container(
+                      width: double.infinity, // Faire en sorte que la carte prenne toute la largeur disponible
+                      padding: const EdgeInsets.all(16.0),
+                      decoration: BoxDecoration(
+                        color: Theme.of(context).cardColor, // Utiliser la couleur du thème
+                        borderRadius: BorderRadius.circular(8), // Ajout de coins arrondis
+                      ),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          // Afficher l'image du token si elle est disponible
+                          if (imageUrl != S.of(context).noImageAvailable)
+                            Image.network(
+                              imageUrl,
+                              height: 100,
+                              width: double.infinity, // Prendre toute la largeur disponible
+                              fit: BoxFit.cover,
+                            ),
+                          const SizedBox(height: 8),
+                          // Afficher le nom du token
+                          Text(
+                            tokenName,
+                            style: TextStyle(
+                                fontSize: 16 + appState.getTextSizeOffset(), fontWeight: FontWeight.bold),
+                          ),
+                          const SizedBox(height: 4),
+                          // Afficher les informations formatées pour ce token
+                          ...updatesForToken.map((update) {
+                            return Padding(
+                              padding: const EdgeInsets.symmetric(vertical: 4.0),
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(update['formattedKey']),
+                                  Text("${update['formattedOldValue']} -> ${update['formattedNewValue']}"),
+                                ],
+                              ),
+                            );
+                          }),
+                        ],
+                      ),
+                    ),
+                  );
+                }),
+              ],
+            );
+          },
+        ),
       ),
     );
   }

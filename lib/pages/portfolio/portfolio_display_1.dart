@@ -1,21 +1,12 @@
 import 'dart:io'; // Import pour Platform
+import 'package:real_token/utils/utils.dart';
 import 'package:flutter/material.dart';
 import 'package:cached_network_image/cached_network_image.dart';
-import 'package:intl/intl.dart'; // Import de la bibliothèque intl
-import '../token_bottom_sheet.dart'; // Import de la bibliothèque url_launcher
+import 'package:real_token/pages/token_bottom_sheet.dart'; // Import de la bibliothèque url_launcher
 import 'package:provider/provider.dart'; // Pour accéder à DataManager
-import '../../api/data_manager.dart'; // Import de DataManager
-import '../../generated/l10n.dart'; // Import des traductions
-import '../../settings/manage_evm_addresses_page.dart'; // Import de la page de gestion des adresses EVM
-import '../../app_state.dart'; // Import AppState
-
-// Fonction pour extraire le nom de la ville à partir du fullName
-String extractCity(String fullName) {
-  List<String> parts = fullName.split(',');
-  return parts.length >= 2
-      ? parts[1].trim()
-      : S.current.unknownCity; // Traduction pour "Ville inconnue"
-}
+import 'package:real_token/generated/l10n.dart'; // Import des traductions
+import 'package:real_token/settings/manage_evm_addresses_page.dart'; // Import de la page de gestion des adresses EVM
+import 'package:real_token/app_state.dart'; // Import AppState
 
 class PortfolioDisplay1 extends StatelessWidget {
   final List<Map<String, dynamic>> portfolio;
@@ -74,7 +65,7 @@ class PortfolioDisplay1 extends StatelessWidget {
                   final token = portfolio[index];
                   final isWallet = token['inWallet'] ?? false; // Modifier pour détecter si présent dans le wallet
                   final isRMM = token['inRMM'] ?? false; // Modifier pour détecter si présent dans le RMM
-                  final city = extractCity(token['fullName'] ?? '');
+                  final city = Utils.extractCity(token['fullName'] ?? '');
 
                   final rentedUnits = token['rentedUnits'] ?? 0;
                   final totalUnits = token['totalUnits'] ?? 1;
@@ -151,7 +142,7 @@ class PortfolioDisplay1 extends StatelessWidget {
                                                   height: 12,
                                                   decoration: BoxDecoration(
                                                     shape: BoxShape.circle,
-                                                    color: getRentalStatusColor(
+                                                    color: Utils.getRentalStatusColor(
                                                       rentedUnits,
                                                       totalUnits,
                                                     ),
@@ -202,6 +193,7 @@ class PortfolioDisplay1 extends StatelessWidget {
                                                   style: TextStyle(
                                                     fontSize: (Platform.isAndroid ? 14 : 15) + appState.getTextSizeOffset(),
                                                     fontWeight: FontWeight.bold,
+                                                    color:Theme.of(context).textTheme.bodyLarge?.color
                                                   ),
                                                   maxLines: 1, // Limite à une seule ligne
                                                   overflow: TextOverflow.ellipsis, // Tronque avec "..."

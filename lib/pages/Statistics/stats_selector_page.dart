@@ -1,47 +1,58 @@
+import 'package:real_token/utils/utils.dart';
 import 'package:flutter/material.dart';
-import 'package:RealToken/pages/Statistics/RMM_stats.dart';
-import 'package:RealToken/pages/Statistics/portfolio_stats.dart';  // Assurez-vous que ces pages existent dans votre projet
+import 'package:real_token/pages/Statistics/RMM_stats.dart';
+import 'package:real_token/pages/Statistics/portfolio_stats.dart'; // Assurez-vous que ces pages existent dans votre projet
 import 'package:provider/provider.dart';
-import '../../app_state.dart';
+import 'package:real_token/app_state.dart';
 
 class StatsSelectorPage extends StatefulWidget {
   const StatsSelectorPage({super.key});
 
   @override
-  _StatsSelectorPageState createState() => _StatsSelectorPageState();
+  StatsSelectorPageState createState() => StatsSelectorPageState();
 }
 
-class _StatsSelectorPageState extends State<StatsSelectorPage> {
+class StatsSelectorPageState extends State<StatsSelectorPage> {
   String _selectedStats = 'PortfolioStats'; // Valeur par défaut
 
-@override
-Widget build(BuildContext context) {
-  return Scaffold(
-    body: Padding(
-          padding: const EdgeInsets.only(top: 80.0),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.center,
-        children: [
-          const SizedBox(height: 20),
-          _buildStatsSelector(),
-          const SizedBox(height: 5),
-
-          // Affichage de la page en fonction du choix
-          Expanded(
-            child: _selectedStats == 'PortfolioStats'
-                ? const PortfolioStats()
-                : const RmmStats(),
-          ),
-        ],
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      body: NestedScrollView(
+        headerSliverBuilder: (BuildContext context, bool innerBoxIsScrolled) {
+          return <Widget>[
+            SliverAppBar(
+              floating: true, // Rend l'AppBar rétractable
+              snap: true, // Permet de faire réapparaître l'AppBar automatiquement
+              expandedHeight: Utils.getSliverAppBarHeight(context), // Hauteur étendue si besoin
+              flexibleSpace: FlexibleSpaceBar(
+                background: Container(
+                  color: Theme.of(context).cardColor,
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.end, // Aligne les éléments vers le bas
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Padding(
+                        padding: const EdgeInsets.all(8.0), // Ajustez les marges si nécessaire
+                        child: _buildStatsSelector(), // Place votre sélecteur ici
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ),
+          ];
+        },
+        body: _selectedStats == 'PortfolioStats'
+            ? const PortfolioStats()
+            : const RmmStats(),
       ),
-    ),
-  );
-}
-
+    );
+  }
 
   Widget _buildStatsSelector() {
     return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 16.0), // Ajoute un padding horizontal
+      padding: const EdgeInsets.symmetric(horizontal: 16.0),
       child: Row(
         children: [
           _buildStatsButton('PortfolioStats', 'Portfolio Stats', isFirst: true),
@@ -51,8 +62,8 @@ Widget build(BuildContext context) {
     );
   }
 
-
-  Widget _buildStatsButton(String value, String label, {bool isFirst = false, bool isLast = false}) {
+  Widget _buildStatsButton(String value, String label,
+      {bool isFirst = false, bool isLast = false}) {
     bool isSelected = _selectedStats == value;
     final appState = Provider.of<AppState>(context);
 

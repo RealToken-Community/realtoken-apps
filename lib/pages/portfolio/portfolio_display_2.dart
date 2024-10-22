@@ -1,18 +1,11 @@
+import 'package:real_token/utils/utils.dart';
 import 'package:flutter/material.dart';
 import 'package:cached_network_image/cached_network_image.dart';
-import '../token_bottom_sheet.dart'; // Import de la bibliothèque url_launcher
+import 'package:real_token/pages/token_bottom_sheet.dart'; // Import de la bibliothèque url_launcher
 import 'package:provider/provider.dart'; // Pour accéder à DataManager
-import '../../generated/l10n.dart'; // Import des traductions
-import '../../settings/manage_evm_addresses_page.dart'; // Import de la page de gestion des adresses EVM
-import '../../app_state.dart'; // Import de AppState
-
-// Fonction pour extraire le nom de la ville à partir du fullName
-String extractCity(String fullName) {
-  List<String> parts = fullName.split(',');
-  return parts.length >= 2
-      ? parts[1].trim()
-      : S.current.unknownCity; // Traduction pour "Ville inconnue"
-}
+import 'package:real_token/generated/l10n.dart'; // Import des traductions
+import 'package:real_token/settings/manage_evm_addresses_page.dart'; // Import de la page de gestion des adresses EVM
+import 'package:real_token/app_state.dart'; // Import de AppState
 
 class PortfolioDisplay2 extends StatefulWidget {
   final List<Map<String, dynamic>> portfolio;
@@ -20,10 +13,10 @@ class PortfolioDisplay2 extends StatefulWidget {
   const PortfolioDisplay2({super.key, required this.portfolio});
 
   @override
-  _PortfolioDisplay2State createState() => _PortfolioDisplay2State();
+  PortfolioDisplay2State createState() => PortfolioDisplay2State();
 }
 
-class _PortfolioDisplay2State extends State<PortfolioDisplay2> {
+class PortfolioDisplay2State extends State<PortfolioDisplay2> {
 
   @override
   Widget build(BuildContext context) {
@@ -85,7 +78,7 @@ class _PortfolioDisplay2State extends State<PortfolioDisplay2> {
                       final token = filteredPortfolio[index];
                       final isWallet = token['inWallet'] ?? false; // Modifier pour détecter si présent dans le wallet
                       final isRMM = token['inRMM'] ?? false; // Modifier pour détecter si présent dans le RMM
-                      final city = extractCity(token['fullName'] ?? '');
+                      final city = Utils.extractCity(token['fullName'] ?? '');
 
                       // Vérifier si la date de 'rent_start' est dans le futur en utilisant le bon format
                       final rentStartDate = DateTime.tryParse(token['rentStartDate'] ?? '');

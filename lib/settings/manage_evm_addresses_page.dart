@@ -1,20 +1,21 @@
+import 'package:real_token/utils/utils.dart';
 import 'package:provider/provider.dart';
 import 'package:flutter/material.dart';
 import 'package:mobile_scanner/mobile_scanner.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:flutter/services.dart'; // Pour copier dans le presse-papiers
-import '../api/data_manager.dart';
-import '../api/api_service.dart';
-import '../../app_state.dart'; // Import pour accéder à AppState
+import 'package:real_token/api/data_manager.dart';
+import 'package:real_token/api/api_service.dart';
+import 'package:real_token/app_state.dart'; // Import pour accéder à AppState
 
 class ManageEvmAddressesPage extends StatefulWidget {
   const ManageEvmAddressesPage({super.key});
 
   @override
-  _ManageEthAddressesPageState createState() => _ManageEthAddressesPageState();
+  ManageEthAddressesPageState createState() => ManageEthAddressesPageState();
 }
 
-class _ManageEthAddressesPageState extends State<ManageEvmAddressesPage> {
+class ManageEthAddressesPageState extends State<ManageEvmAddressesPage> {
   final TextEditingController _ethAddressController = TextEditingController();
   List<String> ethAddresses = [];
 
@@ -70,9 +71,7 @@ class _ManageEthAddressesPageState extends State<ManageEvmAddressesPage> {
 
         await prefs.setStringList('evmAddresses', ethAddresses);
       }
-      await dataManager.updateGlobalVariables(forceFetch: true);
-      dataManager.fetchRentData(forceFetch: true); // Forcer le fetch des données de loyer
-      dataManager.fetchAndCalculateData(forceFetch: true); // Forcer le fetch
+      Utils.loadData(context);
     }
   }
 

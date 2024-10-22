@@ -1,17 +1,17 @@
-import 'dart:convert';
+import 'package:real_token/generated/l10n.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:fl_chart/fl_chart.dart';
-import '../../api/data_manager.dart';
+import 'package:real_token/api/data_manager.dart';
 
 class RmmStats extends StatefulWidget {
   const RmmStats({super.key});
 
   @override
-  _RmmStatsState createState() => _RmmStatsState();
+  RmmStatsState createState() => RmmStatsState();
 }
 
-class _RmmStatsState extends State<RmmStats> {
+class RmmStatsState extends State<RmmStats> {
   String selectedPeriod = 'hour'; // Par défaut, afficher par heure
 
   @override
@@ -71,7 +71,7 @@ class _RmmStatsState extends State<RmmStats> {
                             child: Row(
                               children: [
                                 Text(
-                                  'APY Moyen Global: ${apyAverage.toStringAsFixed(2)}%', // Affichage de l'APY moyen
+                                  '${S.of(context).averageApy} ${apyAverage.toStringAsFixed(2)}%', // Affichage de l'APY moyen
                                   style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
                                 ),
                                 const SizedBox(width: 5), // Un petit espace entre le texte et l'icône
@@ -178,15 +178,25 @@ class _RmmStatsState extends State<RmmStats> {
               Row(
                 children: [
                   Text(
-                    'Période: ',
+                    S.of(context).period, // Traduction pour "Période"
                     style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
                   ),
+                  const SizedBox(width: 20),
                   DropdownButton<String>(
                     value: selectedPeriod,
-                    items: const [
-                      DropdownMenuItem(value: 'hour', child: Text('Heures')),
-                      DropdownMenuItem(value: 'day', child: Text('Jours')),
-                      DropdownMenuItem(value: 'week', child: Text('Semaines')),
+                    items: [
+                      DropdownMenuItem(
+                        value: 'hour',
+                        child: Text(S.of(context).hours), // Traduction pour "Heures"
+                      ),
+                      DropdownMenuItem(
+                        value: 'day',
+                        child: Text(S.of(context).days), // Traduction pour "Jours"
+                      ),
+                      DropdownMenuItem(
+                        value: 'week',
+                        child: Text(S.of(context).weeks), // Traduction pour "Semaines"
+                      ),
                     ],
                     onChanged: (value) {
                       setState(() {
@@ -196,7 +206,6 @@ class _RmmStatsState extends State<RmmStats> {
                   ),
                 ],
               ),
-
               // Carte pour le graphique des dépôts
               Card(
                 elevation: 0,
@@ -208,7 +217,7 @@ class _RmmStatsState extends State<RmmStats> {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        'Deposits (Dépôts)',
+                        S.of(context).depositBalance,
                         style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
                       ),
                       const SizedBox(height: 10),
@@ -248,7 +257,7 @@ class _RmmStatsState extends State<RmmStats> {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        'Borrows (Emprunts)',
+                        S.of(context).borrowBalance,
                         style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
                       ),
                       const SizedBox(height: 10),
@@ -321,7 +330,7 @@ class _RmmStatsState extends State<RmmStats> {
           sideTitles: SideTitles(showTitles: false),
         ),
       ),
-      borderData: FlBorderData(show: true),
+      borderData: FlBorderData(show: false),
       minX: minX,
       maxX: maxX,
       minY: 0, // Laisser un peu d'espace en bas
@@ -372,7 +381,7 @@ class _RmmStatsState extends State<RmmStats> {
           sideTitles: SideTitles(showTitles: false),
         ),
       ),
-      borderData: FlBorderData(show: true),
+      borderData: FlBorderData(show: false),
       minX: minX,
       maxX: maxX,
       minY: 0, // Laisser un peu d'espace en bas

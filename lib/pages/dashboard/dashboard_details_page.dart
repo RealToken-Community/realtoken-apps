@@ -1,19 +1,10 @@
-import 'package:RealToken/utils/utils.dart';
+import 'package:real_token/utils/utils.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import '../../api/data_manager.dart';
-import 'package:intl/intl.dart';
+import 'package:real_token/api/data_manager.dart';
 
 class DashboardRentsDetailsPage extends StatelessWidget {
   const DashboardRentsDetailsPage({super.key});
-
-  // Fonction utilitaire pour formater la date et le montant
-  String _formatDate(String date) {
-    DateTime parsedDate = DateTime.parse(date);
-    return DateFormat('dd/MM/yyyy').format(parsedDate);
-  }
-
-  
 
   @override
   Widget build(BuildContext context) {
@@ -62,7 +53,7 @@ class DashboardRentsDetailsPage extends StatelessWidget {
                       itemCount: dataManager.rentData.length,
                       itemBuilder: (context, index) {
                         final rentEntry = dataManager.rentData[index];
-                        final rentDate = _formatDate(rentEntry['date']);
+                        final rentDate = Utils.formatDate(rentEntry['date']);
                         final rentAmount = Utils.formatCurrency(dataManager.convert(rentEntry['rent']), dataManager.currencySymbol);
 
                         return Padding(

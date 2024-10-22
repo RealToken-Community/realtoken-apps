@@ -6,13 +6,12 @@ import 'package:flutter_map/flutter_map.dart';
 import 'package:latlong2/latlong.dart'; // Import pour les coordonnées géographiques
 import 'package:fl_chart/fl_chart.dart';
 import 'package:provider/provider.dart'; // Pour accéder à DataManager
-import '../api/data_manager.dart'; // Import de DataManager
-import '../generated/l10n.dart'; // Import pour les traductions
+import 'package:real_token/api/data_manager.dart'; // Import de DataManager
+import 'package:real_token/generated/l10n.dart'; // Import pour les traductions
 import 'package:carousel_slider/carousel_slider.dart';
 import 'portfolio/FullScreenCarousel.dart';
-import '../utils/utils.dart';
-import '../app_state.dart';
-
+import 'package:real_token/utils/utils.dart';
+import 'package:real_token/app_state.dart';
 
 // Fonction modifiée pour formater la monnaie avec le taux de conversion et le symbole
 String formatCurrency(BuildContext context, double value) {
@@ -48,7 +47,7 @@ void _openMapModal(BuildContext context, dynamic lat, dynamic lng) {
         heightFactor: 0.7, // Ajuste la hauteur de la modale
         child: Scaffold(
           appBar: AppBar(
-            title: Text('View on Map'), // Titre de la carte
+            title: Text(S.of(context).viewOnMap), // Titre de la carte
             automaticallyImplyLeading: false,
             actions: [
               IconButton(
@@ -241,7 +240,7 @@ Future<void> showTokenDetails( BuildContext context, Map<String, dynamic> token)
                                   height: 16,
                                   decoration: BoxDecoration(
                                     shape: BoxShape.circle,
-                                    color: getRentalStatusColor(
+                                    color: Utils.getRentalStatusColor(
                                       token['rentedUnits'] ??
                                           0, // Nombre de logements loués
                                       token['totalUnits'] ??
@@ -718,7 +717,7 @@ Widget _buildPriceChartOrMessage(BuildContext context, List<dynamic> prices, dou
 
 // Méthode pour construire le graphique du yield
 Widget _buildYieldChart(BuildContext context, List<dynamic> yields) {
-    final appState = Provider.of<AppState>(context, listen: false);
+  final appState = Provider.of<AppState>(context, listen: false);
 
   List<FlSpot> spots = [];
   List<String> dateLabels = [];
@@ -734,21 +733,33 @@ Widget _buildYieldChart(BuildContext context, List<dynamic> yields) {
           y.toStringAsFixed(2)); // Limiter la valeur de `y` à 2 décimales
 
       spots.add(FlSpot(x, y));
-      dateLabels.add(DateFormat('MM/yyyy')
-          .format(date)); // Ajouter la date formatée en mois/année
+      dateLabels.add(DateFormat('MM/yyyy').format(date)); // Ajouter la date formatée en mois/année
     }
   }
+
+  // Calcul des marges
+  double minXValue = spots.isNotEmpty ? spots.first.x : 0;
+  double maxXValue = spots.isNotEmpty ? spots.last.x : 0;
+  double minYValue = spots.isNotEmpty
+      ? spots.map((spot) => spot.y).reduce((a, b) => a < b ? a : b)
+      : 0;
+  double maxYValue = spots.isNotEmpty
+      ? spots.map((spot) => spot.y).reduce((a, b) => a > b ? a : b)
+      : 0;
+
+  // Ajouter des marges autour des valeurs min et max
+  const double marginX = 0.2; // Marge pour l'axe X
+  const double marginY = 0.5; // Marge pour l'axe Y
 
   return SizedBox(
     height: 200,
     child: LineChart(
       LineChartData(
         gridData: FlGridData(show: true),
-        borderData: FlBorderData(show: true),
+        borderData: FlBorderData(show: false),
         titlesData: FlTitlesData(
           topTitles: AxisTitles(
-            sideTitles:
-                SideTitles(showTitles: false), // Désactiver l'axe du haut
+            sideTitles: SideTitles(showTitles: false), // Désactiver l'axe du haut
           ),
           bottomTitles: AxisTitles(
             sideTitles: SideTitles(
@@ -758,7 +769,8 @@ Widget _buildYieldChart(BuildContext context, List<dynamic> yields) {
                   return Text(
                     dateLabels[value.toInt()],
                     style: TextStyle(
-                        fontSize: 10 + appState.getTextSizeOffset()), // Réduction de la taille pour Android
+                      fontSize: 10 + appState.getTextSizeOffset(), // Réduction de la taille pour Android
+                    ),
                   );
                 }
                 return const Text('');
@@ -774,24 +786,20 @@ Widget _buildYieldChart(BuildContext context, List<dynamic> yields) {
                 return Text(
                   value.toStringAsFixed(2),
                   style: TextStyle(
-                      fontSize: 10 + appState.getTextSizeOffset()), // Réduction de la taille pour Android
+                    fontSize: 10 + appState.getTextSizeOffset(), // Réduction de la taille pour Android
+                  ),
                 );
               },
             ),
           ),
           rightTitles: AxisTitles(
-            sideTitles:
-                SideTitles(showTitles: false), // Désactiver l'axe de droite
+            sideTitles: SideTitles(showTitles: false), // Désactiver l'axe de droite
           ),
         ),
-        minX: spots.isNotEmpty ? spots.first.x : 0,
-        maxX: spots.isNotEmpty ? spots.last.x : 0,
-        minY: spots.isNotEmpty
-            ? spots.map((spot) => spot.y).reduce((a, b) => a < b ? a : b)
-            : 0,
-        maxY: spots.isNotEmpty
-            ? spots.map((spot) => spot.y).reduce((a, b) => a > b ? a : b)
-            : 0,
+        minX: minXValue - marginX,
+        maxX: maxXValue + marginX,
+        minY: minYValue - marginY,
+        maxY: maxYValue + marginY,
         lineBarsData: [
           LineChartBarData(
             spots: spots,
@@ -808,7 +816,7 @@ Widget _buildYieldChart(BuildContext context, List<dynamic> yields) {
 
 // Méthode pour construire le graphique des prix
 Widget _buildPriceChart(BuildContext context, List<dynamic> prices) {
-    final appState = Provider.of<AppState>(context, listen: false);
+  final appState = Provider.of<AppState>(context, listen: false);
 
   List<FlSpot> spots = [];
   List<String> dateLabels = [];
@@ -819,20 +827,32 @@ Widget _buildPriceChart(BuildContext context, List<dynamic> prices) {
     double y = prices[i]['price']?.toDouble() ?? 0;
 
     spots.add(FlSpot(x, y));
-    dateLabels.add(DateFormat('MM/yyyy')
-        .format(date)); // Ajouter la date formatée en mois/année
+    dateLabels.add(DateFormat('MM/yyyy').format(date)); // Ajouter la date formatée en mois/année
   }
+
+  // Calcul des marges
+  double minXValue = spots.isNotEmpty ? spots.first.x : 0;
+  double maxXValue = spots.isNotEmpty ? spots.last.x : 0;
+  double minYValue = spots.isNotEmpty
+      ? spots.map((spot) => spot.y).reduce((a, b) => a < b ? a : b)
+      : 0;
+  double maxYValue = spots.isNotEmpty
+      ? spots.map((spot) => spot.y).reduce((a, b) => a > b ? a : b)
+      : 0;
+
+  // Ajouter des marges autour des valeurs min et max
+  const double marginX = 0.1; // Marge pour l'axe X
+  const double marginY = 0.2; // Marge pour l'axe Y
 
   return SizedBox(
     height: 200,
     child: LineChart(
       LineChartData(
         gridData: FlGridData(show: true),
-        borderData: FlBorderData(show: true),
+        borderData: FlBorderData(show: false),
         titlesData: FlTitlesData(
           topTitles: AxisTitles(
-            sideTitles:
-                SideTitles(showTitles: false), // Désactiver l'axe du haut
+            sideTitles: SideTitles(showTitles: false), // Désactiver l'axe du haut
           ),
           bottomTitles: AxisTitles(
             sideTitles: SideTitles(
@@ -842,7 +862,8 @@ Widget _buildPriceChart(BuildContext context, List<dynamic> prices) {
                   return Text(
                     dateLabels[value.toInt()],
                     style: TextStyle(
-                        fontSize: 10 + appState.getTextSizeOffset()), // Réduction de la taille pour Android
+                      fontSize: 10 + appState.getTextSizeOffset(), // Réduction de la taille pour Android
+                    ),
                   );
                 }
                 return const Text('');
@@ -858,24 +879,20 @@ Widget _buildPriceChart(BuildContext context, List<dynamic> prices) {
                 return Text(
                   value.toStringAsFixed(2),
                   style: TextStyle(
-                      fontSize: 10 + appState.getTextSizeOffset()), // Réduction de la taille pour Android
+                    fontSize: 10 + appState.getTextSizeOffset(), // Réduction de la taille pour Android
+                  ),
                 );
               },
             ),
           ),
           rightTitles: AxisTitles(
-            sideTitles:
-                SideTitles(showTitles: false), // Désactiver l'axe de droite
+            sideTitles: SideTitles(showTitles: false), // Désactiver l'axe de droite
           ),
         ),
-        minX: spots.isNotEmpty ? spots.first.x : 0,
-        maxX: spots.isNotEmpty ? spots.last.x : 0,
-        minY: spots.isNotEmpty
-            ? spots.map((spot) => spot.y).reduce((a, b) => a < b ? a : b)
-            : 0,
-        maxY: spots.isNotEmpty
-            ? spots.map((spot) => spot.y).reduce((a, b) => a > b ? a : b)
-            : 0,
+        minX: minXValue - marginX,
+        maxX: maxXValue + marginX,
+        minY: minYValue - marginY,
+        maxY: maxYValue + marginY,
         lineBarsData: [
           LineChartBarData(
             spots: spots,
@@ -890,13 +907,3 @@ Widget _buildPriceChart(BuildContext context, List<dynamic> prices) {
   );
 }
 
-// Méthode pour déterminer la couleur de la pastille en fonction du taux de location
-Color getRentalStatusColor(int rentedUnits, int totalUnits) {
-  if (rentedUnits == 0) {
-    return Colors.red; // Aucun logement loué
-  } else if (rentedUnits == totalUnits) {
-    return Colors.green; // Tous les logements sont loués
-  } else {
-    return Colors.orange; // Partiellement loué
-  }
-}

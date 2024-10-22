@@ -1,13 +1,14 @@
+import 'package:real_token/utils/utils.dart';
 import 'package:flutter/material.dart';
 import 'bottom_bar.dart';
 import 'drawer.dart';
-import '../pages/dashboard/dashboard_page.dart';
-import '../pages/portfolio/portfolio_page.dart';
-import '../pages/Statistics/stats_selector_page.dart';
-import '../pages/maps_page.dart';
+import 'package:real_token/pages/dashboard/dashboard_page.dart';
+import 'package:real_token/pages/portfolio/portfolio_page.dart';
+import 'package:real_token/pages/Statistics/stats_selector_page.dart';
+import 'package:real_token/pages/maps_page.dart';
 import 'dart:ui'; // Import for blur effect
 import 'package:provider/provider.dart';
-import '../app_state.dart'; // Import the global AppState
+import 'package:real_token/app_state.dart'; // Import the global AppState
 
 class MyHomePage extends StatefulWidget {
   const MyHomePage({super.key});
@@ -18,6 +19,14 @@ class MyHomePage extends StatefulWidget {
 
 class _MyHomePageState extends State<MyHomePage> {
   int _selectedIndex = 0;
+
+double _getContainerHeight(BuildContext context) {
+  // Récupère le padding en bas de l'écran, qui est non nul pour les appareils avec un bouton virtuel
+  double bottomPadding = MediaQuery.of(context).viewPadding.bottom;
+  
+  // Si bottomPadding > 0, il y a un bouton virtuel (barre d'accueil), sinon bouton physique
+  return bottomPadding > 0 ? 75 : 60;
+}
 
   static const List<Widget> _pages = <Widget>[
     DashboardPage(),
@@ -51,7 +60,7 @@ class _MyHomePageState extends State<MyHomePage> {
               child: BackdropFilter(
                 filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
                 child: Container(
-                  height: kToolbarHeight + 20,
+                height: Utils.getAppBarHeight(context),
                   color: Theme.of(context).brightness == Brightness.dark
                       ? Colors.black.withOpacity(0.3)
                       : Colors.white.withOpacity(0.3),
@@ -73,7 +82,7 @@ class _MyHomePageState extends State<MyHomePage> {
               child: BackdropFilter(
                 filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
                 child: Container(
-                  height: 60, // Adjust height for blur
+                  height: _getContainerHeight(context), // Adjust height for blur
                   color: Theme.of(context).brightness == Brightness.dark
                       ? Colors.black.withOpacity(0.3)
                       : Colors.white.withOpacity(0.3),

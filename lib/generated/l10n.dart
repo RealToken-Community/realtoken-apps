@@ -130,21 +130,51 @@ class S {
     );
   }
 
-  /// `French`
+  /// `Francais`
   String get french {
     return Intl.message(
-      'French',
+      'Francais',
       name: 'french',
       desc: '',
       args: [],
     );
   }
 
-  /// `Spanish`
+  /// `Español`
   String get spanish {
     return Intl.message(
-      'Spanish',
+      'Español',
       name: 'spanish',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Italiano`
+  String get italian {
+    return Intl.message(
+      'Italiano',
+      name: 'italian',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `中文`
+  String get chinese {
+    return Intl.message(
+      '中文',
+      name: 'chinese',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Português`
+  String get portuguese {
+    return Intl.message(
+      'Português',
+      name: 'portuguese',
       desc: '',
       args: [],
     );
@@ -260,20 +290,30 @@ class S {
     );
   }
 
-  /// `rented units`
+  /// `Rented Units`
   String get rentedUnits {
     return Intl.message(
-      'rented units',
+      'Rented Units',
       name: 'rentedUnits',
       desc: '',
       args: [],
     );
   }
 
-  /// `tokens`
+  /// `units`
+  String get units {
+    return Intl.message(
+      'units',
+      name: 'units',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Tokens`
   String get tokens {
     return Intl.message(
-      'tokens',
+      'Tokens',
       name: 'tokens',
       desc: '',
       args: [],
@@ -300,10 +340,10 @@ class S {
     );
   }
 
-  /// `annual yield`
+  /// `Annual Yield`
   String get annualYield {
     return Intl.message(
-      'annual yield',
+      'Annual Yield',
       name: 'annualYield',
       desc: '',
       args: [],
@@ -380,6 +420,16 @@ class S {
     );
   }
 
+  /// `Details of the Others section`
+  String get othersTitle {
+    return Intl.message(
+      'Details of the Others section',
+      name: 'othersTitle',
+      desc: '',
+      args: [],
+    );
+  }
+
   /// `Insights`
   String get insights {
     return Intl.message(
@@ -420,10 +470,10 @@ class S {
     );
   }
 
-  /// `Total Units`
+  /// `Total units`
   String get totalUnits {
     return Intl.message(
-      'Total Units',
+      'Total units',
       name: 'totalUnits',
       desc: '',
       args: [],
@@ -490,10 +540,10 @@ class S {
     );
   }
 
-  /// `Total Investment`
+  /// `Total investment`
   String get totalInvestment {
     return Intl.message(
-      'Total Investment',
+      'Total investment',
       name: 'totalInvestment',
       desc: '',
       args: [],
@@ -670,10 +720,10 @@ class S {
     );
   }
 
-  /// `No yield evolution. The last value is:`
+  /// `No yield evolution. The last yield is:`
   String get noYieldEvolution {
     return Intl.message(
-      'No yield evolution. The last value is:',
+      'No yield evolution. The last yield is:',
       name: 'noYieldEvolution',
       desc: '',
       args: [],
@@ -745,6 +795,16 @@ class S {
     return Intl.message(
       'APY',
       name: 'apy',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `average APY`
+  String get averageApy {
+    return Intl.message(
+      'average APY',
+      name: 'averageApy',
       desc: '',
       args: [],
     );
@@ -1240,10 +1300,10 @@ class S {
     );
   }
 
-  /// `sort by recently added`
+  /// `Sort by recently added`
   String get sortByInitialLaunchDate {
     return Intl.message(
-      'sort by recently added',
+      'Sort by recently added',
       name: 'sortByInitialLaunchDate',
       desc: '',
       args: [],
@@ -1300,10 +1360,10 @@ class S {
     );
   }
 
-  /// `Clear Cache and Data`
+  /// `Clear Cache/Data`
   String get clearCacheData {
     return Intl.message(
-      'Clear Cache and Data',
+      'Clear Cache/Data',
       name: 'clearCacheData',
       desc: '',
       args: [],
@@ -1430,10 +1490,10 @@ class S {
     );
   }
 
-  /// `view on map`
+  /// `View on map`
   String get viewOnMap {
     return Intl.message(
-      'view on map',
+      'View on map',
       name: 'viewOnMap',
       desc: '',
       args: [],
@@ -1450,20 +1510,20 @@ class S {
     );
   }
 
-  /// `total of revenus`
+  /// `Total of revenues`
   String get totalRentReceived {
     return Intl.message(
-      'total of revenus',
+      'Total of revenues',
       name: 'totalRentReceived',
       desc: '',
       args: [],
     );
   }
 
-  /// `Grouped Rent Graph`
+  /// `Rents`
   String get groupedRentGraph {
     return Intl.message(
-      'Grouped Rent Graph',
+      'Rents',
       name: 'groupedRentGraph',
       desc: '',
       args: [],
@@ -1490,20 +1550,20 @@ class S {
     );
   }
 
-  /// `This ROI feature is in beta and is currently calculated based on the income received from the property and the current token value.`
+  /// `This ROI feature is in beta and is currently calculated based on the income received from the property and the initial token value.`
   String get roiAlertInfo {
     return Intl.message(
-      'This ROI feature is in beta and is currently calculated based on the income received from the property and the current token value.',
+      'This ROI feature is in beta and is currently calculated based on the income received from the property and the initial token value.',
       name: 'roiAlertInfo',
       desc: '',
       args: [],
     );
   }
 
-  /// `last 30 days`
+  /// `Last 30 days`
   String get recentUpdatesTitle {
     return Intl.message(
-      'last 30 days',
+      'Last 30 days',
       name: 'recentUpdatesTitle',
       desc: '',
       args: [],
@@ -1540,20 +1600,20 @@ class S {
     );
   }
 
-  /// `duplicate properties`
+  /// `Duplicate properties`
   String get duplicate_title {
     return Intl.message(
-      'duplicate properties',
+      'Duplicate properties',
       name: 'duplicate_title',
       desc: '',
       args: [],
     );
   }
 
-  /// `properties present in multiple wallets/RMM`
+  /// `Properties present in multiple wallets/RMM`
   String get duplicate {
     return Intl.message(
-      'properties present in multiple wallets/RMM',
+      'Properties present in multiple wallets/RMM',
       name: 'duplicate',
       desc: '',
       args: [],
@@ -1655,16 +1715,6 @@ class S {
     return Intl.message(
       'Net Annual Rent',
       name: 'netAnnualRent',
-      desc: '',
-      args: [],
-    );
-  }
-
-  /// `units`
-  String get units {
-    return Intl.message(
-      'units',
-      name: 'units',
       desc: '',
       args: [],
     );
@@ -1849,6 +1899,46 @@ class S {
       args: [],
     );
   }
+
+  /// `Hours`
+  String get hours {
+    return Intl.message(
+      'Hours',
+      name: 'hours',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Days`
+  String get days {
+    return Intl.message(
+      'Days',
+      name: 'days',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Weeks`
+  String get weeks {
+    return Intl.message(
+      'Weeks',
+      name: 'weeks',
+      desc: '',
+      args: [],
+    );
+  }
+
+  /// `Period`
+  String get period {
+    return Intl.message(
+      'Period',
+      name: 'period',
+      desc: '',
+      args: [],
+    );
+  }
 }
 
 class AppLocalizationDelegate extends LocalizationsDelegate<S> {
@@ -1859,6 +1949,9 @@ class AppLocalizationDelegate extends LocalizationsDelegate<S> {
       Locale.fromSubtags(languageCode: 'en'),
       Locale.fromSubtags(languageCode: 'es'),
       Locale.fromSubtags(languageCode: 'fr'),
+      Locale.fromSubtags(languageCode: 'it'),
+      Locale.fromSubtags(languageCode: 'pt'),
+      Locale.fromSubtags(languageCode: 'zh'),
     ];
   }
 

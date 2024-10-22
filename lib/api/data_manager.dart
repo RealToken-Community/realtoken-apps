@@ -154,7 +154,6 @@ DateTime? lastArchiveTime; // Variable pour stocker le dernier archivage
         // Sauvegarder les balances dans Hive
         box.put('rmmBalances', json.encode(rmmBalancesData));
         rmmBalances = rmmBalancesData.cast<Map<String, dynamic>>();
-        logger.w(rmmBalances);
         fetchRmmBalances();
         notifyListeners(); // Notifier les listeners après la mise à jour
       } else {
@@ -195,12 +194,12 @@ Future<void> loadWalletBalanceHistory() async {
 
       notifyListeners(); // Notifier les listeners après la mise à jour
 
-      print('Données de l\'historique du portefeuille chargées avec succès.');
+      logger.i('Données de l\'historique du portefeuille chargées avec succès.');
     } else {
-      print('Aucune donnée d\'historique trouvée.');
+      logger.i('Aucune donnée d\'historique trouvée.');
     }
   } catch (e) {
-    print('Erreur lors du chargement des données de l\'historique du portefeuille : $e');
+    logger.w('Erreur lors du chargement des données de l\'historique du portefeuille : $e');
   }
 
 }
@@ -506,7 +505,6 @@ Future<void> fetchAndStoreAllTokens() async {
     // Utilisation des ensembles pour stocker les adresses uniques
     Set<String> uniqueWalletTokens = {};
     Set<String> uniqueRmmTokens = {};
-    Set<String> globalUniqueTokens = {}; // Pour stocker les tokens uniques globaux
     Set<String> uniqueRentedUnitAddresses = {}; // Pour stocker les adresses uniques avec unités louées
     Set<String> uniqueTotalUnitAddresses ={}; // Pour stocker les adresses uniques avec unités totales
 
@@ -517,8 +515,7 @@ Future<void> fetchAndStoreAllTokens() async {
       // Process wallet tokens (pour Dashboard et Portfolio)
       for (var walletToken in walletBalances) {
         final tokenAddress = walletToken['token']['address'].toLowerCase();
-        uniqueWalletTokens
-            .add(tokenAddress); // Ajouter à l'ensemble des tokens uniques
+        uniqueWalletTokens.add(tokenAddress); // Ajouter à l'ensemble des tokens uniques
 
         final matchingRealToken = realTokens.cast<Map<String, dynamic>>().firstWhere(
                   (realToken) => realToken['uuid'].toLowerCase() == tokenAddress,
@@ -527,7 +524,7 @@ Future<void> fetchAndStoreAllTokens() async {
 
         if (matchingRealToken.isNotEmpty) {
           final double tokenPrice = matchingRealToken['tokenPrice'] ?? 0.0;
-          final double tokenValue = (double.parse(walletToken['amount']) * tokenPrice) ?? 0.0;
+          final double tokenValue = (double.parse(walletToken['amount']) * tokenPrice);
 
           initialTotalValue += double.parse(walletToken['amount']) * (matchingRealToken['historic']['init_price'] as num?)!.toDouble();
 
@@ -1199,7 +1196,7 @@ Future<void> archiveTotalWalletValue(double totalWalletValue) async {
 
     // Vérifier si la différence est inférieure à 1 heure
     logger.w(DateTime.now().difference(lastTimestamp).inHours);
-    if (DateTime.now().difference(lastTimestamp).inMinutes < 1) {
+    if (DateTime.now().difference(lastTimestamp).inHours < 1) {
       // Si moins d'une heure, ne rien faire
       return; // Sortir de la fonction sans ajouter d'enregistrement
     }
@@ -1281,17 +1278,6 @@ double _calculateAPYForLastThreeValidPairs(List<BalanceRecord> history) {
 
   // Calculer la moyenne sur les paires valides trouvées
   return validPairsCount > 0 ? totalAPY / validPairsCount : 0;
-}
-
-// Chercher l'APY non nul en remontant dans l'historique
-double _findNonZeroAPY(List<BalanceRecord> history) {
-  for (int i = history.length - 1; i > 0; i--) {
-    double apy = _calculateAPY(history[i], history[i - 1]);
-    if (apy != 0) {
-      return apy;
-    }
-  }
-  return 0; // Retourner 0 si toutes les valeurs donnent un APY nul
 }
 
 // Calculer la moyenne des APY sur toutes les paires d'enregistrements, en ignorant les dépôts/retraits

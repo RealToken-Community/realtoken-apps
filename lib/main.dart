@@ -1,4 +1,4 @@
-import 'package:RealToken/structure/home_page.dart';
+import 'package:real_token/structure/home_page.dart';
 import 'package:flutter/material.dart';
 import 'package:hive_flutter/hive_flutter.dart';
 import 'package:provider/provider.dart';
@@ -29,10 +29,10 @@ void main() async {
   final dataManager = DataManager();
   await Future.delayed(Duration(seconds: 1));
   FlutterNativeSplash.remove(); // Supprimer le splash screen natif après l'initialisation
-  dataManager.updateGlobalVariables();
-  dataManager.loadSelectedCurrency(); // Charger la devise sélectionnée
-  dataManager.loadUserIdToAddresses(); // Charger les userIds et adresses
-  dataManager.fetchAndCalculateData();
+  await dataManager.updateGlobalVariables();
+  await dataManager.loadSelectedCurrency(); // Charger la devise sélectionnée
+  await dataManager.loadUserIdToAddresses(); // Charger les userIds et adresses
+  await dataManager.fetchAndCalculateData();
 
   runApp(
     MultiProvider(

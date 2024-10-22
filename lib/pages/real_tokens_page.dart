@@ -1,23 +1,22 @@
-import 'package:RealToken/utils/utils.dart';
+import 'package:real_token/utils/utils.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart'; // Importer provider
 import 'package:cached_network_image/cached_network_image.dart';
-import '../api/data_manager.dart';
+import 'package:real_token/api/data_manager.dart';
 import 'token_bottom_sheet.dart'; // Import du modal bottom sheet
 
 class RealTokensPage extends StatefulWidget {
   const RealTokensPage({super.key});
 
   @override
-  _RealTokensPageState createState() => _RealTokensPageState();
+  RealTokensPageState createState() => RealTokensPageState();
 }
 
-class _RealTokensPageState extends State<RealTokensPage> {
+class RealTokensPageState extends State<RealTokensPage> {
   String _searchQuery = '';
   String _sortOption = 'recentlyAdded';
   bool _isAscending = true;
   String? _selectedCity;
-  final String _rentalStatusFilter = 'All';
 
   @override
   void initState() {

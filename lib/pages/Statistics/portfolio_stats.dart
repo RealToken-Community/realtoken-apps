@@ -1,13 +1,14 @@
 // Import pour Platform
-import 'package:RealToken/utils/utils.dart';
+import 'package:real_token/utils/parameters.dart';
+import 'package:real_token/utils/utils.dart';
 import 'package:flutter/material.dart';
 import 'package:fl_chart/fl_chart.dart';
 import 'package:provider/provider.dart';
 import 'package:intl/intl.dart';
 import 'package:flutter/scheduler.dart';
-import '../../api/data_manager.dart';
-import '../../generated/l10n.dart'; // Import pour les traductions
-import '../../app_state.dart'; // Import AppState
+import 'package:real_token/api/data_manager.dart';
+import 'package:real_token/generated/l10n.dart'; // Import pour les traductions
+import 'package:real_token/app_state.dart'; // Import AppState
 import 'package:logger/logger.dart';
 
 class PortfolioStats  extends StatefulWidget {
@@ -22,70 +23,17 @@ class _PortfolioStats extends State<PortfolioStats > {
 
   late String _selectedPeriod;
 
-  // Carte des abréviations d'États des États-Unis à leurs noms complets
-  final Map<String, String> _usStateAbbreviations = {
-    'AL': 'Alabama',
-    'AK': 'Alaska',
-    'AZ': 'Arizona',
-    'AR': 'Arkansas',
-    'CA': 'California',
-    'CO': 'Colorado',
-    'CT': 'Connecticut',
-    'DE': 'Delaware',
-    'FL': 'Florida',
-    'GA': 'Georgia',
-    'HI': 'Hawaii',
-    'ID': 'Idaho',
-    'IL': 'Illinois',
-    'IN': 'Indiana',
-    'IA': 'Iowa',
-    'KS': 'Kansas',
-    'KY': 'Kentucky',
-    'LA': 'Louisiana',
-    'ME': 'Maine',
-    'MD': 'Maryland',
-    'MA': 'Massachusetts',
-    'MI': 'Michigan',
-    'MN': 'Minnesota',
-    'MS': 'Mississippi',
-    'MO': 'Missouri',
-    'MT': 'Montana',
-    'NE': 'Nebraska',
-    'NV': 'Nevada',
-    'NH': 'New Hampshire',
-    'NJ': 'New Jersey',
-    'NM': 'New Mexico',
-    'NY': 'New York',
-    'NC': 'North Carolina',
-    'ND': 'North Dakota',
-    'OH': 'Ohio',
-    'OK': 'Oklahoma',
-    'OR': 'Oregon',
-    'PA': 'Pennsylvania',
-    'RI': 'Rhode Island',
-    'SC': 'South Carolina',
-    'SD': 'South Dakota',
-    'TN': 'Tennessee',
-    'TX': 'Texas',
-    'UT': 'Utah',
-    'VT': 'Vermont',
-    'VA': 'Virginia',
-    'WA': 'Washington',
-    'WV': 'West Virginia',
-    'WI': 'Wisconsin',
-    'WY': 'Wyoming'
-  };
 
   @override
   void initState() {
     super.initState();
-    SchedulerBinding.instance.addPostFrameCallback((_) {
+    SchedulerBinding.instance.addPostFrameCallback((_) async {
       try {
         final dataManager = Provider.of<DataManager>(context, listen: false);
         logger.i("Fetching rent data and property data...");
-        dataManager.updateGlobalVariables();
-        dataManager.fetchRentData();
-        dataManager.fetchPropertyData();
+        Utils.loadData(context);
+                dataManager.fetchPropertyData();
+
       } catch (e, stacktrace) {
         logger.i("Error during initState: $e");
         logger.i("Stacktrace: $stacktrace");
@@ -109,26 +57,25 @@ class _PortfolioStats extends State<PortfolioStats > {
     }
   }
 
-List<Map<String, dynamic>> _groupByWeek(List<Map<String, dynamic>> data) {
-  Map<String, double> groupedData = {};
-  
-  for (var entry in data) {
-    if (entry.containsKey('date') && entry.containsKey('rent')) {
-      try {
-        DateTime date = DateTime.parse(entry['date']);
-        String weekKey = "${date.year}-S${_weekNumber(date).toString().padLeft(2, '0')}"; // Semaine formatée avec deux chiffres
-        groupedData[weekKey] = (groupedData[weekKey] ?? 0) + entry['rent'];
-      } catch (e) {
-        // En cas d'erreur de parsing de date ou autre, vous pouvez ignorer cette entrée ou la traiter différemment
-        print("Erreur lors de la conversion de la date : ${entry['date']}");
+  List<Map<String, dynamic>> _groupByWeek(List<Map<String, dynamic>> data) {
+    Map<String, double> groupedData = {};
+    
+    for (var entry in data) {
+      if (entry.containsKey('date') && entry.containsKey('rent')) {
+        try {
+          DateTime date = DateTime.parse(entry['date']);
+          String weekKey = "${date.year}-S${Utils.weekNumber(date).toString().padLeft(2, '0')}"; // Semaine formatée avec deux chiffres
+          groupedData[weekKey] = (groupedData[weekKey] ?? 0) + entry['rent'];
+        } catch (e) {
+          // En cas d'erreur de parsing de date ou autre, vous pouvez ignorer cette entrée ou la traiter différemment
+          logger.w("Erreur lors de la conversion de la date : ${entry['date']}");
+        }
       }
     }
+    
+    // Conversion de groupedData en une liste de maps
+    return groupedData.entries.map((entry) => {'date': entry.key, 'rent': entry.value}).toList();
   }
-  
-  // Conversion de groupedData en une liste de maps
-  return groupedData.entries.map((entry) => {'date': entry.key, 'rent': entry.value}).toList();
-}
-
 
   List<Map<String, dynamic>> _groupByMonth(List<Map<String, dynamic>> data) {
     Map<String, double> groupedData = {};
@@ -148,12 +95,6 @@ List<Map<String, dynamic>> _groupByWeek(List<Map<String, dynamic>> data) {
       groupedData[yearKey] = (groupedData[yearKey] ?? 0) + entry['rent'];
     }
     return groupedData.entries.map((entry) => {'date': entry.key, 'rent': entry.value}).toList();
-  }
-
-  int _weekNumber(DateTime date) {
-    int dayOfYear = int.parse(DateFormat("D").format(date));
-    int weekNumber = ((dayOfYear - date.weekday + 10) / 7 ).floor();
-    return weekNumber;
   }
 
   List<FlSpot> _buildChartData(List<Map<String, dynamic>> data) {
@@ -215,274 +156,301 @@ return Scaffold(
 
   bool _showCumulativeRent = false;
 
-Widget _buildRentGraphCard(List<Map<String, dynamic>> groupedData, DataManager dataManager) {
-  const int maxPoints = 1000;
-  final appState = Provider.of<AppState>(context);
+  Widget _buildRentGraphCard(List<Map<String, dynamic>> groupedData, DataManager dataManager) {
+    const int maxPoints = 1000;
+    final appState = Provider.of<AppState>(context);
 
-  List<Map<String, dynamic>> limitedData = groupedData.length > maxPoints
-      ? groupedData.sublist(0, maxPoints)
-      : groupedData;
+    List<Map<String, dynamic>> limitedData = groupedData.length > maxPoints
+        ? groupedData.sublist(0, maxPoints)
+        : groupedData;
 
-  List<Map<String, dynamic>> convertedData = limitedData.map((entry) {
-    double convertedRent = dataManager.convert(entry['rent'] ?? 0.0);
-    return {
-      'date': entry['date'],
-      'rent': convertedRent,
-      'cumulativeRent': entry['cumulativeRent'] ?? 0.0,
-    };
-  }).toList();
+    List<Map<String, dynamic>> convertedData = limitedData.map((entry) {
+      double convertedRent = dataManager.convert(entry['rent'] ?? 0.0);
+      return {
+        'date': entry['date'],
+        'rent': convertedRent,
+        'cumulativeRent': entry['cumulativeRent'] ?? 0.0,
+      };
+    }).toList();
 
-  // Trier les données par date croissante
-  convertedData.sort((a, b) => a['date'].compareTo(b['date']));
+    // Trier les données par date croissante
+    convertedData.sort((a, b) => a['date'].compareTo(b['date']));
 
-  return Padding(
-    padding: const EdgeInsets.symmetric(horizontal: 16.0),
-    child: Card(
-      elevation: 0,
-      color: Theme.of(context).cardColor,
-      child: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              children: [
-                Text(
-                  _showCumulativeRent
-                      ? S.of(context).cumulativeRentGraph
-                      : S.of(context).groupedRentGraph,
-                  style: TextStyle(
-                    fontSize: 20 + appState.getTextSizeOffset(),
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-                Spacer(),
-                Transform.scale(
-                  scale: 0.8, // Réduit la taille à 80% de la taille originale
-                  child: Switch(
-                    value: _showCumulativeRent,
-                    onChanged: (value) {
-                      setState(() {
-                        _showCumulativeRent = value;
-                      });
-                    },
-                    activeColor: Colors.blue, // Couleur d'accentuation en mode activé
-                    inactiveThumbColor: Colors.grey, // Couleur du bouton en mode désactivé
-                  ),
-                )
-              ],
-            ),
-            _buildPeriodSelector(),
-            const SizedBox(height: 20),
-            SizedBox(
-              height: 250,
-              child: LineChart(
-                LineChartData(
-                  gridData: FlGridData(show: true, drawVerticalLine: false),
-                  titlesData: FlTitlesData(
-                    topTitles: AxisTitles(sideTitles: SideTitles(showTitles: false)),
-                    leftTitles: AxisTitles(
-                      sideTitles: SideTitles(
-                        showTitles: true,
-                        reservedSize: 55,
-                        interval: _calculateLeftInterval(convertedData),
-                        getTitlesWidget: (value, meta) {
-                          return Text(
-                            Utils.formatCurrency(value, dataManager.currencySymbol),
-                            style: TextStyle(fontSize: 10 + appState.getTextSizeOffset()),
-                          );
-                        },
-                      ),
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 16.0),
+      child: Card(
+        elevation: 0,
+        color: Theme.of(context).cardColor,
+        child: Padding(
+          padding: const EdgeInsets.all(16.0),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                children: [
+                  Text(
+                    _showCumulativeRent
+                        ? S.of(context).cumulativeRentGraph
+                        : S.of(context).groupedRentGraph,
+                    style: TextStyle(
+                      fontSize: 20 + appState.getTextSizeOffset(),
+                      fontWeight: FontWeight.bold,
                     ),
-                    rightTitles: AxisTitles(
-                      sideTitles: SideTitles(showTitles: false),
+                  ),
+                  Spacer(),
+                  Transform.scale(
+                    scale: 0.8, // Réduit la taille à 80% de la taille originale
+                    child: Switch(
+                      value: _showCumulativeRent,
+                      onChanged: (value) {
+                        setState(() {
+                          _showCumulativeRent = value;
+                        });
+                      },
+                      activeColor: Colors.blue, // Couleur d'accentuation en mode activé
+                      inactiveThumbColor: Colors.grey, // Couleur du bouton en mode désactivé
                     ),
-                    bottomTitles: AxisTitles(
-                      sideTitles: SideTitles(
-                        showTitles: true,
-                        interval: _calculateBottomInterval(convertedData),
-                        getTitlesWidget: (value, meta) {
-                          List<String> labels = _buildDateLabels(convertedData);
-                          if (value.toInt() >= 0 && value.toInt() < labels.length) {
-                            return Transform.rotate(
-                              angle: -0.5,
-                              child: Text(
-                                labels[value.toInt()],
-                                style: TextStyle(fontSize: 8 + appState.getTextSizeOffset()),
-                              ),
+                  )
+                ],
+              ),
+              _buildPeriodSelector(),
+              const SizedBox(height: 20),
+              SizedBox(
+                height: 250,
+                child: LineChart(
+                  LineChartData(
+                    gridData: FlGridData(show: true, drawVerticalLine: false),
+                    titlesData: FlTitlesData(
+                      topTitles: AxisTitles(sideTitles: SideTitles(showTitles: false)),
+                      leftTitles: AxisTitles(
+                        sideTitles: SideTitles(
+                          showTitles: true,
+                          reservedSize: 55,
+                          interval: _calculateLeftInterval(convertedData),
+                          getTitlesWidget: (value, meta) {
+                            return Text(
+                              Utils.formatCurrency(dataManager.convert(value), dataManager.currencySymbol),
+                              style: TextStyle(fontSize: 10 + appState.getTextSizeOffset()),
                             );
-                          } else {
-                            return const Text('');
-                          }
-                        },
+                          },
+                        ),
+                      ),  
+                      rightTitles: AxisTitles(
+                        sideTitles: SideTitles(showTitles: false),
                       ),
-                    ),
-                  ),
-                  borderData: FlBorderData(show: false),
-                  minX: 0,
-                  maxX: (convertedData.length - 1).toDouble(),
-                  lineBarsData: [
-                    LineChartBarData(
-                      spots: _showCumulativeRent
-                          ? _buildCumulativeChartData(convertedData)
-                          : _buildChartData(convertedData),
-                      isCurved: false,
-                      barWidth: 2,
-                      color: _showCumulativeRent ? Colors.green : Colors.blue,
-                      dotData: FlDotData(show: false), // Cache les points par défaut
-                      belowBarData: BarAreaData(
-                        show: true,
-                        gradient: LinearGradient(
-                          colors: [
-                            (_showCumulativeRent ? Colors.green : Colors.blue).withOpacity(0.4),
-                            (_showCumulativeRent ? Colors.green : Colors.blue).withOpacity(0),
-                          ],
-                          begin: Alignment.topCenter,
-                          end: Alignment.bottomCenter,
+                      bottomTitles: AxisTitles(
+                        sideTitles: SideTitles(
+                          showTitles: true,
+                          interval: _calculateBottomInterval(convertedData),
+                          getTitlesWidget: (value, meta) {
+                            List<String> labels = _buildDateLabels(convertedData);
+                            if (value.toInt() >= 0 && value.toInt() < labels.length) {
+                              return Transform.rotate(
+                                angle: -0.5,
+                                child: Text(
+                                  labels[value.toInt()],
+                                  style: TextStyle(fontSize: 8 + appState.getTextSizeOffset()),
+                                ),
+                              );
+                            } else {
+                              return const Text('');
+                            }
+                          },
                         ),
                       ),
                     ),
-                  ],
-                ),
-              ),
-            ),
-          ],
-        ),
-      ),
-    ),
-  );
-}
-
-Widget _buildWalletBalanceCard(DataManager dataManager) {
-  final appState = Provider.of<AppState>(context);
-
-  // Récupérer les données de l'historique des balances du wallet
-  List<FlSpot> walletBalanceData = _buildWalletBalanceChartData(dataManager);
-
-  return Padding(
-    padding: const EdgeInsets.symmetric(horizontal: 16.0),
-    child: Card(
-      elevation: 0,
-      color: Theme.of(context).cardColor,
-      child: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              S.of(context).walletBalanceHistory, // Ajouter une clé de traduction pour "Historique du Wallet"
-              style: TextStyle(
-                fontSize: 20 + appState.getTextSizeOffset(),
-                fontWeight: FontWeight.bold,
-              ),
-            ),
-            const SizedBox(height: 20),
-            SizedBox(
-              height: 250,
-              child: LineChart(
-                LineChartData(
-                  gridData: FlGridData(show: true, drawVerticalLine: false),
-                  titlesData: FlTitlesData(
-                    topTitles: AxisTitles(sideTitles: SideTitles(showTitles: false)),
-                    leftTitles: AxisTitles(
-                      sideTitles: SideTitles(
-                        showTitles: true,
-                        reservedSize: 55,
-                        interval: _calculateWalletBalanceLeftInterval(walletBalanceData),
-                        getTitlesWidget: (value, meta) {
-                          return Text(
-                            Utils.formatCurrency(value, dataManager.currencySymbol),
-                            style: TextStyle(fontSize: 10 + appState.getTextSizeOffset()),
-                          );
-                        },
-                      ),
-                    ),
-                    bottomTitles: AxisTitles(
-                      sideTitles: SideTitles(
-                        showTitles: true,
-                        interval: _calculateBottomInterval(walletBalanceData.cast<Map<String, dynamic>>()),
-                        getTitlesWidget: (value, meta) {
-                          // Labels bas pour les dates du graphique des balances
-                          List<String> labels = _buildDateLabelsForWallet(dataManager);
-                          if (value.toInt() >= 0 && value.toInt() < labels.length) {
-                            return Transform.rotate(
-                              angle: -0.5,
-                              child: Text(
-                                labels[value.toInt()],
-                                style: TextStyle(fontSize: 8 + appState.getTextSizeOffset()),
-                              ),
-                            );
-                          } else {
-                            return const Text('');
-                          }
-                        },
-                      ),
-                    ),
-                    rightTitles: AxisTitles(
-                      sideTitles: SideTitles(showTitles: false),
-                    ),
-                  ),
-                  borderData: FlBorderData(show: false),
-                  minX: 0,
-                  maxX: (walletBalanceData.length - 1).toDouble(),
-                  lineBarsData: [
-                    LineChartBarData(
-                      spots: walletBalanceData,
-                      isCurved: false,
-                      barWidth: 2,
-                      color: Colors.purple,
-                      dotData: FlDotData(show: false), // Cache les points par défaut
-                      belowBarData: BarAreaData(
-                        show: true,
-                        gradient: LinearGradient(
-                          colors: [
-                            Colors.purple.withOpacity(0.4),
-                            Colors.purple.withOpacity(0),
-                          ],
-                          begin: Alignment.topCenter,
-                          end: Alignment.bottomCenter,
+                    borderData: FlBorderData(show: false),
+                    minX: 0,
+                    maxX: (convertedData.length - 1).toDouble(),
+                    lineBarsData: [
+                      LineChartBarData(
+                        spots: _showCumulativeRent
+                            ? _buildCumulativeChartData(convertedData)
+                            : _buildChartData(convertedData),
+                        isCurved: false,
+                        barWidth: 2,
+                        color: _showCumulativeRent ? Colors.green : Colors.blue,
+                        dotData: FlDotData(show: false), // Cache les points par défaut
+                        belowBarData: BarAreaData(
+                          show: true,
+                          gradient: LinearGradient(
+                            colors: [
+                              (_showCumulativeRent ? Colors.green : Colors.blue).withOpacity(0.4),
+                              (_showCumulativeRent ? Colors.green : Colors.blue).withOpacity(0),
+                            ],
+                            begin: Alignment.topCenter,
+                            end: Alignment.bottomCenter,
+                          ),
                         ),
                       ),
+                    ],
+                    lineTouchData: LineTouchData(
+                      touchTooltipData: LineTouchTooltipData(
+                        getTooltipItems: (List<LineBarSpot> touchedSpots) {
+                          return touchedSpots.map((touchedSpot) {
+                            final value = touchedSpot.y;
+                            return LineTooltipItem(
+                              '${Utils.formatCurrency(dataManager.convert(value),dataManager.currencySymbol)} ', // Formater avec 2 chiffres après la virgule
+                              const TextStyle(color: Colors.white),
+                            );
+                          }).toList();
+                        },
+                      ),
                     ),
-                  ],
+                  ),
                 ),
               ),
-            ),
-          ],
+            ],
+          ),
         ),
       ),
-    ),
-  );
-}
-
-List<FlSpot> _buildWalletBalanceChartData(DataManager dataManager) {
-  List<FlSpot> spots = [];
-  List<BalanceRecord> walletHistory = dataManager.walletBalanceHistory;
-
-  for (var i = 0; i < walletHistory.length; i++) {
-    double balanceValue = walletHistory[i].balance;
-    spots.add(FlSpot(i.toDouble(), balanceValue));
+    );
   }
-  return spots;
-}
 
-List<String> _buildDateLabelsForWallet(DataManager dataManager) {
-  return dataManager.walletBalanceHistory
-      .map((record) => DateFormat('yyyy-MM-dd').format(record.timestamp))
-      .toList();
-}
+  Widget _buildWalletBalanceCard(DataManager dataManager) {
+    final appState = Provider.of<AppState>(context);
 
-double _calculateWalletBalanceLeftInterval(List<FlSpot> data) {
-  if (data.isEmpty) return 1;
+    // Récupérer les données de l'historique des balances du wallet
+    List<FlSpot> walletBalanceData = _buildWalletBalanceChartData(dataManager);
 
-  double maxBalance = data.map((spot) => spot.y).reduce((a, b) => a > b ? a : b);
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 16.0),
+      child: Card(
+        elevation: 0,
+        color: Theme.of(context).cardColor,
+        child: Padding(
+          padding: const EdgeInsets.all(16.0),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                S.of(context).walletBalanceHistory, // Ajouter une clé de traduction pour "Historique du Wallet"
+                style: TextStyle(
+                  fontSize: 20 + appState.getTextSizeOffset(),
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+              const SizedBox(height: 20),
+              SizedBox(
+                height: 250,
+                child: LineChart(
+                  LineChartData(
+                    gridData: FlGridData(show: true, drawVerticalLine: false),
+                    titlesData: FlTitlesData(
+                      topTitles: AxisTitles(sideTitles: SideTitles(showTitles: false)),
+                      leftTitles: AxisTitles(
+                        sideTitles: SideTitles(
+                          showTitles: true,
+                          reservedSize: 55,
+                          interval: _calculateWalletBalanceLeftInterval(walletBalanceData),
+                          getTitlesWidget: (value, meta) {
+                            return Text(
+                              Utils.formatCurrency(value, dataManager.currencySymbol),
+                              style: TextStyle(fontSize: 10 + appState.getTextSizeOffset()),
+                            );
+                          },
+                        ),
+                      ),
+                      bottomTitles: AxisTitles(
+                        sideTitles: SideTitles(
+                          showTitles: true,
+                          interval: _calculateBottomInterval(walletBalanceData.cast<Map<String, dynamic>>()),
+                          getTitlesWidget: (value, meta) {
+                            // Labels bas pour les dates du graphique des balances
+                            List<String> labels = _buildDateLabelsForWallet(dataManager);
+                            if (value.toInt() >= 0 && value.toInt() < labels.length) {
+                              return Transform.rotate(
+                                angle: -0.5,
+                                child: Text(
+                                  labels[value.toInt()],
+                                  style: TextStyle(fontSize: 8 + appState.getTextSizeOffset()),
+                                ),
+                              );
+                            } else {
+                              return const Text('');
+                            }
+                          },
+                        ),
+                      ),
+                      rightTitles: AxisTitles(
+                        sideTitles: SideTitles(showTitles: false),
+                      ),
+                    ),
+                    borderData: FlBorderData(show: false),
+                    minX: 0,
+                    maxX: (walletBalanceData.length - 1).toDouble(),
+                    lineBarsData: [
+                      LineChartBarData(
+                        spots: walletBalanceData,
+                        isCurved: false,
+                        barWidth: 2,
+                        color: Colors.purple,
+                        dotData: FlDotData(show: false), // Cache les points par défaut
+                        belowBarData: BarAreaData(
+                          show: true,
+                          gradient: LinearGradient(
+                            colors: [
+                              Colors.purple.withOpacity(0.4),
+                              Colors.purple.withOpacity(0),
+                            ],
+                            begin: Alignment.topCenter,
+                            end: Alignment.bottomCenter,
+                          ),
+                        ),
+                      ),
+                    ],
+                                      lineTouchData: LineTouchData(
+                      touchTooltipData: LineTouchTooltipData(
+                        getTooltipItems: (List<LineBarSpot> touchedSpots) {
+                          return touchedSpots.map((touchedSpot) {
+                            final value = touchedSpot.y;
+                            return LineTooltipItem(
+                              '${Utils.formatCurrency(dataManager.convert(value),dataManager.currencySymbol)} ', // Formater avec 2 chiffres après la virgule
+                              const TextStyle(color: Colors.white),
+                            );
+                          }).toList();
+                        },
+                      ),
+                    ),
+                  
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
 
-  // Calculer l'intervalle et s'assurer qu'il est supérieur à 1
-  double interval = maxBalance / 4;
+  List<FlSpot> _buildWalletBalanceChartData(DataManager dataManager) {
+    List<FlSpot> spots = [];
+    List<BalanceRecord> walletHistory = dataManager.walletBalanceHistory;
 
-  // Retourner au moins 1 pour éviter l'erreur d'intervalle 0
-return interval < 1 ? 1 : interval;
-}
+    for (var i = 0; i < walletHistory.length; i++) {
+      double balanceValue = walletHistory[i].balance;
+      spots.add(FlSpot(i.toDouble(), balanceValue));
+    }
+    return spots;
+  }
+
+  List<String> _buildDateLabelsForWallet(DataManager dataManager) {
+    return dataManager.walletBalanceHistory
+        .map((record) => DateFormat('yyyy-MM-dd').format(record.timestamp))
+        .toList();
+  }
+
+  double _calculateWalletBalanceLeftInterval(List<FlSpot> data) {
+    if (data.isEmpty) return 1;
+
+    double maxBalance = data.map((spot) => spot.y).reduce((a, b) => a > b ? a : b);
+
+    // Calculer l'intervalle et s'assurer qu'il est supérieur à 1
+    double interval = maxBalance / 4;
+
+    // Retourner au moins 1 pour éviter l'erreur d'intervalle 0
+  return interval < 1 ? 1 : interval;
+  }
 
 // Méthode pour calculer un intervalle optimisé pour l'axe des valeurs
   double _calculateLeftInterval(List<Map<String, dynamic>> data) {
@@ -492,15 +460,14 @@ return interval < 1 ? 1 : interval;
   }
 
 // Méthode pour calculer un intervalle optimisé pour l'axe des dates
-double _calculateBottomInterval(List<Map<String, dynamic>> data) {
-  if (data.isEmpty) return 1;
-  
-  double interval = (data.length / 6).roundToDouble(); // Calculer l'intervalle
+  double _calculateBottomInterval(List<Map<String, dynamic>> data) {
+    if (data.isEmpty) return 1;
+    
+    double interval = (data.length / 6).roundToDouble(); // Calculer l'intervalle
 
-  // S'assurer que l'intervalle est au moins 1
-  return interval > 0 ? interval : 1;
-}
-
+    // S'assurer que l'intervalle est au moins 1
+    return interval > 0 ? interval : 1;
+  }
 
   Widget _buildTokenDistributionCard(DataManager dataManager) {
     final appState = Provider.of<AppState>(context);
@@ -584,6 +551,7 @@ double _calculateBottomInterval(List<Map<String, dynamic>> data) {
 
   Widget _buildTokenDistributionByRegionCard(DataManager dataManager) {
     final appState = Provider.of<AppState>(context);
+    List<Map<String, dynamic>> othersDetails = []; // Pour stocker les détails de la section "Autres"
 
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 16.0),
@@ -606,15 +574,28 @@ double _calculateBottomInterval(List<Map<String, dynamic>> data) {
                 height: 200,
                 child: PieChart(
                   PieChartData(
-                    sections: _buildDonutChartDataByRegion(dataManager),
+                    sections: _buildDonutChartDataByRegion(dataManager, othersDetails),
                     centerSpaceRadius: 50,
                     sectionsSpace: 2,
                     borderData: FlBorderData(show: false),
+                    pieTouchData: PieTouchData(
+                    touchCallback: (FlTouchEvent event, pieTouchResponse) {
+                    if (pieTouchResponse != null && pieTouchResponse.touchedSection != null) {
+                      final section = pieTouchResponse.touchedSection!.touchedSection;
+
+                      if (event is FlTapUpEvent) {  // Gérer uniquement les événements de tap final
+                        if (section!.title.contains(S.of(context).others)) {
+                          _showOtherDetailsModal(dataManager, othersDetails, 'region'); // Passer les détails de "Autres"
+                        }
+                      }
+                    }
+                  },
+                ),
                   ),
                 ),
               ),
               const SizedBox(height: 20),
-              _buildLegendByRegion(dataManager),
+              _buildLegendByRegion(dataManager, othersDetails),
             ],
           ),
         ),
@@ -622,58 +603,59 @@ double _calculateBottomInterval(List<Map<String, dynamic>> data) {
     );
   }
 
-Widget _buildTokenDistributionByCityCard(DataManager dataManager) {
-  final appState = Provider.of<AppState>(context);
-  List<Map<String, dynamic>> othersDetails = []; // Pour stocker les détails de la section "Autres"
+  Widget _buildTokenDistributionByCityCard(DataManager dataManager) {
+    final appState = Provider.of<AppState>(context);
+    List<Map<String, dynamic>> othersDetails = []; // Pour stocker les détails de la section "Autres"
 
-  return Padding(
-    padding: const EdgeInsets.symmetric(horizontal: 16.0),
-    child: Card(
-      elevation: 0,
-      color: Theme.of(context).cardColor,
-      child: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              S.of(context).tokenDistributionByCity,
-              style: TextStyle(
-                  fontSize: 20 + appState.getTextSizeOffset(),
-                  fontWeight: FontWeight.bold),
-            ),
-            const SizedBox(height: 20),
-            SizedBox(
-              height: 200,
-              child: PieChart(
-                PieChartData(
-                  sections: _buildDonutChartDataByCity(dataManager, othersDetails),
-                  centerSpaceRadius: 50,
-                  sectionsSpace: 2,
-                  borderData: FlBorderData(show: false),
-                  pieTouchData: PieTouchData(
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 16.0),
+      child: Card(
+        elevation: 0,
+        color: Theme.of(context).cardColor,
+        child: Padding(
+          padding: const EdgeInsets.all(16.0),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                S.of(context).tokenDistributionByCity,
+                style: TextStyle(
+                    fontSize: 20 + appState.getTextSizeOffset(),
+                    fontWeight: FontWeight.bold),
+              ),
+              const SizedBox(height: 20),
+              SizedBox(
+                height: 200,
+                child: PieChart(
+                  PieChartData(
+                    sections: _buildDonutChartDataByCity(dataManager, othersDetails),
+                    centerSpaceRadius: 50,
+                    sectionsSpace: 2,
+                    borderData: FlBorderData(show: false),
+                    pieTouchData: PieTouchData(
                     touchCallback: (FlTouchEvent event, pieTouchResponse) {
-                      if (pieTouchResponse != null &&
-                          pieTouchResponse.touchedSection != null) {
+                      if (pieTouchResponse != null && pieTouchResponse.touchedSection != null) {
                         final section = pieTouchResponse.touchedSection!.touchedSection;
 
-                        if (section!.title.contains('Autres')) {
-                          _showOtherDetailsModal(dataManager, othersDetails); // Passer les détails de "Autres"
+                        if (event is FlTapUpEvent) {  // Gérer uniquement les événements de tap final
+                          if (section!.title.contains(S.of(context).others)) {
+                            _showOtherDetailsModal(dataManager, othersDetails, 'city'); // Passer les détails de "Autres"
+                          }
                         }
                       }
                     },
                   ),
+                  ),
                 ),
               ),
-            ),
-            const SizedBox(height: 20),
-            _buildLegendByCity(dataManager),
-          ],
+              const SizedBox(height: 20),
+              _buildLegendByCity(dataManager, othersDetails),
+            ],
+          ),
         ),
       ),
-    ),
-  );
-}
+    );
+  }
 
   Widget _buildPeriodSelector() {
     return Row(
@@ -719,35 +701,35 @@ Widget _buildTokenDistributionByCityCard(DataManager dataManager) {
     );
   }
 
- List<PieChartSectionData> _buildDonutChartData(DataManager dataManager) {
-  final appState = Provider.of<AppState>(context);
+  List<PieChartSectionData> _buildDonutChartData(DataManager dataManager) {
+    final appState = Provider.of<AppState>(context);
 
-  return dataManager.propertyData.map((data) {
-    final double percentage = (data['count'] / dataManager.propertyData.fold(0.0, (double sum, item) => sum + item['count'])) * 100;
+    return dataManager.propertyData.map((data) {
+      final double percentage = (data['count'] / dataManager.propertyData.fold(0.0, (double sum, item) => sum + item['count'])) * 100;
 
-    // Obtenir la couleur de base et créer des nuances
-    final Color baseColor = _getPropertyColor(data['propertyType']);
-    final Color lighterColor = _shadeColor(baseColor, 1); // plus clair
-    final Color darkerColor = _shadeColor(baseColor, 0.7);  // plus foncé
+      // Obtenir la couleur de base et créer des nuances
+      final Color baseColor = _getPropertyColor(data['propertyType']);
+      final Color lighterColor = Utils.shadeColor(baseColor, 1); // plus clair
+      final Color darkerColor = Utils.shadeColor(baseColor, 0.7);  // plus foncé
 
-    return PieChartSectionData(
-      value: data['count'].toDouble(),
-      title: '${percentage.toStringAsFixed(1)}%',
-      // Supposons que le champ 'gradient' soit pris en charge
-      gradient: LinearGradient(
-        colors: [lighterColor, darkerColor], // Appliquer le dégradé avec les deux nuances
-        begin: Alignment.topLeft,
-        end: Alignment.bottomRight,
-      ),
-      radius: 50,
-      titleStyle: TextStyle(
-        fontSize: 10 + appState.getTextSizeOffset(),
-        color: Colors.white,
-        fontWeight: FontWeight.bold
-      ),
-    );
-  }).toList();
-}
+      return PieChartSectionData(
+        value: data['count'].toDouble(),
+        title: '${percentage.toStringAsFixed(1)}%',
+        // Supposons que le champ 'gradient' soit pris en charge
+        gradient: LinearGradient(
+          colors: [lighterColor, darkerColor], // Appliquer le dégradé avec les deux nuances
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+        ),
+        radius: 50,
+        titleStyle: TextStyle(
+          fontSize: 10 + appState.getTextSizeOffset(),
+          color: Colors.white,
+          fontWeight: FontWeight.bold
+        ),
+      );
+    }).toList();
+  }
 
   Widget _buildLegend(DataManager dataManager) {
     final appState = Provider.of<AppState>(context);
@@ -818,10 +800,11 @@ Widget _buildTokenDistributionByCityCard(DataManager dataManager) {
     );
   }
 
-  Widget _buildLegendByRegion(DataManager dataManager) {
+  Widget _buildLegendByRegion(DataManager dataManager, List<Map<String, dynamic>> othersDetails) {
     Map<String, int> regionCount = {};
     final appState = Provider.of<AppState>(context);
 
+    // Remplir le dictionnaire avec les counts par région
     for (var token in dataManager.portfolio) {
       String fullName = token['fullName'];
       List<String> parts = fullName.split(',');
@@ -829,24 +812,42 @@ Widget _buildTokenDistributionByCityCard(DataManager dataManager) {
           ? parts[2].trim().substring(0, 2)
           : S.of(context).unknown;
 
-      String regionName = _usStateAbbreviations[regionCode] ?? regionCode;
+      String regionName = Parameters.usStateAbbreviations[regionCode] ?? regionCode;
 
       regionCount[regionName] = (regionCount[regionName] ?? 0) + 1;
     }
 
-    return Wrap(
-      spacing: 8.0,
-      runSpacing: 4.0,
-      children: regionCount.entries.map((entry) {
-        return Row(
+    // Trier les régions par nombre croissant de tokens
+    var sortedEntries = regionCount.entries.toList()
+      ..sort((a, b) => a.value.compareTo(b.value));
+
+    // Créer une map pour les couleurs, basée sur les mêmes couleurs que le donut
+    Map<String, Color> regionColors = {};
+    final List<Color> colorPalette = Colors.accents; // Choisir une palette de couleurs
+    for (int i = 0; i < sortedEntries.length; i++) {
+      regionColors[sortedEntries[i].key] = colorPalette[i % colorPalette.length];
+    }
+
+    List<Widget> legendItems = [];
+    int othersValue = 0;
+
+    // Parcourir les régions et regrouper celles avec < 2%
+    for (var entry in sortedEntries) {
+      final double percentage = (entry.value / regionCount.values.fold(0, (sum, value) => sum + value)) * 100;
+
+      if (percentage < 2) {
+        // Ajouter aux "Autres" si < 2%
+        othersValue += entry.value;
+        othersDetails.add({'region': entry.key, 'count': entry.value}); // Stocker les détails de "Autres"
+      } else {
+        // Ajouter un élément de légende pour cette région
+        legendItems.add(Row(
           mainAxisSize: MainAxisSize.min,
           children: [
             Container(
               width: 16,
               height: 16,
-              color: Colors.accents[
-                  regionCount.keys.toList().indexOf(entry.key) %
-                      Colors.accents.length],
+              color: regionColors[entry.key], // Utiliser la couleur attribuée à cette région
             ),
             const SizedBox(width: 4),
             Text(
@@ -854,15 +855,41 @@ Widget _buildTokenDistributionByCityCard(DataManager dataManager) {
               style: TextStyle(fontSize: 13 + appState.getTextSizeOffset()),
             ),
           ],
-        );
-      }).toList(),
+        ));
+      }
+    }
+
+    // Ajouter une légende pour "Autres" si nécessaire
+    if (othersValue > 0) {
+      legendItems.add(Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Container(
+            width: 16,
+            height: 16,
+            color: Colors.grey,
+          ),
+          const SizedBox(width: 4),
+          Text(
+            '${S.of(context).others}: $othersValue',
+            style: TextStyle(fontSize: 13 + appState.getTextSizeOffset()),
+          ),
+        ],
+      ));
+    }
+
+    return Wrap(
+      spacing: 8.0,
+      runSpacing: 4.0,
+      children: legendItems,
     );
   }
 
-  Widget _buildLegendByCity(DataManager dataManager) {
+  Widget _buildLegendByCity(DataManager dataManager, List<Map<String, dynamic>> othersDetails) {
     Map<String, int> cityCount = {};
     final appState = Provider.of<AppState>(context);
 
+    // Remplir le dictionnaire avec les counts par ville
     for (var token in dataManager.portfolio) {
       String fullName = token['fullName'];
       List<String> parts = fullName.split(',');
@@ -871,19 +898,40 @@ Widget _buildTokenDistributionByCityCard(DataManager dataManager) {
       cityCount[city] = (cityCount[city] ?? 0) + 1;
     }
 
-    return Wrap(
-      spacing: 8.0,
-      runSpacing: 4.0,
-      children: cityCount.entries.map((entry) {
-        return Row(
+    // Calculer le total des tokens
+    int totalCount = cityCount.values.fold(0, (sum, value) => sum + value);
+
+    // Trier les villes par nombre croissant de tokens
+    var sortedEntries = cityCount.entries.toList()
+      ..sort((a, b) => a.value.compareTo(b.value));
+
+    // Créer une map pour les couleurs, basée sur les mêmes couleurs que le donut
+    Map<String, Color> cityColors = {};
+    final List<Color> colorPalette = Colors.primaries; // Choisir une palette de couleurs
+    for (int i = 0; i < sortedEntries.length; i++) {
+      cityColors[sortedEntries[i].key] = colorPalette[i % colorPalette.length];
+    }
+
+    List<Widget> legendItems = [];
+    int othersValue = 0;
+
+    // Parcourir les villes et regrouper celles avec < 2%
+    for (var entry in sortedEntries) {
+      final double percentage = (entry.value / totalCount) * 100;
+
+      if (percentage < 2) {
+        // Ajouter aux "Autres" si < 2%
+        othersValue += entry.value;
+        othersDetails.add({'city': entry.key, 'count': entry.value}); // Stocker les détails de "Autres"
+      } else {
+        // Ajouter un élément de légende pour cette ville
+        legendItems.add(Row(
           mainAxisSize: MainAxisSize.min,
           children: [
             Container(
               width: 16,
               height: 16,
-              color: Colors.primaries[
-                  cityCount.keys.toList().indexOf(entry.key) %
-                      Colors.primaries.length],
+              color: cityColors[entry.key], // Utiliser la couleur attribuée à cette ville
             ),
             const SizedBox(width: 4),
             Text(
@@ -891,8 +939,33 @@ Widget _buildTokenDistributionByCityCard(DataManager dataManager) {
               style: TextStyle(fontSize: 13 + appState.getTextSizeOffset()),
             ),
           ],
-        );
-      }).toList(),
+        ));
+      }
+    }
+
+    // Ajouter une légende pour "Autres" si nécessaire
+    if (othersValue > 0) {
+      legendItems.add(Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Container(
+            width: 16,
+            height: 16,
+            color: Colors.grey,
+          ),
+          const SizedBox(width: 4),
+          Text(
+            '${S.of(context).others}: $othersValue',
+            style: TextStyle(fontSize: 13 + appState.getTextSizeOffset()),
+          ),
+        ],
+      ));
+    }
+
+    return Wrap(
+      spacing: 8.0,
+      runSpacing: 4.0,
+      children: legendItems,
     );
   }
 
@@ -907,164 +980,42 @@ Widget _buildTokenDistributionByCityCard(DataManager dataManager) {
     return spots;
   }
 
-List<PieChartSectionData> _buildDonutChartDataByCountry(DataManager dataManager) {
-  Map<String, int> countryCount = {};
-  final appState = Provider.of<AppState>(context);
+  List<PieChartSectionData> _buildDonutChartDataByCountry(DataManager dataManager) {
+    Map<String, int> countryCount = {};
+    final appState = Provider.of<AppState>(context);
 
-  // Remplir le dictionnaire avec les counts par pays
-  for (var token in dataManager.portfolio) {
-    String fullName = token['fullName'];
-    List<String> parts = fullName.split(',');
-    String country = parts.length == 4 ? parts[3].trim() : 'United States';
+    // Remplir le dictionnaire avec les counts par pays
+    for (var token in dataManager.portfolio) {
+      String fullName = token['fullName'];
+      List<String> parts = fullName.split(',');
+      String country = parts.length == 4 ? parts[3].trim() : 'United States';
 
-    countryCount[country] = (countryCount[country] ?? 0) + 1;
-  }
-
-  // Trier les pays par nombre croissant de tokens
-  var sortedEntries = countryCount.entries.toList()
-    ..sort((a, b) => a.value.compareTo(b.value));
-
-  // Créer les sections du graphique à secteurs avec des gradients
-  return sortedEntries.map((entry) {
-    final double percentage = (entry.value /
-            sortedEntries.fold(0, (sum, value) => sum + value.value)) *
-        100;
-
-    // Obtenir un index unique pour chaque pays
-    final int index = sortedEntries.indexOf(entry);
-    final Color baseColor = Colors.cyan[100 * (index % 9)] ?? Colors.cyan;
-
-    // Créer des nuances pour le gradient
-    final Color lighterColor = _shadeColor(baseColor, 1); // Nuance plus claire
-    final Color darkerColor = _shadeColor(baseColor, 0.7);  // Nuance plus foncée
-
-    return PieChartSectionData(
-      value: entry.value.toDouble(),
-      // Conditionner l'affichage du texte selon le pourcentage
-      title: percentage < 1 ? '' : '${percentage.toStringAsFixed(1)}%',
-      // Appliquer un gradient en fonction de la couleur de base
-      gradient: LinearGradient(
-        colors: [lighterColor, darkerColor],
-        begin: Alignment.topLeft,
-        end: Alignment.bottomRight,
-      ),
-      radius: 50,
-      titleStyle: TextStyle(
-        fontSize: 10 + appState.getTextSizeOffset(),
-        color: Colors.white,
-        fontWeight: FontWeight.bold
-      ),
-    );
-  }).toList();
-}
-
-List<PieChartSectionData> _buildDonutChartDataByRegion(DataManager dataManager) {
-  Map<String, int> regionCount = {};
-  final appState = Provider.of<AppState>(context);
-
-  // Remplir le dictionnaire avec les counts par région
-  for (var token in dataManager.portfolio) {
-    String fullName = token['fullName'];
-    List<String> parts = fullName.split(',');
-    String region = '';
-
-    if (parts.length >= 3 &&
-        RegExp(r'^[A-Z]{2}\s\d{5}$').hasMatch(parts[2].trim())) {
-      region = parts[2].trim().substring(0, 2);
-    } else if (parts.length >= 3) {
-      region = parts[2].trim();
+      countryCount[country] = (countryCount[country] ?? 0) + 1;
     }
 
-    if (_usStateAbbreviations.containsKey(region)) {
-      region = _usStateAbbreviations[region]!;
-    }
+    // Trier les pays par nombre croissant de tokens
+    var sortedEntries = countryCount.entries.toList()
+      ..sort((a, b) => a.value.compareTo(b.value));
 
-    regionCount[region] = (regionCount[region] ?? 0) + 1;
-  }
+    // Créer les sections du graphique à secteurs avec des gradients
+    return sortedEntries.map((entry) {
+      final double percentage = (entry.value /
+              sortedEntries.fold(0, (sum, value) => sum + value.value)) *
+          100;
 
-  // Trier les régions par nombre croissant de tokens
-  var sortedEntries = regionCount.entries.toList()
-    ..sort((a, b) => a.value.compareTo(b.value));
-
-  // Créer les sections du graphique à secteurs avec des gradients
-  return sortedEntries.map((entry) {
-    final double percentage = (entry.value /
-            sortedEntries.fold(0, (sum, value) => sum + value.value)) *
-        100;
-
-    // Obtenir un index unique pour chaque région
-    final int index = sortedEntries.indexOf(entry);
-    final Color baseColor = Colors.accents[index % Colors.accents.length];
-
-    // Créer des nuances pour le gradient
-    final Color lighterColor = _shadeColor(baseColor, 1); // Nuance plus claire
-    final Color darkerColor = _shadeColor(baseColor, 0.7);  // Nuance plus foncée
-
-    return PieChartSectionData(
-      value: entry.value.toDouble(),
-      // Conditionner l'affichage du texte selon le pourcentage
-      title: percentage < 1 ? '' : '${percentage.toStringAsFixed(1)}%',
-      // Appliquer un gradient en fonction de la couleur de base
-      gradient: LinearGradient(
-        colors: [lighterColor, darkerColor],
-        begin: Alignment.topLeft,
-        end: Alignment.bottomRight,
-      ),
-      radius: 50,
-      titleStyle: TextStyle(
-        fontSize: 10 + appState.getTextSizeOffset(),
-        color: Colors.white,
-        fontWeight: FontWeight.bold
-      ),
-    );
-  }).toList();
-}
-
-
-List<PieChartSectionData> _buildDonutChartDataByCity(DataManager dataManager, List<Map<String, dynamic>> othersDetails) {
-  Map<String, int> cityCount = {};
-  final appState = Provider.of<AppState>(context);
-
-  // Remplir le dictionnaire avec les counts par ville
-  for (var token in dataManager.portfolio) {
-    String fullName = token['fullName'];
-    List<String> parts = fullName.split(',');
-    String city = parts.length >= 2 ? parts[1].trim() : 'Unknown City';
-
-    cityCount[city] = (cityCount[city] ?? 0) + 1;
-  }
-
-  // Calculer le total des tokens
-  int totalCount = cityCount.values.fold(0, (sum, value) => sum + value);
-
-  // Trier les villes par nombre croissant de tokens
-  var sortedEntries = cityCount.entries.toList()
-    ..sort((a, b) => a.value.compareTo(b.value));
-
-  // Initialiser les sections pour les villes et une section pour "Autres"
-  List<PieChartSectionData> sections = [];
-  othersDetails.clear(); // Clear previous details of "Autres"
-  int othersValue = 0;
-
-  // Parcourir les villes et regrouper celles avec < 2%
-  for (var entry in sortedEntries) {
-    final double percentage = (entry.value / totalCount) * 100;
-
-    if (percentage < 2) {
-      // Ajouter aux "Autres" si < 2%
-      othersValue += entry.value;
-      othersDetails.add({'city': entry.key, 'count': entry.value}); // Stocker les détails de "Autres"
-    } else {
-      // Créer des nuances pour le gradient
+      // Obtenir un index unique pour chaque pays
       final int index = sortedEntries.indexOf(entry);
-      final Color baseColor = Colors.primaries[index % Colors.primaries.length];
-      final Color lighterColor = _shadeColor(baseColor, 1); // Nuance plus claire
-      final Color darkerColor = _shadeColor(baseColor, 0.7); // Nuance plus foncée
+      final Color baseColor = Colors.cyan[100 * (index % 9)] ?? Colors.cyan;
 
-      // Ajouter une section pour cette ville
-      sections.add(PieChartSectionData(
+      // Créer des nuances pour le gradient
+      final Color lighterColor = Utils.shadeColor(baseColor, 1); // Nuance plus claire
+      final Color darkerColor = Utils.shadeColor(baseColor, 0.7);  // Nuance plus foncée
+
+      return PieChartSectionData(
         value: entry.value.toDouble(),
-        title: '${percentage.toStringAsFixed(1)}%',
+        // Conditionner l'affichage du texte selon le pourcentage
+        title: percentage < 1 ? '' : '${percentage.toStringAsFixed(1)}%',
+        // Appliquer un gradient en fonction de la couleur de base
         gradient: LinearGradient(
           colors: [lighterColor, darkerColor],
           begin: Alignment.topLeft,
@@ -1074,94 +1025,273 @@ List<PieChartSectionData> _buildDonutChartDataByCity(DataManager dataManager, Li
         titleStyle: TextStyle(
           fontSize: 10 + appState.getTextSizeOffset(),
           color: Colors.white,
+          fontWeight: FontWeight.bold
+        ),
+      );
+    }).toList();
+  }
+
+  List<PieChartSectionData> _buildDonutChartDataByRegion(DataManager dataManager, List<Map<String, dynamic>> othersDetails) {
+    Map<String, int> regionCount = {};
+    final appState = Provider.of<AppState>(context);
+
+    // Remplir le dictionnaire avec les counts par région
+    for (var token in dataManager.portfolio) {
+      String fullName = token['fullName'];
+      List<String> parts = fullName.split(',');
+      String region = '';
+
+      if (parts.length >= 3 &&
+          RegExp(r'^[A-Z]{2}\s\d{5}$').hasMatch(parts[2].trim())) {
+        region = parts[2].trim().substring(0, 2);
+      } else if (parts.length >= 3) {
+        region = parts[2].trim();
+      }
+
+      if (Parameters.usStateAbbreviations.containsKey(region)) {
+        region = Parameters.usStateAbbreviations[region]!;
+      }
+
+      regionCount[region] = (regionCount[region] ?? 0) + 1;
+    }
+
+    // Calculer le total des tokens
+    int totalCount = regionCount.values.fold(0, (sum, value) => sum + value);
+
+    // Trier les régions par nombre croissant de tokens
+    var sortedEntries = regionCount.entries.toList()
+      ..sort((a, b) => a.value.compareTo(b.value));
+
+    // Créer une map pour les couleurs
+    Map<String, Color> regionColors = {};
+    final List<Color> colorPalette = Colors.accents; // Choisir une palette de couleurs
+    for (int i = 0; i < sortedEntries.length; i++) {
+      regionColors[sortedEntries[i].key] = colorPalette[i % colorPalette.length];
+    }
+
+    // Initialiser les sections pour les régions et une section pour "Autres"
+    List<PieChartSectionData> sections = [];
+    othersDetails.clear(); // Clear previous details of "Autres"
+    int othersValue = 0;
+
+    // Parcourir les régions et regrouper celles avec < 2%
+    for (var entry in sortedEntries) {
+      final double percentage = (entry.value / totalCount) * 100;
+
+      if (percentage < 2) {
+        // Ajouter aux "Autres" si < 2%
+        othersValue += entry.value;
+        othersDetails.add({'region': entry.key, 'count': entry.value}); // Stocker les détails de "Autres"
+      } else {
+        // Ajouter une section pour cette région
+        sections.add(PieChartSectionData(
+          value: entry.value.toDouble(),
+          title: '${percentage.toStringAsFixed(1)}%',
+          color: regionColors[entry.key], // Utiliser la couleur attribuée à cette région
+          radius: 50,
+          titleStyle: TextStyle(
+            fontSize: 10 + appState.getTextSizeOffset(),
+            color: Colors.white,
+            fontWeight: FontWeight.bold,
+          ),
+        ));
+      }
+    }
+
+    // Ajouter la section "Autres" si nécessaire
+    if (othersValue > 0) {
+      final double othersPercentage = (othersValue / totalCount) * 100;
+      sections.add(PieChartSectionData(
+        value: othersValue.toDouble(),
+        title: '${S.of(context).others} ${othersPercentage.toStringAsFixed(1)}%',
+        color: Colors.grey,
+        radius: 50,
+        titleStyle: TextStyle(
+          fontSize: 10 + appState.getTextSizeOffset(),
+          color: Colors.white,
           fontWeight: FontWeight.bold,
         ),
       ));
     }
+
+    return sections;
   }
 
-  // Ajouter la section "Autres" si nécessaire
-  if (othersValue > 0) {
-    final double othersPercentage = (othersValue / totalCount) * 100;
-    sections.add(PieChartSectionData(
-      value: othersValue.toDouble(),
-      title: 'Autres ${othersPercentage.toStringAsFixed(1)}%',
-      gradient: LinearGradient(
-        colors: [Colors.grey[300]!, Colors.grey[600]!],
-        begin: Alignment.topLeft,
-        end: Alignment.bottomRight,
-      ),
-      radius: 50,
-      titleStyle: TextStyle(
-        fontSize: 10 + appState.getTextSizeOffset(),
-        color: Colors.white,
-        fontWeight: FontWeight.bold,
-      ),
-    ));
+  List<PieChartSectionData> _buildDonutChartDataByCity(DataManager dataManager, List<Map<String, dynamic>> othersDetails) {
+    Map<String, int> cityCount = {};
+    final appState = Provider.of<AppState>(context);
+
+    // Remplir le dictionnaire avec les counts par ville
+    for (var token in dataManager.portfolio) {
+      String fullName = token['fullName'];
+      List<String> parts = fullName.split(',');
+      String city = parts.length >= 2 ? parts[1].trim() : 'Unknown City';
+
+      cityCount[city] = (cityCount[city] ?? 0) + 1;
+    }
+
+    // Calculer le total des tokens
+    int totalCount = cityCount.values.fold(0, (sum, value) => sum + value);
+
+    // Trier les villes par nombre croissant de tokens
+    var sortedEntries = cityCount.entries.toList()
+      ..sort((a, b) => a.value.compareTo(b.value));
+
+    // Créer une map pour les couleurs
+    Map<String, Color> cityColors = {};
+    final List<Color> colorPalette = Colors.primaries; // Choisir une palette de couleurs
+    for (int i = 0; i < sortedEntries.length; i++) {
+      cityColors[sortedEntries[i].key] = colorPalette[i % colorPalette.length];
+    }
+
+    // Initialiser les sections pour les villes et une section pour "Autres"
+    List<PieChartSectionData> sections = [];
+    othersDetails.clear(); // Clear previous details of "Autres"
+    int othersValue = 0;
+
+    // Parcourir les villes et regrouper celles avec < 2%
+    for (var entry in sortedEntries) {
+      final double percentage = (entry.value / totalCount) * 100;
+
+      if (percentage < 2) {
+        // Ajouter aux "Autres" si < 2%
+        othersValue += entry.value;
+        othersDetails.add({'city': entry.key, 'count': entry.value}); // Stocker les détails de "Autres"
+      } else {
+        // Ajouter une section pour cette ville
+        sections.add(PieChartSectionData(
+          value: entry.value.toDouble(),
+          title: '${percentage.toStringAsFixed(1)}%',
+          color: cityColors[entry.key], // Utiliser la couleur attribuée à cette ville
+          radius: 50,
+          titleStyle: TextStyle(
+            fontSize: 10 + appState.getTextSizeOffset(),
+            color: Colors.white,
+            fontWeight: FontWeight.bold,
+          ),
+        ));
+      }
+    }
+
+    // Ajouter la section "Autres" si nécessaire
+    if (othersValue > 0) {
+      final double othersPercentage = (othersValue / totalCount) * 100;
+      sections.add(PieChartSectionData(
+        value: othersValue.toDouble(),
+        title: '${S.of(context).others} ${othersPercentage.toStringAsFixed(1)}%',
+        color: Colors.grey,
+        radius: 50,
+        titleStyle: TextStyle(
+          fontSize: 10 + appState.getTextSizeOffset(),
+          color: Colors.white,
+          fontWeight: FontWeight.bold,
+        ),
+      ));
+    }
+
+    return sections;
   }
 
-  return sections;
-}
-
-void _showOtherDetailsModal(DataManager dataManager, List<Map<String, dynamic>> othersDetails) {
-  showModalBottomSheet(
-    context: context,
-    builder: (BuildContext context) {
-      return Container(
-        height: 400,
-        padding: const EdgeInsets.all(16.0),
-        child: Column(
-          children: [
-            Text(
-              'Détails de la section Autres',
-              style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
-            ),
-            const SizedBox(height: 20),
-            SizedBox(
-              height: 200,
-              child: PieChart(
-                PieChartData(
-                  sections: _buildOtherDetailsDonutData(othersDetails),
-                  centerSpaceRadius: 50,
-                  sectionsSpace: 2,
-                  borderData: FlBorderData(show: false),
+  void _showOtherDetailsModal(DataManager dataManager, List<Map<String, dynamic>> othersDetails, String key) {
+    showModalBottomSheet(
+      context: context,
+      builder: (BuildContext context) {
+        return Container(
+          height: 500,
+          padding: const EdgeInsets.all(16.0),
+          child: Column(
+            children: [
+              Text(
+                S.of(context).othersTitle,
+                style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+              ),
+              const SizedBox(height: 20),
+              SizedBox(
+                height: 200,
+                child: PieChart(
+                  PieChartData(
+                    sections: _buildOtherDetailsDonutData(othersDetails, key),
+                    centerSpaceRadius: 50,
+                    sectionsSpace: 2,
+                    borderData: FlBorderData(show: false),
+                  ),
                 ),
               ),
-            ),
-          ],
-        ),
-      );
-    },
-  );
-}
-
-List<PieChartSectionData> _buildOtherDetailsDonutData(List<Map<String, dynamic>> othersDetails) {
-  return othersDetails.map((entry) {
-final double percentage = (entry['count'] / othersDetails.fold<double>(0.0, (sum, e) => sum + e['count'])) * 100;
-
-    return PieChartSectionData(
-      value: entry['count'].toDouble(),
-      title: '${entry['city']} ${percentage.toStringAsFixed(1)}%',
-      color: Colors.blue, // Vous pouvez ajuster la couleur selon vos besoins
-      radius: 50,
-      titleStyle: TextStyle(
-        fontSize: 10,
-        color: Colors.white,
-        fontWeight: FontWeight.bold,
-      ),
+              const SizedBox(height: 20),
+              // Ajout de la légende en dessous du donut
+              _buildLegendForModal(othersDetails, key),
+            ],
+          ),
+        );
+      },
     );
-  }).toList();
-}
+  }
 
-  Color _shadeColor(Color color, double factor) {
-  return Color.fromRGBO(
-    (color.red * factor).round(),
-    (color.green * factor).round(),
-    (color.blue * factor).round(),
-    1,
-  );
-}
+  List<PieChartSectionData> _buildOtherDetailsDonutData(List<Map<String, dynamic>> othersDetails, String key) {
+    final List<Color> sectionColors = Colors.primaries; // Utilisez une palette de couleurs
 
+    // Utiliser un Set pour éviter les doublons
+    final Set<String> uniqueEntries = {};
+    
+    return othersDetails.asMap().entries.map((entry) {
+      final int index = entry.key;
+      final String entryName = entry.value[key] ?? 'Unknown';
+
+      // Ajouter uniquement les entrées uniques
+      if (uniqueEntries.add(entryName)) {
+        final double percentage = (entry.value['count'] / othersDetails.fold<double>(0.0, (sum, e) => sum + e['count'])) * 100;
+
+        return PieChartSectionData(
+          value: entry.value['count'].toDouble(),
+          title: '${percentage.toStringAsFixed(1)}%', // Afficher uniquement le pourcentage
+          color: sectionColors[index % sectionColors.length], // Couleurs uniques pour chaque section
+          radius: 50,
+          titleStyle: const TextStyle(
+            fontSize: 10,
+            color: Colors.white,
+            fontWeight: FontWeight.bold,
+          ),
+        );
+      } else {
+        return null;  // Ignorer les doublons
+      }
+    }).where((section) => section != null).toList().cast<PieChartSectionData>();
+  }
+
+  Widget _buildLegendForModal(List<Map<String, dynamic>> othersDetails, String key) {
+    final List<Color> sectionColors = Colors.primaries; // Utiliser une palette de couleurs
+    final Set<String> uniqueEntries = {}; // Utiliser un Set pour éviter les doublons
+
+    return Wrap(
+      spacing: 8.0,
+      runSpacing: 4.0,
+      children: othersDetails.asMap().entries.map((entry) {
+        final int index = entry.key;
+        final String name = entry.value[key] ?? 'Unknown';
+
+        // Ajouter uniquement les entrées uniques
+        if (uniqueEntries.add(name)) {
+          return Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Container(
+                width: 16,
+                height: 16,
+                color: sectionColors[index % sectionColors.length], // Couleur identique au donut
+              ),
+              const SizedBox(width: 4),
+              Text(
+                name,
+                style: const TextStyle(fontSize: 12),
+              ),
+            ],
+          );
+        } else {
+          return Container(); // Ignorer les doublons
+        }
+      }).toList(),
+    );
+  }
 
   Color _getPropertyColor(int propertyType) {
   switch (propertyType) {
@@ -1193,7 +1323,6 @@ final double percentage = (entry['count'] / othersDetails.fold<double>(0.0, (sum
       return Colors.grey;
   }
 }
-
 
   String getPropertyTypeName(int propertyType) {
     switch (propertyType) {

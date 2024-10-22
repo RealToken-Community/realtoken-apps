@@ -1,10 +1,9 @@
-import 'package:RealToken/generated/l10n.dart';
-import 'package:RealToken/utils/utils.dart';
+import 'package:real_token/generated/l10n.dart';
+import 'package:real_token/utils/utils.dart';
 import 'package:flutter/material.dart';
 import 'package:hive/hive.dart';
-import 'package:intl/intl.dart';  // Pour la gestion des dates
 import 'package:provider/provider.dart';
-import '../app_state.dart'; // Import AppState
+import 'package:real_token/app_state.dart'; // Import AppState
 
 class ServiceStatusPage extends StatelessWidget {
   const ServiceStatusPage({super.key});

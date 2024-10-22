@@ -1,34 +1,32 @@
-import 'package:RealToken/utils/utils.dart';
+import 'package:real_token/utils/utils.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_map/flutter_map.dart';
 import 'package:flutter_map_marker_cluster/flutter_map_marker_cluster.dart';
 import 'package:latlong2/latlong.dart';
 import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import '../api/data_manager.dart';
+import 'package:real_token/api/data_manager.dart';
 
 class MapsPage extends StatefulWidget {
   const MapsPage({super.key});
 
   @override
-  _MapsPageState createState() => _MapsPageState();
-  
+  MapsPageState createState() => MapsPageState(); // Remplacer _MapsPageState par MapsPageState
 }
 
-class _MapsPageState extends State<MapsPage> {
+class MapsPageState extends State<MapsPage> {
   final PopupController _popupController = PopupController();
   bool _showAllTokens = false;
   final String _searchQuery = '';
   final String _sortOption = 'Name';
   final bool _isAscending = true;
-  bool _isDarkTheme = false; // Variable pour suivre le thème sélectionné
   bool _forceLightMode = false; // Nouveau switch pour forcer le mode clair
 
   @override
   void initState() {
     super.initState();
     _loadThemePreference(); // Charger la préférence du thème à l'initialisation
-     WidgetsBinding.instance.addPostFrameCallback((_) {
+    WidgetsBinding.instance.addPostFrameCallback((_) {
       Provider.of<DataManager>(context, listen: false).fetchAndStoreAllTokens();
     });
   }
@@ -37,13 +35,18 @@ class _MapsPageState extends State<MapsPage> {
   Future<void> _loadThemePreference() async {
     SharedPreferences prefs = await SharedPreferences.getInstance();
     setState(() {
-      _isDarkTheme = prefs.getBool('isDarkTheme') ?? false;
+      _forceLightMode = prefs.getBool('forceLightMode') ?? false; // Charger le mode forcé
     });
   }
 
+  // Sauvegarder la préférence du mode dans SharedPreferences
+  Future<void> _saveThemePreference() async {
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    await prefs.setBool('forceLightMode', _forceLightMode); // Sauvegarder le mode forcé
+  }
+
   // Méthode pour filtrer et trier les tokens (même approche que PortfolioPage)
-  List<Map<String, dynamic>> _filterAndSortTokens(
-      List<Map<String, dynamic>> tokens) {
+  List<Map<String, dynamic>> _filterAndSortTokens(List<Map<String, dynamic>> tokens) {
     List<Map<String, dynamic>> filteredTokens = tokens
         .where((token) => token['fullName']
             .toLowerCase()
@@ -98,7 +101,7 @@ class _MapsPageState extends State<MapsPage> {
             onTap: () => _showMarkerPopup(context, matchingToken),
             child: Icon(
               Icons.location_on,
-              color: getRentalStatusColor(rentedUnits, totalUnits),
+              color: Utils.getRentalStatusColor(rentedUnits, totalUnits),
               size: 40.0,
             ),
           ),
@@ -135,71 +138,71 @@ class _MapsPageState extends State<MapsPage> {
           child: Text('No tokens with valid coordinates found on the map'));
     }
 
-return Scaffold(
-  backgroundColor: Theme.of(context).scaffoldBackgroundColor,
-  body: Stack(
-    children: [
-      Container(
-        color: Theme.of(context).scaffoldBackgroundColor, // Définit la couleur de fond pour la carte
-        child: FlutterMap(
-          options: MapOptions(
-            initialCenter: LatLng(42.367476, -83.130921),
-            initialZoom: 10.0,
-            onTap: (_, __) => _popupController.hideAllPopups(),
-            interactionOptions: const InteractionOptions(flags: InteractiveFlag.pinchZoom | InteractiveFlag.drag),
-          ),
-          children: [
-              TileLayer(
-                // Si _forceLightMode est activé, on utilise le mode clair
-                urlTemplate: _forceLightMode
-                    ? 'https://tile.openstreetmap.org/{z}/{x}/{y}.png'
-                    : _isDarkTheme
-                        ? 'https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png'
-                        : 'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
-                subdomains: ['a', 'b', 'c'],
-                userAgentPackageName: 'com.byackee.app',
-                retinaMode: true,
+    return Scaffold(
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
+      body: Stack(
+        children: [
+          Container(
+            color: Theme.of(context).scaffoldBackgroundColor, // Définit la couleur de fond pour la carte
+            child: FlutterMap(
+              options: MapOptions(
+                initialCenter: LatLng(42.367476, -83.130921),
+                initialZoom: 10.0,
+                onTap: (_, __) => _popupController.hideAllPopups(),
+                interactionOptions: const InteractionOptions(flags: InteractiveFlag.pinchZoom | InteractiveFlag.drag),
               ),
-            MarkerClusterLayerWidget(
-              options: MarkerClusterLayerOptions(
-                maxClusterRadius: 70,
-                disableClusteringAtZoom: 15,
-                size: const Size(40, 40),
-                markers: markers,
-                builder: (context, clusterMarkers) {
-                  Color clusterColor = _getClusterColor(clusterMarkers);
-                  return Container(
-                    width: 50,
-                    height: 50,
-                    decoration: BoxDecoration(
-                      shape: BoxShape.circle,
-                      gradient: RadialGradient(
-                        colors: [
-                          clusterColor.withOpacity(0.9),
-                          clusterColor.withOpacity(0.2),
-                        ],
-                        stops: [0.4, 1.0],
-                      ),
-                    ),
-                    child: Center(
-                      child: Text(
-                        clusterMarkers.length.toString(),
-                        style: const TextStyle(
-                          color: Colors.white,
-                          fontWeight: FontWeight.bold,
+              children: [
+                TileLayer(
+                  // Si _forceLightMode est activé, on utilise le mode clair
+                  urlTemplate: _forceLightMode
+                      ? 'https://tile.openstreetmap.org/{z}/{x}/{y}.png'
+                      : Theme.of(context).brightness == Brightness.dark
+                          ? 'https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png'
+                          : 'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
+                  subdomains: ['a', 'b', 'c'],
+                  userAgentPackageName: 'com.byackee.app',
+                  retinaMode: true,
+                ),
+                MarkerClusterLayerWidget(
+                  options: MarkerClusterLayerOptions(
+                    maxClusterRadius: 70,
+                    disableClusteringAtZoom: 15,
+                    size: const Size(40, 40),
+                    markers: markers,
+                    builder: (context, clusterMarkers) {
+                      Color clusterColor = _getClusterColor(clusterMarkers);
+                      return Container(
+                        width: 50,
+                        height: 50,
+                        decoration: BoxDecoration(
+                          shape: BoxShape.circle,
+                          gradient: RadialGradient(
+                            colors: [
+                              clusterColor.withOpacity(0.9),
+                              clusterColor.withOpacity(0.2),
+                            ],
+                            stops: [0.4, 1.0],
+                          ),
                         ),
-                      ),
-                    ),
-                  );
-                },
-              ),
+                        child: Center(
+                          child: Text(
+                            clusterMarkers.length.toString(),
+                            style: const TextStyle(
+                              color: Colors.white,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                        ),
+                      );
+                    },
+                  ),
+                ),
+              ],
             ),
-          ],
-        ),
-      ),
-       // Switch pour basculer entre le mode sombre/clair et forcer le mode clair pour la carte
+          ),
+          // Switch pour basculer entre le mode sombre/clair et forcer le mode clair pour la carte
           Positioned(
-            top: 90,
+            top: Utils.getAppBarHeight(context),
             right: 16,
             child: Row(
               children: [
@@ -212,6 +215,7 @@ return Scaffold(
                       setState(() {
                         _forceLightMode = value; // Mettre à jour le switch pour forcer le mode clair
                       });
+                      _saveThemePreference(); // Sauvegarder la préférence
                     },
                     activeColor: Colors.blue,
                     inactiveThumbColor: Colors.grey,
@@ -221,96 +225,97 @@ return Scaffold(
               ],
             ),
           ),
-      // Switch en haut à gauche pour basculer entre les tokens du portefeuille et tous les tokens
-      Positioned(
-        top: 90, // Positionner juste en dessous de l'AppBar
-        left: 16,
-        child: Row(
-        children: [
-          Transform.scale(
-            scale: 0.8, // Réduit la taille du Switch à 80%
-            child: Switch(
-              value: _showAllTokens,
-              onChanged: (value) {
-                setState(() {
-                  _showAllTokens = value;
-                });
-              },
-              activeColor: Colors.blue, // Couleur du bouton en mode activé
-              inactiveThumbColor: Colors.grey, // Couleur du bouton en mode désactivé
+          // Switch en haut à gauche pour basculer entre les tokens du portefeuille et tous les tokens
+          Positioned(
+            top: Utils.getAppBarHeight(context), // Positionner juste en dessous de l'AppBar
+            left: 16,
+            child: Row(
+              children: [
+                Transform.scale(
+                  scale: 0.8, // Réduit la taille du Switch à 80%
+                  child: Switch(
+                    value: _showAllTokens,
+                    onChanged: (value) {
+                      setState(() {
+                        _showAllTokens = value;
+                      });
+                    },
+                    activeColor: Colors.blue, // Couleur du bouton en mode activé
+                    inactiveThumbColor: Colors.grey, // Couleur du bouton en mode désactivé
+                  ),
+                ),
+                Text(_showAllTokens ? 'All Tokens' : 'Portfolio'),
+              ],
             ),
           ),
-                    Text(_showAllTokens ? 'All Tokens' : 'Portfolio'),
-
+          // Légende en bas à gauche
+          Positioned(
+            bottom: 90, // Remonter la légende pour la placer au-dessus de la BottomBar
+            left: 16,
+            child: Container(
+              padding: const EdgeInsets.all(8),
+              decoration: BoxDecoration(
+                color: Theme.of(context).cardColor,
+                borderRadius: BorderRadius.circular(8),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black26,
+                    blurRadius: 6,
+                    offset: Offset(0, 2),
+                  ),
+                ],
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    children: [
+                      Icon(Icons.location_on, color: Colors.green),
+                      SizedBox(width: 4),
+                      Text(
+                        "Fully Rented",
+                        style: TextStyle(
+                          fontSize: 13, // Taille du texte ajustée
+                        ),
+                      ),
+                    ],
+                  ),
+                  Row(
+                    children: const [
+                      Icon(Icons.location_on, color: Colors.orange),
+                      SizedBox(width: 4),
+                      Text(
+                        "Partially Rented",
+                        style: TextStyle(
+                          fontSize: 13, // Taille du texte ajustée
+                        ),
+                      ),
+                    ],
+                  ),
+                  Row(
+                    children: const [
+                      Icon(Icons.location_on, color: Colors.red),
+                      SizedBox(width: 4),
+                      Text(
+                        "Not Rented",
+                        style: TextStyle(
+                          fontSize: 13, // Taille du texte ajustée
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+            ),
+          ),
         ],
-
-        ),
       ),
-      // Légende en bas à gauche
-      Positioned(
-        bottom: 90, // Remonter la légende pour la placer au-dessus de la BottomBar
-        left: 16,
-        child: Container(
-          padding: const EdgeInsets.all(8),
-          decoration: BoxDecoration(
-            color: Theme.of(context).cardColor,
-            borderRadius: BorderRadius.circular(8),
-            boxShadow: [
-              BoxShadow(
-                color: Colors.black26,
-                blurRadius: 6,
-                offset: Offset(0, 2),
-              ),
-            ],
-          ),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Row(
-                children:  [
-                  Icon(Icons.location_on, color: Colors.green),
-                  SizedBox(width: 4),
-                  Text("Fully Rented", style: TextStyle(
-                  fontSize: 13, // Taille du texte ajustée
-              ),
-              ),
-                ],
-              ),
-              Row(
-                children: const [
-                  Icon(Icons.location_on, color: Colors.orange),
-                  SizedBox(width: 4),
-                  Text("Partially Rented", style: TextStyle(
-                  fontSize: 13, // Taille du texte ajustée
-              ),
-                  ),
-                ],
-              ),
-              Row(
-                children: const [
-                  Icon(Icons.location_on, color: Colors.red),
-                  SizedBox(width: 4),
-                  Text("Not Rented", style: TextStyle(
-                  fontSize: 13, // Taille du texte ajustée
-              ),
-                  ),
-                ],
-              ),
-            ],
-          ),
-        ),
-      ),
-    ],
-  ),
-);
-
+    );
   }
 
   // Fonction pour déterminer la couleur du cluster en fonction des marqueurs qu'il contient
   Color _getClusterColor(List<Marker> markers) {
     int fullyRented = 0;
-    // ignore: unused_local_variable
-    int partiallyRented = 0;
     int notRented = 0;
 
     for (var marker in markers) {
@@ -324,8 +329,6 @@ return Scaffold(
           notRented++;
         } else if (rentedUnits == totalUnits) {
           fullyRented++;
-        } else {
-          partiallyRented++;
         }
       }
     }
@@ -339,92 +342,83 @@ return Scaffold(
     }
   }
 
-void _showMarkerPopup(BuildContext context, dynamic matchingToken) {
-  showDialog(
-    context: context,
-    builder: (BuildContext context) {
-      final rentedUnits = matchingToken['rentedUnits'] ?? 0;
-      final totalUnits = matchingToken['totalUnits'] ?? 1;
-      final lat = double.tryParse(matchingToken['lat']) ?? 0.0;
-      final lng = double.tryParse(matchingToken['lng']) ?? 0.0;
+  void _showMarkerPopup(BuildContext context, dynamic matchingToken) {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        final rentedUnits = matchingToken['rentedUnits'] ?? 0;
+        final totalUnits = matchingToken['totalUnits'] ?? 1;
+        final lat = double.tryParse(matchingToken['lat']) ?? 0.0;
+        final lng = double.tryParse(matchingToken['lng']) ?? 0.0;
 
-      return AlertDialog(
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.center,
-          children: [
-            if (matchingToken['imageLink'] != null)
-              Image.network(
-                matchingToken['imageLink'][0],
-                width: 200,
-                fit: BoxFit.cover,
+        return AlertDialog(
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.center,
+            children: [
+              if (matchingToken['imageLink'] != null)
+                Image.network(
+                  matchingToken['imageLink'][0],
+                  width: 200,
+                  fit: BoxFit.cover,
+                ),
+              Padding(
+                padding: const EdgeInsets.all(8.0),
+                child: Text(
+                  matchingToken['shortName'],
+                  style: const TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.bold,
+                  ),
+                  textAlign: TextAlign.center,
+                ),
               ),
-            Padding(
-              padding: const EdgeInsets.all(8.0),
-              child: Text(
-                matchingToken['shortName'],
-                style: const TextStyle(
-                  fontSize: 16,
-                  fontWeight: FontWeight.bold,
-                ),
-                textAlign: TextAlign.center,
+              const SizedBox(height: 8.0),
+              Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const Text(
+                    'Token Price: ',
+                    style: TextStyle(fontWeight: FontWeight.bold),
+                  ),
+                  Text('${matchingToken['tokenPrice'] ?? 'N/A'}'),
+                ],
               ),
-            ),
-            const SizedBox(height: 8.0),
-            Row(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                const Text(
-                  'Token Price: ',
-                  style: TextStyle(fontWeight: FontWeight.bold),
-                ),
-                Text('${matchingToken['tokenPrice'] ?? 'N/A'}'),
-              ],
-            ),
-            Row(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                const Text(
-                  'Token Yield: ',
-                  style: TextStyle(fontWeight: FontWeight.bold),
-                ),
-                Text(
-                    '${matchingToken['annualPercentageYield'] != null ? matchingToken['annualPercentageYield'].toStringAsFixed(2) : 'N/A'}'),
-              ],
-            ),
-            Row(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                const Text(
-                  'Units Rented: ',
-                  style: TextStyle(fontWeight: FontWeight.bold),
-                ),
-                Text('$rentedUnits / $totalUnits'),
-              ],
-            ),
-            const SizedBox(height: 16.0),
-            IconButton(
-              icon: const Icon(Icons.streetview, color: Colors.blue),
-              onPressed: () {
-                final googleStreetViewUrl =
-                    'https://www.google.com/maps/@?api=1&map_action=pano&viewpoint=$lat,$lng';
-                Utils.launchURL(googleStreetViewUrl);
-              },
-            ),
-            const Text('View in Street View'),
-          ],
-        ),
-      );
-    },
-  );
-}
-  Color getRentalStatusColor(int rentedUnits, int totalUnits) {
-    if (rentedUnits == 0) {
-      return Colors.red;
-    } else if (rentedUnits == totalUnits) {
-      return Colors.green;
-    } else {
-      return Colors.orange;
-    }
+              Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const Text(
+                    'Token Yield: ',
+                    style: TextStyle(fontWeight: FontWeight.bold),
+                  ),
+                  Text(
+                      '${matchingToken['annualPercentageYield'] != null ? matchingToken['annualPercentageYield'].toStringAsFixed(2) : 'N/A'}'),
+                ],
+              ),
+              Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const Text(
+                    'Units Rented: ',
+                    style: TextStyle(fontWeight: FontWeight.bold),
+                  ),
+                  Text('$rentedUnits / $totalUnits'),
+                ],
+              ),
+              const SizedBox(height: 16.0),
+              IconButton(
+                icon: const Icon(Icons.streetview, color: Colors.blue),
+                onPressed: () {
+                  final googleStreetViewUrl =
+                      'https://www.google.com/maps/@?api=1&map_action=pano&viewpoint=$lat,$lng';
+                  Utils.launchURL(googleStreetViewUrl);
+                },
+              ),
+              const Text('View in Street View'),
+            ],
+          ),
+        );
+      },
+    );
   }
 }

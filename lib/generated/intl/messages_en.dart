@@ -39,7 +39,7 @@ class MessageLookup extends MessageLookupByLibrary {
         "amount": MessageLookupByLibrary.simpleMessage("Amount"),
         "annualPercentageYield":
             MessageLookupByLibrary.simpleMessage("Annual yield"),
-        "annualYield": MessageLookupByLibrary.simpleMessage("annual yield"),
+        "annualYield": MessageLookupByLibrary.simpleMessage("Annual Yield"),
         "annually": MessageLookupByLibrary.simpleMessage("Annually"),
         "appDescription":
             MessageLookupByLibrary.simpleMessage("mobile app for Community"),
@@ -50,13 +50,15 @@ class MessageLookup extends MessageLookupByLibrary {
             "Are you sure you want to clear cache and data?"),
         "ascending": MessageLookupByLibrary.simpleMessage("Ascending"),
         "author": MessageLookupByLibrary.simpleMessage("Author"),
+        "averageApy": MessageLookupByLibrary.simpleMessage("average APY"),
         "blockchain": MessageLookupByLibrary.simpleMessage("Blockchain"),
         "borrowBalance": MessageLookupByLibrary.simpleMessage("Borrows"),
         "cancel": MessageLookupByLibrary.simpleMessage("Cancel"),
         "characteristics":
             MessageLookupByLibrary.simpleMessage("Characteristics"),
+        "chinese": MessageLookupByLibrary.simpleMessage("中文"),
         "clearCacheData":
-            MessageLookupByLibrary.simpleMessage("Clear Cache and Data"),
+            MessageLookupByLibrary.simpleMessage("Clear Cache/Data"),
         "close": MessageLookupByLibrary.simpleMessage("Close"),
         "commercial": MessageLookupByLibrary.simpleMessage("Commercial"),
         "condominium": MessageLookupByLibrary.simpleMessage("Condominium"),
@@ -79,6 +81,7 @@ class MessageLookup extends MessageLookupByLibrary {
         "darkTheme": MessageLookupByLibrary.simpleMessage("Dark Theme"),
         "dashboard": MessageLookupByLibrary.simpleMessage("Dashboard"),
         "day": MessageLookupByLibrary.simpleMessage("Day"),
+        "days": MessageLookupByLibrary.simpleMessage("Days"),
         "depositBalance": MessageLookupByLibrary.simpleMessage("Deposits"),
         "descending": MessageLookupByLibrary.simpleMessage("Descending"),
         "donate": MessageLookupByLibrary.simpleMessage("Donate"),
@@ -86,9 +89,9 @@ class MessageLookup extends MessageLookupByLibrary {
             "If you like this app and want to support its development, you can donate."),
         "duplex": MessageLookupByLibrary.simpleMessage("Duplex"),
         "duplicate": MessageLookupByLibrary.simpleMessage(
-            "properties present in multiple wallets/RMM"),
+            "Properties present in multiple wallets/RMM"),
         "duplicate_title":
-            MessageLookupByLibrary.simpleMessage("duplicate properties"),
+            MessageLookupByLibrary.simpleMessage("Duplicate properties"),
         "english": MessageLookupByLibrary.simpleMessage("English"),
         "ethereumContract":
             MessageLookupByLibrary.simpleMessage("Ethereum contract"),
@@ -99,15 +102,15 @@ class MessageLookup extends MessageLookupByLibrary {
             MessageLookupByLibrary.simpleMessage("Data exported successfully"),
         "feedback": MessageLookupByLibrary.simpleMessage("Feedback"),
         "finances": MessageLookupByLibrary.simpleMessage("Finances"),
-        "french": MessageLookupByLibrary.simpleMessage("French"),
+        "french": MessageLookupByLibrary.simpleMessage("Francais"),
         "futureRents": MessageLookupByLibrary.simpleMessage("Future Rents"),
         "gnosisContract":
             MessageLookupByLibrary.simpleMessage("Gnosis contract"),
         "grossRentMonth":
             MessageLookupByLibrary.simpleMessage("Gross rent per month"),
-        "groupedRentGraph":
-            MessageLookupByLibrary.simpleMessage("Grouped Rent Graph"),
+        "groupedRentGraph": MessageLookupByLibrary.simpleMessage("Rents"),
         "hello": MessageLookupByLibrary.simpleMessage("Hello"),
+        "hours": MessageLookupByLibrary.simpleMessage("Hours"),
         "importData": MessageLookupByLibrary.simpleMessage("Import Data"),
         "importExportData":
             MessageLookupByLibrary.simpleMessage("Import or export data (zip)"),
@@ -120,6 +123,7 @@ class MessageLookup extends MessageLookupByLibrary {
         "initialMaintenanceReserve":
             MessageLookupByLibrary.simpleMessage("Maintenance reserve"),
         "insights": MessageLookupByLibrary.simpleMessage("Insights"),
+        "italian": MessageLookupByLibrary.simpleMessage("Italiano"),
         "language": MessageLookupByLibrary.simpleMessage("Language"),
         "languageUpdated": m0,
         "lastExecution": MessageLookupByLibrary.simpleMessage("Last update"),
@@ -159,13 +163,17 @@ class MessageLookup extends MessageLookupByLibrary {
         "noRentReceived":
             MessageLookupByLibrary.simpleMessage("No rent received"),
         "noYieldEvolution": MessageLookupByLibrary.simpleMessage(
-            "No yield evolution. The last value is:"),
+            "No yield evolution. The last yield is:"),
         "notSpecified": MessageLookupByLibrary.simpleMessage("Not specified"),
         "offering": MessageLookupByLibrary.simpleMessage("Offering"),
         "other": MessageLookupByLibrary.simpleMessage("Other"),
         "others": MessageLookupByLibrary.simpleMessage("Others"),
+        "othersTitle": MessageLookupByLibrary.simpleMessage(
+            "Details of the Others section"),
         "paypal": MessageLookupByLibrary.simpleMessage("PayPal"),
+        "period": MessageLookupByLibrary.simpleMessage("Period"),
         "portfolio": MessageLookupByLibrary.simpleMessage("Portfolio"),
+        "portuguese": MessageLookupByLibrary.simpleMessage("Português"),
         "priceEvolution":
             MessageLookupByLibrary.simpleMessage("Price evolution"),
         "priceEvolutionPercentage":
@@ -180,7 +188,7 @@ class MessageLookup extends MessageLookupByLibrary {
             MessageLookupByLibrary.simpleMessage("RealTokens list"),
         "recentChanges": MessageLookupByLibrary.simpleMessage("Recent changes"),
         "recentUpdatesTitle":
-            MessageLookupByLibrary.simpleMessage("last 30 days"),
+            MessageLookupByLibrary.simpleMessage("Last 30 days"),
         "rentGraph":
             MessageLookupByLibrary.simpleMessage("Rent Received Graph"),
         "rentStartDate": MessageLookupByLibrary.simpleMessage("First rent"),
@@ -195,14 +203,14 @@ class MessageLookup extends MessageLookupByLibrary {
         "rentalStatusRented": MessageLookupByLibrary.simpleMessage("Rented"),
         "rentalType": MessageLookupByLibrary.simpleMessage("Rental type"),
         "rented": MessageLookupByLibrary.simpleMessage("Rented"),
-        "rentedUnits": MessageLookupByLibrary.simpleMessage("rented units"),
+        "rentedUnits": MessageLookupByLibrary.simpleMessage("Rented Units"),
         "rents": MessageLookupByLibrary.simpleMessage("Rents"),
         "resortBungalow":
             MessageLookupByLibrary.simpleMessage("Resort Bungalow"),
         "revenue": MessageLookupByLibrary.simpleMessage("Revenue"),
         "rmm": MessageLookupByLibrary.simpleMessage("RMM"),
         "roiAlertInfo": MessageLookupByLibrary.simpleMessage(
-            "This ROI feature is in beta and is currently calculated based on the income received from the property and the current token value."),
+            "This ROI feature is in beta and is currently calculated based on the income received from the property and the initial token value."),
         "roiPerProperties":
             MessageLookupByLibrary.simpleMessage("Property ROI"),
         "rwaHoldings": MessageLookupByLibrary.simpleMessage("RWA Holdings SA"),
@@ -219,10 +227,10 @@ class MessageLookup extends MessageLookupByLibrary {
             "The data may not be up to date"),
         "sortByAPY": MessageLookupByLibrary.simpleMessage("Sort by APY"),
         "sortByInitialLaunchDate":
-            MessageLookupByLibrary.simpleMessage("sort by recently added"),
+            MessageLookupByLibrary.simpleMessage("Sort by recently added"),
         "sortByName": MessageLookupByLibrary.simpleMessage("Sort by Name"),
         "sortByValue": MessageLookupByLibrary.simpleMessage("Sort by Value"),
-        "spanish": MessageLookupByLibrary.simpleMessage("Spanish"),
+        "spanish": MessageLookupByLibrary.simpleMessage("Español"),
         "specialThanks": MessageLookupByLibrary.simpleMessage(
             "Special thanks to @Sigri, @ehpst, and @pitsbi for their support."),
         "squareFeet": MessageLookupByLibrary.simpleMessage("Interior size"),
@@ -244,15 +252,15 @@ class MessageLookup extends MessageLookupByLibrary {
         "tokenDistributionByRegion": MessageLookupByLibrary.simpleMessage(
             "Token Distribution by Region"),
         "tokenSymbol": MessageLookupByLibrary.simpleMessage("Token symbol"),
-        "tokens": MessageLookupByLibrary.simpleMessage("tokens"),
+        "tokens": MessageLookupByLibrary.simpleMessage("Tokens"),
         "totalInvestment":
-            MessageLookupByLibrary.simpleMessage("Total Investment"),
+            MessageLookupByLibrary.simpleMessage("Total investment"),
         "totalPortfolio":
             MessageLookupByLibrary.simpleMessage("Total Portfolio"),
         "totalRentReceived":
-            MessageLookupByLibrary.simpleMessage("total of revenus"),
+            MessageLookupByLibrary.simpleMessage("Total of revenues"),
         "totalTokens": MessageLookupByLibrary.simpleMessage("Total Tokens"),
-        "totalUnits": MessageLookupByLibrary.simpleMessage("Total Units"),
+        "totalUnits": MessageLookupByLibrary.simpleMessage("Total units"),
         "totalValue": MessageLookupByLibrary.simpleMessage("Total Value"),
         "underlyingAssetPrice":
             MessageLookupByLibrary.simpleMessage("Asset price"),
@@ -266,13 +274,14 @@ class MessageLookup extends MessageLookupByLibrary {
         "usdcDepositBalance":
             MessageLookupByLibrary.simpleMessage("USDC Deposit Balance"),
         "version": MessageLookupByLibrary.simpleMessage("Version"),
-        "viewOnMap": MessageLookupByLibrary.simpleMessage("view on map"),
+        "viewOnMap": MessageLookupByLibrary.simpleMessage("View on map"),
         "viewOnRealT": MessageLookupByLibrary.simpleMessage("View on RealT"),
         "wallet": MessageLookupByLibrary.simpleMessage("Wallet"),
         "walletBalanceHistory":
             MessageLookupByLibrary.simpleMessage("Wallet Balance History"),
         "week": MessageLookupByLibrary.simpleMessage("Week"),
         "weekly": MessageLookupByLibrary.simpleMessage("Weekly"),
+        "weeks": MessageLookupByLibrary.simpleMessage("Weeks"),
         "xdaiBorrowBalance":
             MessageLookupByLibrary.simpleMessage("XDAI Borrow Balance"),
         "xdaiDepositBalance":

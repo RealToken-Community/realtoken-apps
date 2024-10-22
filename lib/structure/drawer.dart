@@ -1,16 +1,16 @@
-import 'package:RealToken/settings/service_status.dart';
-import 'package:RealToken/utils/utils.dart';
+import 'package:real_token/settings/service_status.dart';
+import 'package:real_token/utils/utils.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import '../settings/settings_page.dart'; // Importer la page des paramètres
-import '../pages/real_tokens_page.dart'; // Importer la page des RealTokens
-import '../about.dart'; // Importer la page About
-import '../pages/updates_page.dart'; // Importer la page des mises à jour
-import '../pages/realt_page.dart'; // Importer la page TokenSummaryPage
+import 'package:real_token/settings/settings_page.dart'; // Importer la page des paramètres
+import 'package:real_token/pages/real_tokens_page.dart'; // Importer la page des RealTokens
+import 'package:real_token/about.dart'; // Importer la page About
+import 'package:real_token/pages/updates_page.dart'; // Importer la page des mises à jour
+import 'package:real_token/pages/realt_page.dart'; // Importer la page TokenSummaryPage
 // Pour détecter la plateforme
-import '../generated/l10n.dart'; // Importer les traductions
-import '../settings/manage_evm_addresses_page.dart'; // Ajouter cet import si ce n'est pas déjà le cas
-import '../app_state.dart'; // Importer AppState
+import 'package:real_token/generated/l10n.dart'; // Importer les traductions
+import 'package:real_token/settings/manage_evm_addresses_page.dart'; // Ajouter cet import si ce n'est pas déjà le cas
+import 'package:real_token/app_state.dart'; // Importer AppState
 
 class CustomDrawer extends StatelessWidget {
   final Function(bool) onThemeChanged;
@@ -26,42 +26,47 @@ class CustomDrawer extends StatelessWidget {
     child: Column(
       children: <Widget>[
         DrawerHeader(
-          decoration: const BoxDecoration(
-            color: Colors.blue,
-          ),
-          child: Row(
-            crossAxisAlignment: CrossAxisAlignment.center,
-            children: [
-              Image.asset(
-                'assets/logo.png',
-                width: 60,
-                height: 60,
-              ),
-              const SizedBox(width: 10),
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Text(
-                    'RealToken',
-                    style: TextStyle(
-                      color: Colors.white,
-                      fontSize: 23 + appState.getTextSizeOffset(),
-                    ),
-                  ),
-                  Text(
-                    S.of(context).appDescription,
-                    style: TextStyle(
-                      color: Colors.white70,
-                      fontSize: 15 + appState.getTextSizeOffset(),
-                    ),
-                  ),
-                ],
-              ),
-            ],
-          ),
+  decoration: const BoxDecoration(
+    color: Colors.blue,
+  ),
+  child: GestureDetector(
+    onTap: () {
+      Utils.launchURL('https://realt.co/marketplace/');
+    },
+    child: Row(
+      crossAxisAlignment: CrossAxisAlignment.center,
+      children: [
+        Image.asset(
+          'assets/logo.png',
+          width: 60,
+          height: 60,
         ),
-        ListTile(
+        const SizedBox(width: 10),
+        Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Text(
+              'RealToken',
+              style: TextStyle(
+                color: Colors.white,
+                fontSize: 23 + appState.getTextSizeOffset(),
+              ),
+            ),
+            Text(
+              S.of(context).appDescription,
+              style: TextStyle(
+                color: Colors.white70,
+                fontSize: 15 + appState.getTextSizeOffset(),
+              ),
+            ),
+          ],
+        ),
+      ],
+    ),
+  ),
+),
+ ListTile(
           leading: Icon(Icons.wallet, size: 24 + appState.getTextSizeOffset()),
           title: Text(
             S.of(context).manageEvmAddresses,

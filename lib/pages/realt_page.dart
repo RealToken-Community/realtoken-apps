@@ -1,15 +1,17 @@
-import 'package:RealToken/api/data_manager.dart';
-import 'package:RealToken/generated/l10n.dart';
-import 'package:RealToken/utils/utils.dart';
+import 'package:real_token/api/data_manager.dart';
+import 'package:real_token/generated/l10n.dart';
+import 'package:real_token/utils/utils.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 class RealtPage extends StatefulWidget {
+  const RealtPage({super.key});
+
   @override
-  _RealtPageState createState() => _RealtPageState();
+  RealtPageState createState() => RealtPageState();
 }
 
-class _RealtPageState extends State<RealtPage> {
+class RealtPageState extends State<RealtPage> {
   @override
   void initState() {
     super.initState();
