@@ -39,7 +39,7 @@ jobs:
       run: flutter build windows
 
     - name: Upload Windows build
-      uses: actions/upload-artifact@v2
+      uses: actions/upload-artifact@v3
       with:
         name: windows-build
         path: build/windows/runner/Release/
