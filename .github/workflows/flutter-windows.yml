@@ -29,9 +29,6 @@ jobs:
     - name: Verify Flutter installation
       run: flutter --version
 
-    - name: Force Flutter upgrade
-      run: flutter upgrade
-
     - name: Install dependencies
       run: flutter pub get
 
@@ -39,7 +36,7 @@ jobs:
       run: flutter build windows
 
     - name: Upload Windows build
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v3  # Mise à jour vers la version v3
       with:
         name: windows-build
         path: build/windows/runner/Release/
