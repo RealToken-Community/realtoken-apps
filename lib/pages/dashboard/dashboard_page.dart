@@ -1,14 +1,14 @@
-import 'package:real_token/utils/utils.dart';
+import 'package:realtokens_apps/utils/utils.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:fl_chart/fl_chart.dart';
 import 'package:intl/intl.dart';
 import 'package:shared_preferences/shared_preferences.dart'; // Import pour SharedPreferences
-import 'package:real_token/api/data_manager.dart';
-import 'package:real_token/generated/l10n.dart';
+import 'package:realtokens_apps/api/data_manager.dart';
+import 'package:realtokens_apps/generated/l10n.dart';
 import '/settings/manage_evm_addresses_page.dart'; // Import de la page pour gérer les adresses EVM
 import 'dashboard_details_page.dart';
-import 'package:real_token/app_state.dart'; // Import AppState
+import 'package:realtokens_apps/app_state.dart'; // Import AppState
 
 
 class DashboardPage extends StatefulWidget {

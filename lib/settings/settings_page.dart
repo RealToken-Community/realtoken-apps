@@ -1,13 +1,13 @@
 import 'dart:convert';
 import 'dart:io'; // Pour détecter la plateforme (Android/iOS)
-import 'package:real_token/app_state.dart';
-import 'package:real_token/utils/parameters.dart';
-import 'package:real_token/utils/utils.dart';
+import 'package:realtokens_apps/app_state.dart';
+import 'package:realtokens_apps/utils/parameters.dart';
+import 'package:realtokens_apps/utils/utils.dart';
 import 'package:flutter/material.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:real_token/api/data_manager.dart';
-import 'package:real_token/generated/l10n.dart'; // Importer le fichier généré pour les traductions
+import 'package:realtokens_apps/api/data_manager.dart';
+import 'package:realtokens_apps/generated/l10n.dart'; // Importer le fichier généré pour les traductions
 import 'package:hive/hive.dart'; // Import pour Hive
 import 'package:provider/provider.dart';
 import '/api/api_service.dart';

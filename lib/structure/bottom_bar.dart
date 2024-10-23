@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:real_token/generated/l10n.dart'; // Import pour les traductions
-import 'package:real_token/app_state.dart'; // Importer AppState
+import 'package:realtokens_apps/generated/l10n.dart'; // Import pour les traductions
+import 'package:realtokens_apps/app_state.dart'; // Importer AppState
 
 class CustomBottomNavigationBar extends StatelessWidget {
   final int selectedIndex;

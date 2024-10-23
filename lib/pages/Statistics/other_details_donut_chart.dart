@@ -1,8 +1,8 @@
-import 'package:real_token/utils/utils.dart';
+import 'package:realtokens_apps/utils/utils.dart';
 import 'package:flutter/material.dart';
 import 'package:fl_chart/fl_chart.dart';
 import 'package:provider/provider.dart';
-import 'package:real_token/app_state.dart'; // Import AppState
+import 'package:realtokens_apps/app_state.dart'; // Import AppState
 
 List<PieChartSectionData> buildDetailedDonutForOthers(
     List<MapEntry<String, int>> otherCitiesDetails, BuildContext context) {

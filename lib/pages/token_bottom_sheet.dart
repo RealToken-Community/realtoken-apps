@@ -6,12 +6,12 @@ import 'package:flutter_map/flutter_map.dart';
 import 'package:latlong2/latlong.dart'; // Import pour les coordonnées géographiques
 import 'package:fl_chart/fl_chart.dart';
 import 'package:provider/provider.dart'; // Pour accéder à DataManager
-import 'package:real_token/api/data_manager.dart'; // Import de DataManager
-import 'package:real_token/generated/l10n.dart'; // Import pour les traductions
+import 'package:realtokens_apps/api/data_manager.dart'; // Import de DataManager
+import 'package:realtokens_apps/generated/l10n.dart'; // Import pour les traductions
 import 'package:carousel_slider/carousel_slider.dart';
 import 'portfolio/FullScreenCarousel.dart';
-import 'package:real_token/utils/utils.dart';
-import 'package:real_token/app_state.dart';
+import 'package:realtokens_apps/utils/utils.dart';
+import 'package:realtokens_apps/app_state.dart';
 
 // Fonction modifiée pour formater la monnaie avec le taux de conversion et le symbole
 String formatCurrency(BuildContext context, double value) {

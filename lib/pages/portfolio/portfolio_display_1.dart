@@ -1,11 +1,11 @@
-import 'package:real_token/utils/utils.dart';
+import 'package:realtokens_apps/utils/utils.dart';
 import 'package:flutter/material.dart';
 import 'package:cached_network_image/cached_network_image.dart';
-import 'package:real_token/pages/token_bottom_sheet.dart'; // Import de la bibliothèque url_launcher
+import 'package:realtokens_apps/pages/token_bottom_sheet.dart'; // Import de la bibliothèque url_launcher
 import 'package:provider/provider.dart'; // Pour accéder à DataManager
-import 'package:real_token/generated/l10n.dart'; // Import des traductions
-import 'package:real_token/settings/manage_evm_addresses_page.dart'; // Import de la page de gestion des adresses EVM
-import 'package:real_token/app_state.dart'; // Import AppState
+import 'package:realtokens_apps/generated/l10n.dart'; // Import des traductions
+import 'package:realtokens_apps/settings/manage_evm_addresses_page.dart'; // Import de la page de gestion des adresses EVM
+import 'package:realtokens_apps/app_state.dart'; // Import AppState
 
 class PortfolioDisplay1 extends StatelessWidget {
   final List<Map<String, dynamic>> portfolio;

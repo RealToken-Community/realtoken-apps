@@ -1,7 +1,7 @@
-import 'package:real_token/utils/utils.dart';
+import 'package:realtokens_apps/utils/utils.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:real_token/api/data_manager.dart';
+import 'package:realtokens_apps/api/data_manager.dart';
 
 class DashboardRentsDetailsPage extends StatelessWidget {
   const DashboardRentsDetailsPage({super.key});

@@ -26,13 +26,13 @@ jobs:
       with:
         flutter-version: '3.24.3'
 
+    - name: Install dependencies
+      run: flutter pub get
+
     - name: Enable Windows desktop support
       run: |
         flutter config --enable-windows-desktop
         flutter create .
-
-    - name: Install dependencies
-      run: flutter pub get
 
     - name: Build Windows app
       run: flutter build windows

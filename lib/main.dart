@@ -1,4 +1,4 @@
-import 'package:real_token/structure/home_page.dart';
+import 'package:realtokens_apps/structure/home_page.dart';
 import 'package:flutter/material.dart';
 import 'package:hive_flutter/hive_flutter.dart';
 import 'package:provider/provider.dart';

@@ -1,14 +1,14 @@
-import 'package:real_token/utils/utils.dart';
+import 'package:realtokens_apps/utils/utils.dart';
 import 'package:flutter/material.dart';
 import 'bottom_bar.dart';
 import 'drawer.dart';
-import 'package:real_token/pages/dashboard/dashboard_page.dart';
-import 'package:real_token/pages/portfolio/portfolio_page.dart';
-import 'package:real_token/pages/Statistics/stats_selector_page.dart';
-import 'package:real_token/pages/maps_page.dart';
+import 'package:realtokens_apps/pages/dashboard/dashboard_page.dart';
+import 'package:realtokens_apps/pages/portfolio/portfolio_page.dart';
+import 'package:realtokens_apps/pages/Statistics/stats_selector_page.dart';
+import 'package:realtokens_apps/pages/maps_page.dart';
 import 'dart:ui'; // Import for blur effect
 import 'package:provider/provider.dart';
-import 'package:real_token/app_state.dart'; // Import the global AppState
+import 'package:realtokens_apps/app_state.dart'; // Import the global AppState
 
 class MyHomePage extends StatefulWidget {
   const MyHomePage({super.key});

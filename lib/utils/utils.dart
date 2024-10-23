@@ -1,6 +1,6 @@
 
-import 'package:real_token/api/data_manager.dart';
-import 'package:real_token/generated/l10n.dart';
+import 'package:realtokens_apps/api/data_manager.dart';
+import 'package:realtokens_apps/generated/l10n.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/widgets.dart';
 import 'package:intl/intl.dart';

@@ -1,12 +1,12 @@
-import 'package:real_token/utils/utils.dart';
+import 'package:realtokens_apps/utils/utils.dart';
 import 'package:provider/provider.dart';
 import 'package:flutter/material.dart';
 import 'package:mobile_scanner/mobile_scanner.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:flutter/services.dart'; // Pour copier dans le presse-papiers
-import 'package:real_token/api/data_manager.dart';
-import 'package:real_token/api/api_service.dart';
-import 'package:real_token/app_state.dart'; // Import pour accéder à AppState
+import 'package:realtokens_apps/api/data_manager.dart';
+import 'package:realtokens_apps/api/api_service.dart';
+import 'package:realtokens_apps/app_state.dart'; // Import pour accéder à AppState
 
 class ManageEvmAddressesPage extends StatefulWidget {
   const ManageEvmAddressesPage({super.key});

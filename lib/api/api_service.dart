@@ -1,6 +1,6 @@
 import 'dart:async';
 import 'dart:convert';
-import 'package:real_token/utils/parameters.dart';
+import 'package:realtokens_apps/utils/parameters.dart';
 import 'package:http/http.dart' as http;
 import 'package:hive/hive.dart';
 import 'package:shared_preferences/shared_preferences.dart';

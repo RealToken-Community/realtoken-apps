@@ -1,16 +1,16 @@
-import 'package:real_token/settings/service_status.dart';
-import 'package:real_token/utils/utils.dart';
+import 'package:realtokens_apps/settings/service_status.dart';
+import 'package:realtokens_apps/utils/utils.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:real_token/settings/settings_page.dart'; // Importer la page des paramètres
-import 'package:real_token/pages/real_tokens_page.dart'; // Importer la page des RealTokens
-import 'package:real_token/about.dart'; // Importer la page About
-import 'package:real_token/pages/updates_page.dart'; // Importer la page des mises à jour
-import 'package:real_token/pages/realt_page.dart'; // Importer la page TokenSummaryPage
+import 'package:realtokens_apps/settings/settings_page.dart'; // Importer la page des paramètres
+import 'package:realtokens_apps/pages/real_tokens_page.dart'; // Importer la page des RealTokens
+import 'package:realtokens_apps/about.dart'; // Importer la page About
+import 'package:realtokens_apps/pages/updates_page.dart'; // Importer la page des mises à jour
+import 'package:realtokens_apps/pages/realt_page.dart'; // Importer la page TokenSummaryPage
 // Pour détecter la plateforme
-import 'package:real_token/generated/l10n.dart'; // Importer les traductions
-import 'package:real_token/settings/manage_evm_addresses_page.dart'; // Ajouter cet import si ce n'est pas déjà le cas
-import 'package:real_token/app_state.dart'; // Importer AppState
+import 'package:realtokens_apps/generated/l10n.dart'; // Importer les traductions
+import 'package:realtokens_apps/settings/manage_evm_addresses_page.dart'; // Ajouter cet import si ce n'est pas déjà le cas
+import 'package:realtokens_apps/app_state.dart'; // Importer AppState
 
 class CustomDrawer extends StatelessWidget {
   final Function(bool) onThemeChanged;

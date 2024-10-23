@@ -1,9 +1,9 @@
-import 'package:real_token/utils/utils.dart';
+import 'package:realtokens_apps/utils/utils.dart';
 import 'package:flutter/material.dart';
-import 'package:real_token/pages/Statistics/RMM_stats.dart';
-import 'package:real_token/pages/Statistics/portfolio_stats.dart'; // Assurez-vous que ces pages existent dans votre projet
+import 'package:realtokens_apps/pages/Statistics/RMM_stats.dart';
+import 'package:realtokens_apps/pages/Statistics/portfolio_stats.dart'; // Assurez-vous que ces pages existent dans votre projet
 import 'package:provider/provider.dart';
-import 'package:real_token/app_state.dart';
+import 'package:realtokens_apps/app_state.dart';
 
 class StatsSelectorPage extends StatefulWidget {
   const StatsSelectorPage({super.key});

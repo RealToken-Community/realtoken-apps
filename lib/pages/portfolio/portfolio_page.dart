@@ -1,11 +1,11 @@
-import 'package:real_token/utils/utils.dart';
+import 'package:realtokens_apps/utils/utils.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:real_token/api/data_manager.dart';
+import 'package:realtokens_apps/api/data_manager.dart';
 import 'portfolio_display_1.dart';
 import 'portfolio_display_2.dart';
-import 'package:real_token/generated/l10n.dart'; // Import pour les traductions
+import 'package:realtokens_apps/generated/l10n.dart'; // Import pour les traductions
 
 class PortfolioPage extends StatefulWidget {
   const PortfolioPage({super.key});
