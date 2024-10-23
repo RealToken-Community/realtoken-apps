@@ -23,7 +23,7 @@ jobs:
     - name: Setup Flutter
       uses: subosito/flutter-action@v2
       with:
-        flutter-version: 'stable'  # Vous pouvez changer vers une version Flutter spécifique
+          flutter-version: '3.10.0'  # Spécifiez ici une version stable de Flutter
 
     # Étape 3 : Installer les dépendances
     - name: Install dependencies
