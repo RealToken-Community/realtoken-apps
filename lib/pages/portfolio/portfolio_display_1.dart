@@ -1,4 +1,3 @@
-import 'dart:io'; // Import pour Platform
 import 'package:real_token/utils/utils.dart';
 import 'package:flutter/material.dart';
 import 'package:cached_network_image/cached_network_image.dart';
@@ -28,7 +27,7 @@ class PortfolioDisplay1 extends StatelessWidget {
                       Text(
                         S.of(context).noDataAvailable, // Traduction pour "Aucune donnée disponible"
                         style: TextStyle(
-                          fontSize: (Platform.isAndroid ? 16 : 18) + appState.getTextSizeOffset(),
+                          fontSize: 18 + appState.getTextSizeOffset(),
                           fontWeight: FontWeight.bold,
                           color: Colors.grey,
                         ),
@@ -50,7 +49,7 @@ class PortfolioDisplay1 extends StatelessWidget {
                         child: Text(
                           S.of(context).manageAddresses, // Traduction pour "Gérer les adresses"
                           style: TextStyle(
-                            fontSize: (Platform.isAndroid ? 14 : 16) + appState.getTextSizeOffset(),
+                            fontSize: 16 + appState.getTextSizeOffset(),
                           ),
                         ),
                       ),
@@ -154,7 +153,7 @@ class PortfolioDisplay1 extends StatelessWidget {
                                                   city,
                                                   style: TextStyle(
                                                     color: Colors.white,
-                                                    fontSize: (Platform.isAndroid ? 13 : 14) + appState.getTextSizeOffset(),
+                                                    fontSize: 14 + appState.getTextSizeOffset(),
                                                     fontWeight: FontWeight.bold,
                                                   ),
                                                   textAlign: TextAlign.center,
@@ -191,7 +190,7 @@ class PortfolioDisplay1 extends StatelessWidget {
                                                 child: Text(
                                                   token['shortName'] ?? S.of(context).nameUnavailable,
                                                   style: TextStyle(
-                                                    fontSize: (Platform.isAndroid ? 14 : 15) + appState.getTextSizeOffset(),
+                                                    fontSize: 15 + appState.getTextSizeOffset(),
                                                     fontWeight: FontWeight.bold,
                                                     color:Theme.of(context).textTheme.bodyLarge?.color
                                                   ),
@@ -217,7 +216,7 @@ class PortfolioDisplay1 extends StatelessWidget {
                                                           style: TextStyle(
                                                             color: Colors.white,
                                                             fontWeight: FontWeight.bold,
-                                                            fontSize: (Platform.isAndroid ? 9 : 10) + appState.getTextSizeOffset(),
+                                                            fontSize: 10 + appState.getTextSizeOffset(),
                                                           ),
                                                         ),
                                                       ),
@@ -235,7 +234,7 @@ class PortfolioDisplay1 extends StatelessWidget {
                                                           style: TextStyle(
                                                             color: Colors.white,
                                                             fontWeight: FontWeight.bold,
-                                                            fontSize: (Platform.isAndroid ? 9 : 10) + appState.getTextSizeOffset(),
+                                                            fontSize: 10 + appState.getTextSizeOffset(),
                                                           ),
                                                         ),
                                                       ),
