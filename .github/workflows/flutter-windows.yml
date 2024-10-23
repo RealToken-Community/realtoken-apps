@@ -17,7 +17,7 @@ jobs:
     steps:
     # Étape 1 : Cloner le dépôt
     - name: Checkout repository
-      uses: actions/checkout@v2
+      uses: actions/checkout@v3  # Mise à jour vers v3 pour éviter les avertissements Node.js
 
     # Étape 2 : Configurer Flutter
     - name: Setup Flutter
