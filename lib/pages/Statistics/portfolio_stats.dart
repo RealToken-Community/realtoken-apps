@@ -1,4 +1,3 @@
-// Import pour Platform
 import 'package:real_token/utils/parameters.dart';
 import 'package:real_token/utils/utils.dart';
 import 'package:flutter/material.dart';

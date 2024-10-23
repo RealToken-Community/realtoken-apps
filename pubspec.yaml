@@ -66,6 +66,8 @@ flutter_launcher_icons:
   ios: true
   image_path: "assets/logo_launcher.png"
   remove_alpha_ios: true  
+  web:
+  generate: true
   
 flutter_intl:
   enabled: true

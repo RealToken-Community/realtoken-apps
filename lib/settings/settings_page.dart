@@ -256,7 +256,7 @@ class _SettingsPageState extends State<SettingsPage> {
            ListTile(
   title: Text(
     S.of(context).darkTheme,
-    style: TextStyle(fontSize: Platform.isAndroid ? 15.0 : 16.0 + appState.getTextSizeOffset()),
+    style: TextStyle(fontSize: 16.0 + appState.getTextSizeOffset()),
   ),
   trailing: DropdownButton<String>(
     value: appState.themeMode, // Utilisez themeMode ici
@@ -284,7 +284,7 @@ class _SettingsPageState extends State<SettingsPage> {
           ListTile(
   title: Text(
     S.of(context).language,
-    style: TextStyle(fontSize: Platform.isAndroid ? 15.0 : 16.0 + appState.getTextSizeOffset()),
+    style: TextStyle(fontSize: 16.0 + appState.getTextSizeOffset()),
   ),
   trailing: DropdownButton<String>(
     value: appState.selectedLanguage,
@@ -305,7 +305,7 @@ class _SettingsPageState extends State<SettingsPage> {
                               : languageCode == 'zh'
                                   ? S.of(context).chinese
                                   : S.of(context).english, // Par défaut, anglais
-          style: TextStyle(fontSize: Platform.isAndroid ? 14.0 : 15.0 + appState.getTextSizeOffset()),
+          style: TextStyle(fontSize: 15.0 + appState.getTextSizeOffset()),
         ),
       );
     }).toList(),
@@ -351,7 +351,7 @@ class _SettingsPageState extends State<SettingsPage> {
             ListTile(
               title: Text(
                 S.of(context).textSize,
-                style: TextStyle(fontSize: Platform.isAndroid ? 15.0 : 16.0 + appState.getTextSizeOffset()),
+                style: TextStyle(fontSize: 16.0 + appState.getTextSizeOffset()),
               ),
               trailing: DropdownButton<String>(
                 value: appState.selectedTextSize,
@@ -360,7 +360,7 @@ class _SettingsPageState extends State<SettingsPage> {
                     value: sizeOption,
                     child: Text(
                       sizeOption,
-                      style: TextStyle(fontSize: Platform.isAndroid ? 14.0 : 15.0 + appState.getTextSizeOffset()),
+                      style: TextStyle(fontSize: 15.0 + appState.getTextSizeOffset()),
                     ),
                   );
                 }).toList(),
@@ -380,7 +380,7 @@ class _SettingsPageState extends State<SettingsPage> {
             ListTile(
               title: Text(
                 S.of(context).currency,
-                style: TextStyle(fontSize: Platform.isAndroid ? 15.0 : 16.0 + appState.getTextSizeOffset()),
+                style: TextStyle(fontSize: 16.0 + appState.getTextSizeOffset()),
               ),
               trailing: _currencies.isNotEmpty
                   ? DropdownButton<String>(
@@ -405,7 +405,7 @@ class _SettingsPageState extends State<SettingsPage> {
             ListTile(
               title: Text(
                 S.of(context).convertSqft,
-                style: TextStyle(fontSize: Platform.isAndroid ? 15.0 : 16.0 + appState.getTextSizeOffset()),
+                style: TextStyle(fontSize: 16.0 + appState.getTextSizeOffset()),
               ),
               trailing: Transform.scale(
                 scale: 0.8, // Réduit la taille du Switch à 80%
@@ -430,7 +430,7 @@ class _SettingsPageState extends State<SettingsPage> {
                 Text(
                   S.of(context).importExportData,
                   style: TextStyle(
-                    fontSize: Platform.isAndroid ? 15.0 : 16.0 + appState.getTextSizeOffset(),
+                    fontSize: 16.0 + appState.getTextSizeOffset(),
                   ),
                 ),
                 
@@ -532,7 +532,7 @@ Center(
     },
     style: ElevatedButton.styleFrom(
       backgroundColor: Colors.red,
-      textStyle: TextStyle(fontSize: Platform.isAndroid ? 14.0 : 15.0 + appState.getTextSizeOffset()),
+      textStyle: TextStyle(fontSize: 15.0 + appState.getTextSizeOffset()),
     ),
     child: Text(
       S.of(context).clearCacheData,

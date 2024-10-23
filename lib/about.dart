@@ -31,7 +31,7 @@ class AboutPage extends StatelessWidget {
               title: Text(
                 S.of(context).appName, // Traduction pour "Nom de l'application"
                 style: TextStyle(
-                    fontSize: (Platform.isAndroid ? 14 : 15) + appState.getTextSizeOffset()),
+                    fontSize: 15 + appState.getTextSizeOffset()),
               ),
               subtitle: const Text('RealToken App'),
             ),
@@ -40,7 +40,7 @@ class AboutPage extends StatelessWidget {
               title: Text(
                 S.of(context).version, // Traduction pour "Version"
                 style: TextStyle(
-                    fontSize: (Platform.isAndroid ? 14 : 15) + appState.getTextSizeOffset()),
+                    fontSize: 15 + appState.getTextSizeOffset()),
               ),
               subtitle: const Text('1.0.0'),
             ),
@@ -49,7 +49,7 @@ class AboutPage extends StatelessWidget {
               title: Text(
                 S.of(context).author, // Traduction pour "Auteur"
                 style: TextStyle(
-                    fontSize: (Platform.isAndroid ? 14 : 15) + appState.getTextSizeOffset()),
+                    fontSize: 15 + appState.getTextSizeOffset()),
               ),
               subtitle: const Text('Byackee'),
             ),
@@ -64,7 +64,7 @@ class AboutPage extends StatelessWidget {
                     title: Text(
                       'LinkedIn',
                       style: TextStyle(
-                          fontSize: (Platform.isAndroid ? 14 : 15) + appState.getTextSizeOffset()),
+                          fontSize: 15 + appState.getTextSizeOffset()),
                     ),
                     onTap: () => Utils.launchURL('https://www.linkedin.com/in/vincent-fresnel/'),
                     visualDensity: const VisualDensity(vertical: -4), // Réduction de l'espace vertical
@@ -74,7 +74,7 @@ class AboutPage extends StatelessWidget {
                     title: Text(
                       'GitHub',
                       style: TextStyle(
-                          fontSize: (Platform.isAndroid ? 14 : 15) + appState.getTextSizeOffset()),
+                          fontSize: 15 + appState.getTextSizeOffset()),
                     ),
                     onTap: () => Utils.launchURL('https://github.com/byackee'),
                     visualDensity: const VisualDensity(vertical: -4), // Réduction de l'espace vertical
@@ -95,12 +95,12 @@ class AboutPage extends StatelessWidget {
               title: Text(
                 S.of(context).thankYouMessage, // Traduction pour "Merci à tous ceux qui ont contribué à ce projet"
                 style: TextStyle(
-                    fontSize: (Platform.isAndroid ? 14 : 15) + appState.getTextSizeOffset()),
+                    fontSize: 15 + appState.getTextSizeOffset()),
               ),
               subtitle: Text(
                 S.of(context).specialThanks, // Traduction pour "Remerciements particuliers à..."
                 style: TextStyle(
-                    fontSize: (Platform.isAndroid ? 13 : 14) + appState.getTextSizeOffset()),
+                    fontSize: 14 + appState.getTextSizeOffset()),
               ),
             ),
             const Divider(),
@@ -115,12 +115,12 @@ class AboutPage extends StatelessWidget {
               title: Text(
                 S.of(context).supportProject, // Traduction pour "Soutenez le projet"
                 style: TextStyle(
-                    fontSize: (Platform.isAndroid ? 14 : 15) + appState.getTextSizeOffset()),
+                    fontSize: 15 + appState.getTextSizeOffset()),
               ),
               subtitle: Text(
                 S.of(context).donationMessage, // Traduction pour "Si vous aimez cette application..."
                 style: TextStyle(
-                    fontSize: (Platform.isAndroid ? 13 : 14) + appState.getTextSizeOffset()),
+                    fontSize: 14 + appState.getTextSizeOffset()),
               ),
             ),
 
@@ -137,7 +137,7 @@ class AboutPage extends StatelessWidget {
                   label: Text(
                     S.of(context).paypal, // Traduction pour "PayPal"
                     style: TextStyle(
-                        fontSize: (Platform.isAndroid ? 13 : 14) + appState.getTextSizeOffset(),
+                        fontSize: 14 + appState.getTextSizeOffset(),
                         color: Colors.white),
                   ),
                   style: ElevatedButton.styleFrom(
@@ -153,7 +153,7 @@ class AboutPage extends StatelessWidget {
                   label: Text(
                     S.of(context).crypto, // Traduction pour "Crypto"
                     style: TextStyle(
-                        fontSize: (Platform.isAndroid ? 13 : 14) + appState.getTextSizeOffset(),
+                        fontSize: 14 + appState.getTextSizeOffset(),
                         color: Colors.white),
                   ),
                   style: ElevatedButton.styleFrom(
@@ -176,16 +176,16 @@ class AboutPage extends StatelessWidget {
       builder: (BuildContext context) {
         return AlertDialog(
           title: Text(S.of(context).cryptoDonationAddress, // Traduction pour "Adresse de Donation Crypto"
-              style: TextStyle(fontSize: (Platform.isAndroid ? 13 : 14) + textSizeOffset)),
+              style: TextStyle(fontSize: 14 + textSizeOffset)),
           content: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
               Text(S.of(context).sendDonations, // Traduction pour "Envoyez vos donations à l'adresse suivante"
-                  style: TextStyle(fontSize: (Platform.isAndroid ? 13 : 14) + textSizeOffset)),
+                  style: TextStyle(fontSize: 14 + textSizeOffset)),
               const SizedBox(height: 10),
               SelectableText(
                 cryptoAddress,
-                style: TextStyle(fontSize: (Platform.isAndroid ? 13 : 14) + textSizeOffset, fontWeight: FontWeight.bold),
+                style: TextStyle(fontSize: 14 + textSizeOffset, fontWeight: FontWeight.bold),
               ),
               const SizedBox(height: 20),
               Row(
@@ -202,7 +202,7 @@ class AboutPage extends StatelessWidget {
                     icon: const Icon(Icons.copy),
                     label: Text(
                       S.of(context).copy, // Traduction pour "Copier"
-                      style: TextStyle(fontSize: (Platform.isAndroid ? 13 : 14) + textSizeOffset),
+                      style: TextStyle(fontSize: 14 + textSizeOffset),
                     ),
                     style: ElevatedButton.styleFrom(
                       backgroundColor: Colors.green,
@@ -219,7 +219,7 @@ class AboutPage extends StatelessWidget {
               },
               child: Text(
                 S.of(context).close, // Traduction pour "Fermer"
-                style: TextStyle(fontSize: (Platform.isAndroid ? 13 : 14) + textSizeOffset),
+                style: TextStyle(fontSize: 14 + textSizeOffset),
               ),
             ),
           ],
@@ -242,7 +242,7 @@ class SectionHeader extends StatelessWidget {
       child: Text(
         title,
         style: TextStyle(
-          fontSize: (Platform.isAndroid ? 17 : 18) + textSizeOffset, // Ajustement pour Android avec offset
+          fontSize: 18 + textSizeOffset, // Ajustement pour Android avec offset
           fontWeight: FontWeight.bold,
         ),
       ),

@@ -1,0 +1,41 @@
+name: Build realtTokens Windows App
+
+# Ce workflow se déclenchera à chaque push ou pull request sur la branche principale (ou une autre branche que vous définissez)
+on:
+  push:
+    branches:
+      - main  # Spécifiez la branche à surveiller pour les pushs
+  pull_request:
+    branches:
+      - main  # Surveiller également les pull requests
+
+jobs:
+  build:
+    # Utiliser l'environnement Windows pour le build
+    runs-on: windows-latest
+
+    steps:
+    # Étape 1 : Cloner le dépôt
+    - name: Checkout repository
+      uses: actions/checkout@v2
+
+    # Étape 2 : Configurer Flutter
+    - name: Setup Flutter
+      uses: subosito/flutter-action@v2
+      with:
+        flutter-version: 'stable'  # Vous pouvez changer vers une version Flutter spécifique
+
+    # Étape 3 : Installer les dépendances
+    - name: Install dependencies
+      run: flutter pub get
+
+    # Étape 4 : Construire l'application pour Windows
+    - name: Build Windows app
+      run: flutter build windows
+
+    # Étape 5 : Télécharger les artefacts (les fichiers build) pour les consulter ou les télécharger
+    - name: Upload Build Artifacts
+      uses: actions/upload-artifact@v3
+      with:
+        name: windows-build
+        path: build/windows/runner/Release/  # Chemin vers les fichiers build générés
