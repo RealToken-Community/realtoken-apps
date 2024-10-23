@@ -1,6 +1,6 @@
 import 'package:realtokens_apps/utils/utils.dart';
 import 'package:flutter/material.dart';
-import 'package:realtokens_apps/pages/Statistics/RMM_stats.dart';
+import 'package:realtokens_apps/pages/Statistics/rmm_stats.dart';
 import 'package:realtokens_apps/pages/Statistics/portfolio_stats.dart'; // Assurez-vous que ces pages existent dans votre projet
 import 'package:provider/provider.dart';
 import 'package:realtokens_apps/app_state.dart';
