@@ -1,0 +1,32 @@
+name: Build and Deploy Flutter Web
+
+on:
+  push:
+    branches:
+      - main  # Déclenche le workflow à chaque push sur la branche "main"
+
+jobs:
+  build:
+    name: Build Flutter Web
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v3
+
+    - name: Setup Flutter
+      uses: subosito/flutter-action@v2
+      with:
+        flutter-version: '3.24.3'  # La version Flutter que vous utilisez
+
+    - name: Install dependencies
+      run: flutter pub get
+
+    - name: Build web app
+      run: flutter build web --release
+
+    - name: Deploy to GitHub Pages
+      uses: peaceiris/actions-gh-pages@v3
+      with:
+        github_token: ${{ secrets.GITHUB_TOKEN }}
+        publish_dir: build/web  # Chemin vers les fichiers web générés
