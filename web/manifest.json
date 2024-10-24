@@ -1,6 +1,6 @@
 {
-    "name": "realt_apps",
-    "short_name": "realt_apps",
+    "name": "realtoken_apps",
+    "short_name": "realtoken_apps",
     "start_url": ".",
     "display": "standalone",
     "background_color": "#0175C2",

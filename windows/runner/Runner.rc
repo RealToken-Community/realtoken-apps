@@ -89,13 +89,13 @@ BEGIN
     BEGIN
         BLOCK "040904e4"
         BEGIN
-            VALUE "CompanyName", "com.example" "\0"
-            VALUE "FileDescription", "realt_apps" "\0"
+            VALUE "CompanyName", "com.byackee" "\0"
+            VALUE "FileDescription", "realtoken_apps" "\0"
             VALUE "FileVersion", VERSION_AS_STRING "\0"
-            VALUE "InternalName", "realt_apps" "\0"
-            VALUE "LegalCopyright", "Copyright (C) 2024 com.example. All rights reserved." "\0"
-            VALUE "OriginalFilename", "realt_apps.exe" "\0"
-            VALUE "ProductName", "realt_apps" "\0"
+            VALUE "InternalName", "realtoken_apps" "\0"
+            VALUE "LegalCopyright", "Copyright (C) 2024 com.byackee. All rights reserved." "\0"
+            VALUE "OriginalFilename", "realtoken_apps.exe" "\0"
+            VALUE "ProductName", "realtoken_apps" "\0"
             VALUE "ProductVersion", VERSION_AS_STRING "\0"
         END
     END
