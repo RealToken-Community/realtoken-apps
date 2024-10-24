@@ -55,10 +55,9 @@
 		<false/>
 		<key>UIViewControllerBasedStatusBarAppearance</key>
 		<false/>
-        <key>NSDocumentsFolderUsageDescription</key>
-        <string>Nous avons besoin d'accéder à vos documents pour sauvegarder et charger les fichiers.</string>
+		<key>NSDocumentsFolderUsageDescription</key>
+		<string>Nous avons besoin d'accéder à vos documents pour sauvegarder et charger les fichiers.</string>
 		<key>NSPhotoLibraryUsageDescription</key>
 		<string>Cette application utilise la bibliothèque de photos pour permettre aux utilisateurs de sélectionner et d'envoyer des images.</string>
-
 	</dict>
 </plist>

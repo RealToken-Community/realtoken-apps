@@ -23,7 +23,7 @@ jobs:
       run: flutter pub get
 
     - name: Build web app
-      run: flutter build web --release
+      run: flutter build web --release --base-href /realtoken_apps/
 
     - name: Deploy to GitHub Pages
       uses: peaceiris/actions-gh-pages@v3
