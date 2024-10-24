@@ -100,6 +100,7 @@ class PortfolioDisplay1 extends StatelessWidget {
                                           height: double.infinity,
                                           child: CachedNetworkImage(
                                             imageUrl: token['imageLink'][0] ?? '',
+                                            httpHeaders: {'mode': 'no-cors'}, // Désactiver CORS
                                             fit: BoxFit.cover,
                                             errorWidget: (context, url, error) => const Icon(Icons.error),
                                           ),
